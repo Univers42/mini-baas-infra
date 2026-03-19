@@ -1,0 +1,66 @@
+#!/bin/bash
+
+################################################################################
+# commit-msg
+# Git hook: Validates commit message format (Conventional Commits).
+# 
+# Conventional Commits format:
+#   type(scope): description
+#   
+# Allowed types: feat, fix, docs, chore, test, refactor, perf, ci, revert, style
+# Scope is optional.
+################################################################################
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/hooks/log_hook.sh
+source "${SCRIPT_DIR}/log_hook.sh"
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="${2:-}"
+
+# Skip merge, squash, or amend commits
+if [[ "$COMMIT_SOURCE" =~ ^(merge|squash|commit)$ ]]; then
+  log_debug "Skipping commit-msg validation for commit source: $COMMIT_SOURCE"
+  exit 0
+fi
+
+# Read commit message
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Remove comments (lines starting with #)
+COMMIT_MSG=$(echo "$COMMIT_MSG" | grep -v '^#' | head -1)
+
+# Skip empty commit messages
+if [[ -z "$COMMIT_MSG" ]]; then
+  log_error "Commit message is empty"
+  exit 1
+fi
+
+log_section "Validating commit message format"
+log_info "Message: $COMMIT_MSG"
+
+# Regex for Conventional Commits
+# Pattern: type(scope): description OR type: description
+# type: mandatory, one of [feat, fix, docs, chore, test, refactor, perf, ci, revert, style]
+# scope: optional
+# description: mandatory, starts with lowercase or digit
+CONVENTIONAL_COMMIT_REGEX="^(feat|fix|docs|chore|test|refactor|perf|ci|revert|style)(\([a-z0-9\-]+\))?: [a-z0-9]"
+
+if echo "$COMMIT_MSG" | grep -qE "$CONVENTIONAL_COMMIT_REGEX"; then
+  log_success "Commit message follows Conventional Commits format"
+  exit 0
+else
+  log_error "Commit message does not follow Conventional Commits format"
+  log_info "Expected format: type(scope): description"
+  log_info "  type: feat|fix|docs|chore|test|refactor|perf|ci|revert|style"
+  log_info "  scope: optional, e.g., 'api-gateway', 'deployment', 'k8s'"
+  log_info "  description: lowercase, concise"
+  log_info ""
+  log_info "Examples:"
+  log_info "  ✅ feat(api-gateway): add new deployment overlay"
+  log_info "  ✅ fix(k8s): resolve resource limit parsing issue"
+  log_info "  ✅ docs: update cluster bootstrap instructions"
+  exit 1
+fi
