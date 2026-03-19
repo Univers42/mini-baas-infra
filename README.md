@@ -27,4 +27,3 @@ It centralizes environment contracts, service deployment conventions, and delive
 - `schema-service`
 
 `shared-library` is treated as a build-time dependency unless it evolves into a network service.
-a

@@ -42,11 +42,11 @@ log_section "Validating commit message format"
 log_info "Message: $COMMIT_MSG"
 
 # Regex for Conventional Commits
-# Pattern: type(scope): description OR type: description
+# Pattern: type(scope): description
 # type: mandatory, one of [feat, fix, docs, chore, test, refactor, perf, ci, revert, style]
-# scope: optional
+# scope: mandatory, must be present in parentheses
 # description: mandatory, starts with lowercase or digit
-CONVENTIONAL_COMMIT_REGEX="^(feat|fix|docs|chore|test|refactor|perf|ci|revert|style)(\([a-z0-9\-]+\))?: [a-z0-9]"
+CONVENTIONAL_COMMIT_REGEX="^(feat|fix|docs|chore|test|refactor|perf|ci|revert|style)\([a-z0-9\-]+\): [a-z0-9]"
 
 if echo "$COMMIT_MSG" | grep -qE "$CONVENTIONAL_COMMIT_REGEX"; then
   log_success "Commit message follows Conventional Commits format"
@@ -55,12 +55,12 @@ else
   log_error "Commit message does not follow Conventional Commits format"
   log_info "Expected format: type(scope): description"
   log_info "  type: feat|fix|docs|chore|test|refactor|perf|ci|revert|style"
-  log_info "  scope: optional, e.g., 'api-gateway', 'deployment', 'k8s'"
+  log_info "  scope: mandatory, e.g., 'api-gateway', 'deployment', 'k8s', 'hooks'"
   log_info "  description: lowercase, concise"
   log_info ""
   log_info "Examples:"
   log_info "  ✅ feat(api-gateway): add new deployment overlay"
   log_info "  ✅ fix(k8s): resolve resource limit parsing issue"
-  log_info "  ✅ docs: update cluster bootstrap instructions"
+  log_info "  ✅ docs(hooks): update commit message validation instructions"
   exit 1
 fi
