@@ -1,0 +1,114 @@
+#!/bin/bash
+
+################################################################################
+# pre-commit
+# Git hook: Pre-commit validation guard for Infrastructure-as-Code.
+#
+# Checks:
+#   1. Merge conflict markers (<<<<<<, ======, >>>>>>)
+#   2. Files exceeding 500KB
+#   3. YAML syntax validation (if yamllint is available)
+#   4. Secret leak detection (if gitleaks is available)
+#
+# Exits with 1 if any check fails, blocking the commit.
+################################################################################
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/hooks/log_hook.sh
+source "${SCRIPT_DIR}/log_hook.sh"
+
+EXIT_CODE=0
+
+log_section "Running pre-commit checks"
+
+################################################################################
+# Check 1: Merge conflict markers
+################################################################################
+log_info "Checking for merge conflict markers..."
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if echo "$STAGED_FILES" | xargs -r grep -l "^<<<<<<< \|^=======$\|^>>>>>>>" 2>/dev/null; then
+  log_error "Merge conflict markers detected in staged files"
+  EXIT_CODE=1
+else
+  log_success "No merge conflict markers found"
+fi
+
+################################################################################
+# Check 2: Files exceeding 500KB
+################################################################################
+log_info "Checking for files exceeding 500KB..."
+
+LARGE_FILES_FOUND=0
+while IFS= read -r file; do
+  if [[ -f "$file" ]]; then
+    SIZE=$(stat --format=%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo 0)
+    if [[ $SIZE -gt 524288 ]]; then  # 500KB = 512000 bytes, using 524288 (512 KiB)
+      SIZE_KB=$((SIZE / 1024))
+      log_warn "File exceeds 500KB: $file ($SIZE_KB KB)"
+      LARGE_FILES_FOUND=1
+    fi
+  fi
+done <<< "$STAGED_FILES"
+
+if [[ $LARGE_FILES_FOUND -eq 1 ]]; then
+  log_error "Large files detected (>500KB). Please review before committing."
+  EXIT_CODE=1
+else
+  log_success "No files exceeding 500KB found"
+fi
+
+################################################################################
+# Check 3: YAML syntax validation (optional, requires yamllint)
+################################################################################
+log_info "Checking YAML files..."
+
+if command -v yamllint &> /dev/null; then
+  YAML_FILES=$(echo "$STAGED_FILES" | grep -E '\.(yaml|yml)$' || true)
+  
+  if [[ -z "$YAML_FILES" ]]; then
+    log_success "No YAML files to lint"
+  else
+    log_info "Running yamllint on staged YAML files..."
+    if echo "$YAML_FILES" | xargs yamllint --config-data "{extends: default, rules: {line-length: {max: 120}}}" 2>/dev/null; then
+      log_success "YAML validation passed"
+    else
+      log_error "YAML validation failed"
+      EXIT_CODE=1
+    fi
+  fi
+else
+  log_warn "yamllint not found, skipping YAML validation"
+fi
+
+################################################################################
+# Check 4: Secret leak detection (optional, requires gitleaks)
+################################################################################
+log_info "Checking for hardcoded secrets..."
+
+if command -v gitleaks &> /dev/null; then
+  if gitleaks detect --protect --staged 2>/dev/null; then
+    log_success "No secrets detected"
+  else
+    log_error "Potential secrets detected. Please review or remove them."
+    EXIT_CODE=1
+  fi
+else
+  log_warn "gitleaks not found, skipping secret detection"
+fi
+
+################################################################################
+# Exit with appropriate code
+################################################################################
+log_section "Pre-commit check summary"
+
+if [[ $EXIT_CODE -eq 0 ]]; then
+  log_success "All pre-commit checks passed"
+else
+  log_error "Pre-commit checks failed. Commit blocked."
+fi
+
+exit $EXIT_CODE

@@ -1,0 +1,86 @@
+#!/bin/bash
+
+################################################################################
+# pre-push
+# Git hook: Pre-push validation guard for protected branches.
+#
+# Behavior:
+#   - If branch is main or develop: run deep validation (shellcheck, kustomize)
+#   - If any other branch: allow push (exit 0)
+#
+# Validation targets:
+#   - make lint-scripts: shellcheck on all .sh files
+#   - make validate-k8s: kubectl kustomize validation on overlays
+#
+# Exits with 1 if validation fails on protected branches, blocking the push.
+################################################################################
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/hooks/log_hook.sh
+source "${SCRIPT_DIR}/log_hook.sh"
+
+# Get the current branch name
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+log_section "Pre-push validation"
+log_info "Current branch: $BRANCH"
+
+# Protected branches that require full validation
+PROTECTED_BRANCHES=("main" "develop")
+
+# Check if current branch is protected
+IS_PROTECTED=0
+for branch in "${PROTECTED_BRANCHES[@]}"; do
+  if [[ "$BRANCH" == "$branch" ]]; then
+    IS_PROTECTED=1
+    break
+  fi
+done
+
+if [[ $IS_PROTECTED -eq 0 ]]; then
+  log_info "Branch '$BRANCH' is not protected. Skipping deep validation."
+  log_success "Push allowed (feature branch)"
+  exit 0
+fi
+
+log_warn "Branch '$BRANCH' is protected. Running full validation suite..."
+
+################################################################################
+# Run Makefile validation targets
+################################################################################
+
+EXIT_CODE=0
+
+# Test 1: Lint shell scripts
+log_info "Running shellcheck validation..."
+if make lint-scripts 2>&1; then
+  log_success "Shell script linting passed"
+else
+  log_error "Shell script linting failed"
+  EXIT_CODE=1
+fi
+
+# Test 2: Validate Kubernetes manifests
+log_info "Running Kubernetes manifest validation..."
+if make validate-k8s 2>&1; then
+  log_success "Kubernetes manifest validation passed"
+else
+  log_error "Kubernetes manifest validation failed"
+  EXIT_CODE=1
+fi
+
+################################################################################
+# Exit with validation result
+################################################################################
+
+log_section "Pre-push validation summary"
+
+if [[ $EXIT_CODE -eq 0 ]]; then
+  log_success "All pre-push checks passed. Push allowed."
+  exit 0
+else
+  log_error "Pre-push validation failed. Push blocked."
+  exit 1
+fi
