@@ -63,11 +63,14 @@ compose-up: check-compose ## Start all local Docker Compose services
 compose-down: check-compose ## Stop all local Docker Compose services
 	@$(COMPOSE_CMD) down
 
+compose-restart: check-compose ## Restart all local Docker Compose services
+	@$(COMPOSE_CMD) restart
+
 compose-logs: check-compose ## Follow Docker Compose logs
 	@$(COMPOSE_CMD) logs -f --tail=200
 
 compose-ps: check-compose ## Show Docker Compose service status
-	@$(COMPOSE_CMD) ps
+	@$(COMPOSE_CMD) ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
 
 help: ## ❓ Show this help message
 	@echo ""
