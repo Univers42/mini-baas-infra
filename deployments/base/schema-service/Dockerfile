@@ -11,7 +11,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Install all dependencies (including dev for TypeScript compilation)
-RUN npm ci --prefer-offline --no-audit
+RUN npm install --prefer-offline --no-audit
 
 # Copy source code
 COPY src ./src
@@ -31,7 +31,7 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production --prefer-offline --no-audit && \
+RUN npm install --omit=dev --prefer-offline --no-audit && \
     npm cache clean --force
 
 # Copy compiled JavaScript from builder

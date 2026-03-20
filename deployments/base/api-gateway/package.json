@@ -1,0 +1,13 @@
+{
+  "name": "api-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal API gateway scaffold for Docker image build",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "mkdir -p dist && cp src/index.js dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

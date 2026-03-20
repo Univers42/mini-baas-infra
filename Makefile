@@ -72,8 +72,29 @@ compose-logs: check-compose ## Follow Docker Compose logs
 compose-ps: check-compose ## Show Docker Compose service status
 	@$(COMPOSE_CMD) ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
 
-compose-build: check-compose ## Build Docker Compose services
-	@docker-compose -f docker-compose.build.yml build
+build-compose-up: check-compose ## Build Docker Compose services
+	@docker compose -f docker-compose.build.yml up --build
+
+build-compose-stop: check-compose ## Stop and remove Docker Compose services, then build with docker-compose.build.yml
+	@docker compose -f docker-compose.build.yml up --build
+
+build-compose-down: check-compose ## Stop and remove Docker Compose services, then build with docker-compose.build.yml
+	@docker compose -f docker-compose.build.yml down
+
+build-compose-logs: check-compose ## Follow Docker Compose logs for build services
+	@docker compose -f docker-compose.build.yml logs -f --tail=200
+
+build-compose-ps: check-compose ## Show Docker Compose service status for build services
+	@docker compose -f docker-compose.build.yml ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
+
+build-compose-images: check-compose ## Build Docker Compose images for build services
+	@docker compose -f docker-compose.build.yml build
+
+build-compose-restart: check-compose ## Restart Docker Compose services for build services
+	@docker compose -f docker-compose.build.yml restart
+
+build-compose-clean: check-compose ## Stop and remove Docker Compose services for build services, then remove images
+	@docker compose -f docker-compose.build.yml down --rmi all
 
 help: ## ❓ Show this help message
 	@echo ""

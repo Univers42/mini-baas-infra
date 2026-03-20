@@ -2,14 +2,12 @@
 # This file shows how to build custom services locally
 # Use with: docker compose -f docker-compose.build.yml up
 
-version: '3.9'
-
 services:
   # Optional: Build api-gateway from source
   api-gateway:
     build:
-      context: .
-      dockerfile: deployments/base/api-gateway/Dockerfile
+      context: ./deployments/base/api-gateway
+      dockerfile: Dockerfile
       args:
         NODE_VERSION: "22-alpine"
       # buildx options for multi-platform builds
@@ -32,8 +30,8 @@ services:
   # Optional: Build auth-service from source
   auth-service:
     build:
-      context: .
-      dockerfile: deployments/base/auth-service/Dockerfile
+      context: ./deployments/base/auth-service
+      dockerfile: Dockerfile
     image: mini-baas/auth-service:latest
     ports:
       - "8001:8000"
@@ -49,8 +47,8 @@ services:
   # Optional: Build dynamic-api from source
   dynamic-api:
     build:
-      context: .
-      dockerfile: deployments/base/dynamic-api/Dockerfile
+      context: ./deployments/base/dynamic-api
+      dockerfile: Dockerfile
     image: mini-baas/dynamic-api:latest
     ports:
       - "8002:8080"
@@ -64,8 +62,8 @@ services:
   # Optional: Build schema-service from source
   schema-service:
     build:
-      context: .
-      dockerfile: deployments/base/schema-service/Dockerfile
+      context: ./deployments/base/schema-service
+      dockerfile: Dockerfile
     image: mini-baas/schema-service:latest
     ports:
       - "3001:3001"
