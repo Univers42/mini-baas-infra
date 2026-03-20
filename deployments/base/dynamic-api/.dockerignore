@@ -1,0 +1,38 @@
+# .dockerignore for dynamic-api service
+
+# Version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+test/
+tests/
+__tests__/
+
+# Development files
+.vscode/
+.idea/
+.env
+.env.local
+
+# CI/CD
+.circleci
+.gitlab-ci.yml
+
+# Build
+dist/
+build/
+target/
+
+# Logs
+*.log
+
+# Misc
+.DS_Store
+coverage/

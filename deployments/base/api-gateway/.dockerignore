@@ -1,0 +1,46 @@
+# .dockerignore for api-gateway service
+# These files/directories won't be copied into the Docker image
+
+# Version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+__tests__/
+test/
+tests/
+spec/
+*.test.js
+*.spec.js
+jest.config.js
+
+# Development dependencies cache
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# CI/CD
+.circleci
+.gitlab-ci.yml
+
+# Misc
+.DS_Store
+*.log
+coverage/
+dist/

@@ -1,0 +1,42 @@
+# .dockerignore for auth-service service
+
+# Version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+test/
+tests/
+__tests__/
+*.test.go
+*.test.py
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# CI/CD
+.circleci
+.gitlab-ci.yml
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# Misc
+.DS_Store
+*.log
+coverage/

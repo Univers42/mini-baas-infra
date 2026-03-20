@@ -1,0 +1,37 @@
+# .dockerignore for schema-service service
+
+# Version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+test/
+tests/
+spec/
+
+# Development
+.vscode/
+.idea/
+.env
+
+# CI/CD
+.circleci
+.gitlab-ci.yml
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+
+# Misc
+.DS_Store
+coverage/
+node_modules/

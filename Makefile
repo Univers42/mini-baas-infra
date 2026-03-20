@@ -72,6 +72,9 @@ compose-logs: check-compose ## Follow Docker Compose logs
 compose-ps: check-compose ## Show Docker Compose service status
 	@$(COMPOSE_CMD) ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}"
 
+compose-build: check-compose ## Build Docker Compose services
+	@docker-compose -f docker-compose.build.yml build
+
 help: ## ❓ Show this help message
 	@echo ""
 	@echo -e "$(BOLD)mini-baas-infrastructure - Available Commands$(NC)"

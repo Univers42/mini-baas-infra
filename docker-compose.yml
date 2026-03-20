@@ -1,6 +1,17 @@
 name: mini-baas
+version: '3.9'
 
 # todo: add description to services
+# 
+# Build Optimization Tips:
+# - All images use Alpine Linux to minimize size
+# - Services utilize multistage builds where possible
+# - .dockerignore files prevent unnecessary context copying
+# - Non-root users improve security
+#
+# To build custom services, use:
+#   docker compose build [service-name]
+#   docker compose build --no-cache [service-name]
 
 services:
   trino:
