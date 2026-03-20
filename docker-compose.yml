@@ -1,5 +1,7 @@
 name: mini-baas
 
+# todo: add description to services
+
 services:
   trino:
     image: trinodb/trino
