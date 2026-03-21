@@ -20,13 +20,20 @@ make docker-build-api-gateway
 ### 2. Deploy to Kubernetes (Local Development)
 
 ```bash
-# Build images and deploy to local Kubernetes
+# Build images, load them into minikube, and deploy
 make k8s-deploy
 
 # Or deploy to a specific environment
 ENVIRONMENT=local make k8s-deploy
 ENVIRONMENT=staging make k8s-deploy
 ENVIRONMENT=production make k8s-deploy
+```
+
+For local Minikube workflows, you can also run the image load step explicitly:
+
+```bash
+# Build and load mini-baas images into the minikube node runtime
+make k8s-load-local-images
 ```
 
 ### 3. Monitor Deployments
@@ -257,21 +264,42 @@ deploy_production:
 # 1. Build images locally
 make docker-build
 
-# 2. Deploy to local Kubernetes
+# 2. Load images into minikube
+make k8s-load-local-images
+
+# 3. Deploy to local Kubernetes
 make k8s-deploy
 
-# 3. Check status
+# 4. Check status
 make k8s-status
 
-# 4. Port forward to test
+# 5. Port forward to test
 SERVICE=api-gateway PORT=3000 make k8s-port-forward
 # In another terminal, test: curl http://localhost:3000/health
 
-# 5. View logs
+# 6. View logs
 SERVICE=api-gateway make k8s-logs
 
-# 6. When done, delete
+# 7. When done, delete
 make k8s-delete
+```
+
+## Minikube Image Pull Troubleshooting
+
+If pods are stuck in `ImagePullBackOff` for `mini-baas/*` images, Kubernetes is not finding those images in the Minikube node runtime.
+
+Use this sequence:
+
+```bash
+make docker-build
+make k8s-load-local-images
+make k8s-deploy
+```
+
+To verify images are present in Minikube:
+
+```bash
+minikube image ls | grep mini-baas
 ```
 
 ### Push to Registry and Deploy to Staging

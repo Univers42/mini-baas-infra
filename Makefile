@@ -151,16 +151,36 @@ docker-clean: check-docker ## Remove all mini-baas Docker images
 check-kubectl: ## Check if kubectl is installed
 	@command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl is not installed. Please install it from https://kubernetes.io/docs/tasks/tools/"; exit 1; }
 
+check-minikube: ## Check if minikube is installed
+	@command -v minikube >/dev/null 2>&1 || { echo >&2 "minikube is not installed. Please install it from https://minikube.sigs.k8s.io/docs/start/"; exit 1; }
+
 check-kustomize: ## Check if kustomize is installed
 	@command -v kustomize >/dev/null 2>&1 || { echo >&2 "kustomize is not installed. Install via: brew install kustomize"; exit 1; }
 
 check-k8s-cluster: check-kubectl ## Check if Kubernetes cluster is accessible
 	@kubectl cluster-info >/dev/null 2>&1 || { echo >&2 "$(RED)✗ Kubernetes cluster not accessible$(NC)"; echo >&2 "Make sure your K8s cluster is running:"; echo >&2 "  - minikube start     (for local minikube)"; echo >&2 "  - docker desktop     (enable K8s in Docker Desktop)"; echo >&2 "  - kubectl config     (ensure kubeconfig is valid)"; exit 1; }
 
+k8s-load-local-images: check-minikube check-k8s-cluster ## Load local images into minikube
+	@echo -e "$(BLUE)Loading local Docker images into minikube...$(NC)"
+	@minikube image load mini-baas/api-gateway:$(IMAGE_TAG)
+	@minikube image load mini-baas/auth-service:$(IMAGE_TAG)
+	@minikube image load mini-baas/dynamic-api:$(IMAGE_TAG)
+	@minikube image load mini-baas/schema-service:$(IMAGE_TAG)
+	@echo -e "$(GREEN)✓ Local images loaded into minikube$(NC)"
+
 k8s-deploy: check-kubectl check-kustomize check-k8s-cluster docker-build ## Build images and deploy to Kubernetes (ENVIRONMENT=local)
 	@echo -e "$(BLUE)Deploying to Kubernetes cluster ($(ENVIRONMENT))...$(NC)"
+	@if [ "$(ENVIRONMENT)" = "local" ]; then \
+		$(MAKE) k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG); \
+	fi
 	@kubectl apply -k $(KUSTOMIZE_DIR) --validate=false || { echo -e "$(RED)✗ Deployment failed$(NC)"; exit 1; }
 	@echo -e "$(GREEN)✓ Deployment complete$(NC)"
+
+k8s-deploy-local: ## Build images, load into minikube, and deploy to Kubernetes (ENVIRONMENT=local)
+	@$(MAKE) docker-clean
+	@$(MAKE) docker-build
+	@$(MAKE) k8s-load-local-images
+	@$(MAKE) k8s-deploy
 
 k8s-preview: check-kustomize ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
 	@echo -e "$(BLUE)Kubernetes manifests for $(ENVIRONMENT):$(NC)"
@@ -252,9 +272,10 @@ help: ## ❓ Show this help message
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-25s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 
-.PHONY: check-docker check-compose check-kubectl check-kustomize check-k8s-cluster \
+
+.PHONY: check-docker check-compose check-kubectl check-minikube check-kustomize check-k8s-cluster \
 	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
-	k8s-deploy k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
+	k8s-load-local-images k8s-deploy k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
 	build-and-push deploy-staging deploy-production \
 	build-compose-up build-compose-down build-compose-images build-compose-logs build-compose-ps build-compose-clean \
 	help
