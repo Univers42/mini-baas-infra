@@ -154,18 +154,21 @@ check-kubectl: ## Check if kubectl is installed
 check-kustomize: ## Check if kustomize is installed
 	@command -v kustomize >/dev/null 2>&1 || { echo >&2 "kustomize is not installed. Install via: brew install kustomize"; exit 1; }
 
-k8s-deploy: check-kubectl check-kustomize docker-build ## Build images and deploy to Kubernetes (ENVIRONMENT=local)
+check-k8s-cluster: check-kubectl ## Check if Kubernetes cluster is accessible
+	@kubectl cluster-info >/dev/null 2>&1 || { echo >&2 "$(RED)✗ Kubernetes cluster not accessible$(NC)"; echo >&2 "Make sure your K8s cluster is running:"; echo >&2 "  - minikube start     (for local minikube)"; echo >&2 "  - docker desktop     (enable K8s in Docker Desktop)"; echo >&2 "  - kubectl config     (ensure kubeconfig is valid)"; exit 1; }
+
+k8s-deploy: check-kubectl check-kustomize check-k8s-cluster docker-build ## Build images and deploy to Kubernetes (ENVIRONMENT=local)
 	@echo -e "$(BLUE)Deploying to Kubernetes cluster ($(ENVIRONMENT))...$(NC)"
-	@kubectl apply -k $(KUSTOMIZE_DIR)
+	@kubectl apply -k $(KUSTOMIZE_DIR) --validate=false || { echo -e "$(RED)✗ Deployment failed$(NC)"; exit 1; }
 	@echo -e "$(GREEN)✓ Deployment complete$(NC)"
 
 k8s-preview: check-kustomize ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
 	@echo -e "$(BLUE)Kubernetes manifests for $(ENVIRONMENT):$(NC)"
 	@kustomize build $(KUSTOMIZE_DIR)
 
-k8s-apply: check-kubectl check-kustomize ## Apply Kubernetes manifests (ENVIRONMENT=local)
+k8s-apply: check-kubectl check-kustomize check-k8s-cluster ## Apply Kubernetes manifests (ENVIRONMENT=local)
 	@echo -e "$(BLUE)Applying Kubernetes manifests to cluster ($(ENVIRONMENT))...$(NC)"
-	@kubectl apply -k $(KUSTOMIZE_DIR)
+	@kubectl apply -k $(KUSTOMIZE_DIR) --validate=false || { echo -e "$(RED)✗ Apply failed$(NC)"; exit 1; }
 	@echo -e "$(GREEN)✓ Applied$(NC)"
 
 k8s-update-images: check-kubectl ## Update image tags in running deployments
@@ -249,7 +252,7 @@ help: ## ❓ Show this help message
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-25s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 
-.PHONY: check-docker check-compose check-kubectl check-kustomize \
+.PHONY: check-docker check-compose check-kubectl check-kustomize check-k8s-cluster \
 	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
 	k8s-deploy k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
 	build-and-push deploy-staging deploy-production \

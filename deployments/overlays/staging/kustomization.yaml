@@ -3,14 +3,15 @@ kind: Kustomization
 
 namespace: mini-baas-staging
 
-bases:
+resources:
   - ../../base
 
 namePrefix: staging-
 
-commonLabels:
-  environment: staging
-  tier: pre-production
+labels:
+  - pairs:
+      environment: staging
+      tier: pre-production
 
 images:
   - name: mini-baas/api-gateway

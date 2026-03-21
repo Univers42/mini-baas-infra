@@ -3,9 +3,10 @@ kind: Kustomization
 
 namespace: default
 
-commonLabels:
-  app.mini-baas/managed-by: kustomize
-  app.mini-baas/version: v1
+labels:
+  - pairs:
+      app.mini-baas/managed-by: kustomize
+      app.mini-baas/version: v1
 
 resources:
   - api-gateway/deployment.yaml

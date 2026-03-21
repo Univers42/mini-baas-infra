@@ -3,14 +3,15 @@ kind: Kustomization
 
 namespace: default
 
-bases:
+resources:
   - ../../base
 
 namePrefix: local-
 
-commonLabels:
-  environment: local
-  tier: development
+labels:
+  - pairs:
+      environment: local
+      tier: development
 
 images:
   - name: mini-baas/api-gateway
