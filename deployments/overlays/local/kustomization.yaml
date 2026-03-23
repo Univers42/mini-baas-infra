@@ -6,6 +6,9 @@ namespace: default
 resources:
   - ../../base
 
+patches:
+  - path: api-gateway-service-nodeport.yaml
+
 namePrefix: local-
 
 labels:

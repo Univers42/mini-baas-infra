@@ -11,9 +11,6 @@ NC      := \033[0m
 BOLD    := \033[1m
 DIM     := \033[2m
 
-COMPOSE_CMD := $(shell if docker compose version >/dev/null 2>&1; then echo "docker compose"; elif command -v docker-compose >/dev/null 2>&1; then echo "docker-compose"; fi)
-COMPOSE_VERSION := $(shell if docker compose version >/dev/null 2>&1; then docker compose version --short; elif command -v docker-compose >/dev/null 2>&1; then docker-compose version --short 2>/dev/null || docker-compose version | head -n 1; else echo "not installed"; fi)
-
 # Configuration variables
 REGISTRY ?= localhost:5000
 IMAGE_TAG ?= latest
@@ -24,23 +21,25 @@ KUSTOMIZE_DIR ?= deployments/overlays/$(ENVIRONMENT)
 check-docker: ## Check if docker is installed
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker Engine/Desktop first."; exit 1; }
 
-check-compose: check-docker ## Check if Docker Compose is available
-	@if [ -z "$(COMPOSE_CMD)" ]; then \
-		echo >&2 "Docker Compose is not available. Use Docker with the compose plugin or install docker-compose."; \
-		exit 1; \
-	fi
-
 # ============================================================================
 # Docker Image Management
 # ============================================================================
 
 docker-build: check-docker ## Build all service Docker images
 	@echo -e "$(BLUE)Building Docker images...$(NC)"
-	@docker compose -f docker-compose.build.yml build
+	@docker build -t mini-baas/api-gateway:$(IMAGE_TAG) deployments/base/api-gateway
+	@docker build -t mini-baas/auth-service:$(IMAGE_TAG) deployments/base/auth-service
+	@docker build -t mini-baas/dynamic-api:$(IMAGE_TAG) deployments/base/dynamic-api
+	@docker build -t mini-baas/schema-service:$(IMAGE_TAG) deployments/base/schema-service
+	@echo -e "$(GREEN)✓ Docker images built$(NC)"
 
 docker-build-no-cache: check-docker ## Build all Docker images without cache
 	@echo -e "$(BLUE)Building Docker images (no cache)...$(NC)"
-	@docker compose -f docker-compose.build.yml build --no-cache
+	@docker build --no-cache -t mini-baas/api-gateway:$(IMAGE_TAG) deployments/base/api-gateway
+	@docker build --no-cache -t mini-baas/auth-service:$(IMAGE_TAG) deployments/base/auth-service
+	@docker build --no-cache -t mini-baas/dynamic-api:$(IMAGE_TAG) deployments/base/dynamic-api
+	@docker build --no-cache -t mini-baas/schema-service:$(IMAGE_TAG) deployments/base/schema-service
+	@echo -e "$(GREEN)✓ Docker images built (no cache)$(NC)"
 
 docker-build-%: check-docker ## Build specific service image (e.g., make docker-build-api-gateway)
 	@echo -e "$(BLUE)Building Docker image for $*...$(NC)"
@@ -151,8 +150,16 @@ k8s-describe: check-kubectl ## Describe a service deployment (SERVICE=api-gatewa
 	@kubectl describe deployment $(SERVICE) -n $(NAMESPACE) || echo "Deployment not found"
 
 k8s-port-forward: check-kubectl ## Port forward to a service (SERVICE=api-gateway PORT=3000 make k8s-port-forward)
-	@echo -e "$(BLUE)Port forwarding $(SERVICE) to localhost:$(PORT)$(NC)"
-	@kubectl port-forward -n $(NAMESPACE) svc/$(SERVICE) $(PORT):$(PORT)
+	@svc="$(SERVICE)"; \
+	if [ "$(ENVIRONMENT)" = "local" ] && [[ "$$svc" != local-* ]]; then \
+		svc="local-$$svc"; \
+	fi; \
+	echo -e "$(BLUE)Port forwarding $$svc to localhost:$(PORT)$(NC)"; \
+	kubectl get svc "$$svc" -n $(NAMESPACE) >/dev/null 2>&1 || { \
+		echo -e "$(RED)✗ Service '$$svc' not found in namespace '$(NAMESPACE)'$(NC)"; \
+		exit 1; \
+	}; \
+	kubectl port-forward -n $(NAMESPACE) svc/$$svc $(PORT):$(PORT)
 
 k8s-scale: check-kubectl ## Scale a deployment (SERVICE=api-gateway REPLICAS=3 make k8s-scale)
 	@echo -e "$(BLUE)Scaling $(SERVICE) to $(REPLICAS) replicas...$(NC)"
@@ -190,19 +197,20 @@ deploy-production: REGISTRY?=registry.example.com
 deploy-production: IMAGE_TAG?=v1.0.0
 deploy-production: k8s-deploy ## Build and deploy to production environment
 
+dashboard: ## Open Kubernetes dashboard (minikube)
+	@minikube dashboard
+
 help: ## ❓ Show this help message
 	@echo ""
 	@echo -e "$(BOLD)mini-baas-infrastructure - Available Commands$(NC)"
-	@echo -e "$(DIM)Compose: $(COMPOSE_CMD) $(COMPOSE_VERSION)$(NC)"
 	@echo ""
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-25s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 
 
-.PHONY: check-docker check-compose check-kubectl check-minikube check-kustomize check-k8s-cluster \
+.PHONY: check-docker check-kubectl check-minikube check-kustomize check-k8s-cluster \
 	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
 	k8s-load-local-images k8s-deploy k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
 	build-and-push deploy-staging deploy-production \
-	build-compose-up build-compose-down build-compose-images build-compose-logs build-compose-ps build-compose-clean \
 	help
