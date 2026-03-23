@@ -43,6 +43,22 @@ services:
       timeout: 5s
       retries: 20
 
+  mongo:
+    image: mongo:7
+    container_name: mini-baas-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   gotrue:
     image: supabase/gotrue:v2.188.1
     container_name: mini-baas-gotrue
@@ -188,3 +204,4 @@ volumes:
   minio-data:
   redis-data:
   postgres-data:
+  mongo-data:

@@ -57,6 +57,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      DB_ENGINE: ${DB_ENGINE:-postgres}
+      DB_DSN: ${DB_DSN:-postgres://postgres:postgres@postgres:5432/postgres}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017}
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-mini_baas}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-dynamic_records}
     restart: unless-stopped
 
   # Optional: Build schema-service from source
@@ -102,6 +111,23 @@ services:
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mongo:
+    image: mongo:7
+    pull_policy: if_not_present
+    container_name: mini-baas-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -258,3 +284,4 @@ volumes:
   minio-data:
   redis-data:
   postgres-data:
+  mongo-data:
