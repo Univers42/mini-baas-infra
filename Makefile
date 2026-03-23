@@ -17,6 +17,11 @@ IMAGE_TAG ?= latest
 ENVIRONMENT ?= local
 NAMESPACE ?= default
 KUSTOMIZE_DIR ?= deployments/overlays/$(ENVIRONMENT)
+SERVICES ?= api-gateway auth-service dynamic-api schema-service
+K8S_WAIT_TIMEOUT ?= 180s
+MINIKUBE_CPUS ?= 4
+MINIKUBE_MEMORY ?= 8192
+MINIKUBE_DISK_SIZE ?= 30g
 
 check-docker: ## Check if docker is installed
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker Engine/Desktop first."; exit 1; }
@@ -80,6 +85,19 @@ check-kubectl: ## Check if kubectl is installed
 check-minikube: ## Check if minikube is installed
 	@command -v minikube >/dev/null 2>&1 || { echo >&2 "minikube is not installed. Please install it from https://minikube.sigs.k8s.io/docs/start/"; exit 1; }
 
+minikube-start: check-minikube ## Start minikube if not running
+	@if [ "$(ENVIRONMENT)" != "local" ]; then \
+		echo -e "$(DIM)Skipping minikube start (ENVIRONMENT=$(ENVIRONMENT))$(NC)"; \
+		exit 0; \
+	fi
+	@if minikube status --format='{{.Host}}' 2>/dev/null | grep -qi "Running"; then \
+		echo -e "$(GREEN)✓ minikube is already running$(NC)"; \
+	else \
+		echo -e "$(BLUE)Starting minikube (cpus=$(MINIKUBE_CPUS), memory=$(MINIKUBE_MEMORY), disk=$(MINIKUBE_DISK_SIZE))...$(NC)"; \
+		minikube start --cpus=$(MINIKUBE_CPUS) --memory=$(MINIKUBE_MEMORY) --disk-size=$(MINIKUBE_DISK_SIZE); \
+		echo -e "$(GREEN)✓ minikube started$(NC)"; \
+	fi
+
 check-kustomize: ## Check if kustomize is installed
 	@command -v kustomize >/dev/null 2>&1 || { echo >&2 "kustomize is not installed. Install via: brew install kustomize"; exit 1; }
 
@@ -107,6 +125,34 @@ k8s-deploy-local: ## Build images, load into minikube, and deploy to Kubernetes 
 	@$(MAKE) docker-build
 	@$(MAKE) k8s-load-local-images
 	@$(MAKE) k8s-deploy
+
+k8s-wait: check-kubectl check-k8s-cluster ## Wait until service deployments are available
+	@echo -e "$(BLUE)Waiting for deployments to become ready ($(ENVIRONMENT))...$(NC)"
+	@prefix=""; \
+	if [ "$(ENVIRONMENT)" = "local" ]; then \
+		prefix="local-"; \
+	fi; \
+	for svc in $(SERVICES); do \
+		deploy_name="$$prefix$$svc"; \
+		if kubectl get deployment "$$deploy_name" -n $(NAMESPACE) >/dev/null 2>&1; then \
+			echo -e "$(CYAN)→ rollout status deployment/$$deploy_name$(NC)"; \
+			kubectl rollout status deployment/"$$deploy_name" -n $(NAMESPACE) --timeout=$(K8S_WAIT_TIMEOUT); \
+		else \
+			echo -e "$(YELLOW)• deployment/$$deploy_name not found, skipping$(NC)"; \
+		fi; \
+	done
+	@echo -e "$(GREEN)✓ Rollouts complete$(NC)"
+
+k8s-local-url: check-minikube ## Show local api-gateway URL
+	@echo -e "$(BLUE)Local access URL:$(NC)"
+	@echo "  http://$$(minikube ip):30080/health"
+
+k8s-bootstrap-local: ENVIRONMENT=local
+k8s-bootstrap-local: minikube-start k8s-deploy k8s-wait ## One-command local bootstrap (start minikube, build, deploy, wait)
+	@echo -e "$(GREEN)✓ Local Kubernetes bootstrap complete$(NC)"
+	@$(MAKE) k8s-local-url
+
+dev-up: k8s-bootstrap-local ## Alias for one-command local bootstrap
 
 k8s-preview: check-kustomize ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
 	@echo -e "$(BLUE)Kubernetes manifests for $(ENVIRONMENT):$(NC)"
@@ -211,6 +257,6 @@ help: ## ❓ Show this help message
 
 .PHONY: check-docker check-kubectl check-minikube check-kustomize check-k8s-cluster \
 	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
-	k8s-load-local-images k8s-deploy k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
+	minikube-start k8s-load-local-images k8s-deploy k8s-deploy-local k8s-wait k8s-local-url k8s-bootstrap-local dev-up k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
 	build-and-push deploy-staging deploy-production \
 	help
