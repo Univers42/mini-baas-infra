@@ -15,7 +15,8 @@ DIM     := \033[2m
 NO_PRINT = --no-print-directory
 REGISTRY ?= localhost:5000
 IMAGE_TAG ?= latest
-ENVIRONMENT ?= local
+# Local-only project: always deploy Kubernetes resources with local overlay.
+override ENVIRONMENT := local
 NAMESPACE ?= default
 KUSTOMIZE_DIR ?= deployments/overlays/$(ENVIRONMENT)
 SERVICES ?= api-gateway auth-service dynamic-api schema-service
@@ -83,7 +84,7 @@ docker-push: ## Push all tagged images to registry (REGISTRY=myregistry.com make
 	@docker push $(REGISTRY)/dynamic-api:$(IMAGE_TAG)
 	@docker push $(REGISTRY)/schema-service:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ All images pushed$(NC)"
-	$(call print-next,Run make k8s-update-images ENVIRONMENT=staging REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
+	$(call print-next,Run make k8s-update-images ENVIRONMENT=local REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
 
 docker-images: ## Show built Docker images
 	@$(MAKE) $(NO_PRINT) check-docker
@@ -292,16 +293,58 @@ k8s-describe: ## Describe a service deployment (SERVICE=api-gateway make k8s-des
 k8s-port-forward: ## Port forward to a service (SERVICE=api-gateway PORT=3000 make k8s-port-forward)
 	@$(MAKE) $(NO_PRINT) check-kubectl
 	@svc="$(SERVICE)"; \
+	if [ -z "$$svc" ]; then \
+		svc="api-gateway"; \
+	fi; \
 	if [ "$(ENVIRONMENT)" = "local" ] && [[ "$$svc" != local-* ]]; then \
 		svc="local-$$svc"; \
 	fi; \
-	echo -e "$(BLUE)Port forwarding $$svc to localhost:$(PORT)$(NC)"; \
+	port="$(PORT)"; \
 	kubectl get svc "$$svc" -n $(NAMESPACE) >/dev/null 2>&1 || { \
 		echo -e "$(RED)✗ Service '$$svc' not found in namespace '$(NAMESPACE)'$(NC)"; \
+		echo -e "$(YELLOW)Available services:$(NC)"; \
+		kubectl get svc -n $(NAMESPACE) -o custom-columns=NAME:.metadata.name,PORT:.spec.ports[0].port --no-headers || true; \
 		exit 1; \
 	}; \
-	kubectl port-forward -n $(NAMESPACE) svc/$$svc $(PORT):$(PORT)
-	$(call print-next,Open http://localhost:$(PORT)/docs when available.)
+	if [ -z "$$port" ]; then \
+		port="$$(kubectl get svc "$$svc" -n $(NAMESPACE) -o jsonpath='{.spec.ports[0].port}')"; \
+	fi; \
+	if [ -z "$$port" ]; then \
+		echo -e "$(RED)✗ Could not determine a port for service '$$svc'$(NC)"; \
+		exit 1; \
+	fi; \
+	echo -e "$(BLUE)Port forwarding $$svc to localhost:$$port$(NC)"; \
+	kubectl port-forward -n $(NAMESPACE) svc/$$svc $$port:$$port
+	$(call print-next,Open http://localhost:<port>/docs where <port> is the forwarded local port.)
+
+k8s-port-forward-%: ## Port forward one specific service (e.g., make k8s-port-forward-auth-service)
+	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=$* PORT=$(PORT) ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+	$(call print-next,Stop forwarding with Ctrl+C when done.)
+
+k8s-port-forward-api-gateway: ## Port forward only api-gateway
+	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=api-gateway PORT=$(PORT) ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+
+k8s-port-forward-auth-service: ## Port forward only auth-service
+	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=auth-service PORT=$(PORT) ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+
+k8s-port-forward-dynamic-api: ## Port forward only dynamic-api
+	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=dynamic-api PORT=$(PORT) ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+
+k8s-port-forward-schema-service: ## Port forward only schema-service
+	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=schema-service PORT=$(PORT) ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+
+# Compatibility aliases for requested naming style/typo ("fordward").
+make-k8s-port-fordward-api-gateway:
+	@$(MAKE) $(NO_PRINT) k8s-port-forward-api-gateway PORT=$(PORT)
+
+make-k8s-port-fordward-auth-service:
+	@$(MAKE) $(NO_PRINT) k8s-port-forward-auth-service PORT=$(PORT)
+
+make-k8s-port-fordward-dynamic-api:
+	@$(MAKE) $(NO_PRINT) k8s-port-forward-dynamic-api PORT=$(PORT)
+
+make-k8s-port-fordward-schema-service:
+	@$(MAKE) $(NO_PRINT) k8s-port-forward-schema-service PORT=$(PORT)
 
 k8s-scale: ## Scale a deployment (SERVICE=api-gateway REPLICAS=3 make k8s-scale)
 	@$(MAKE) $(NO_PRINT) check-kubectl
@@ -350,21 +393,17 @@ build-and-push: ## Build all images and push to registry
 	@$(MAKE) $(NO_PRINT) docker-build
 	@$(MAKE) $(NO_PRINT) docker-push
 	@echo -e "$(GREEN)✓ All images built and pushed$(NC)"
-	$(call print-next,Deploy with make deploy-staging IMAGE_TAG=$(IMAGE_TAG) or make deploy-production IMAGE_TAG=$(IMAGE_TAG).)
+	$(call print-next,Deploy locally with make k8s-deploy-local IMAGE_TAG=$(IMAGE_TAG).)
 
-deploy-staging: ENVIRONMENT=staging
-deploy-staging: REGISTRY?=registry.example.com
-deploy-staging: IMAGE_TAG?=staging-latest
-deploy-staging: ## Build and deploy to staging environment
-	@$(MAKE) $(NO_PRINT) k8s-deploy ENVIRONMENT=$(ENVIRONMENT) REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG)
-	$(call print-next,Verify staging with make k8s-status ENVIRONMENT=staging NAMESPACE=$(NAMESPACE).)
+deploy-staging: ## Deprecated alias: local-only deploy
+	@echo -e "$(YELLOW)⚠ deploy-staging is mapped to local deploy (project is local-only).$(NC)"
+	@$(MAKE) $(NO_PRINT) k8s-deploy ENVIRONMENT=local REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG)
+	$(call print-next,Verify local rollout with make k8s-status ENVIRONMENT=local NAMESPACE=$(NAMESPACE).)
 
-deploy-production: ENVIRONMENT=production
-deploy-production: REGISTRY?=registry.example.com
-deploy-production: IMAGE_TAG?=v1.0.0
-deploy-production: ## Build and deploy to production environment
-	@$(MAKE) $(NO_PRINT) k8s-deploy ENVIRONMENT=$(ENVIRONMENT) REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG)
-	$(call print-next,Verify production rollout with make k8s-wait ENVIRONMENT=production.)
+deploy-production: ## Deprecated alias: local-only deploy
+	@echo -e "$(YELLOW)⚠ deploy-production is mapped to local deploy (project is local-only).$(NC)"
+	@$(MAKE) $(NO_PRINT) k8s-deploy ENVIRONMENT=local REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG)
+	$(call print-next,Verify local rollout with make k8s-wait ENVIRONMENT=local.)
 
 dashboard: ## Open Kubernetes dashboard (minikube)
 	@minikube dashboard
@@ -382,7 +421,7 @@ help: ## ❓ Show this help message
 
 .PHONY: check-docker check-kubectl check-minikube check-kustomize check-k8s-cluster \
 	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
-	minikube-start k8s-load-local-images k8s-deploy k8s-deploy-local k8s-wait k8s-local-url k8s-bootstrap-local dev-up k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
+	minikube-start k8s-load-local-images k8s-deploy k8s-deploy-local k8s-wait k8s-local-url k8s-bootstrap-local dev-up k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-port-forward-% k8s-port-forward-api-gateway k8s-port-forward-auth-service k8s-port-forward-dynamic-api k8s-port-forward-schema-service make-k8s-port-fordward-api-gateway make-k8s-port-fordward-auth-service make-k8s-port-fordward-dynamic-api make-k8s-port-fordward-schema-service k8s-scale k8s-restart k8s-rollback k8s-events \
 	random-tag k8s-update-images-random \
 	build-and-push deploy-staging deploy-production \
 	help
