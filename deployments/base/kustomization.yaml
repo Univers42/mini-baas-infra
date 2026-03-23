@@ -9,6 +9,7 @@ labels:
       app.mini-baas/version: v1
 
 resources:
+  - postgres/deployment.yaml
   - api-gateway/deployment.yaml
   - auth-service/deployment.yaml
   - dynamic-api/deployment.yaml

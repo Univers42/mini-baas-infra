@@ -8,6 +8,7 @@ resources:
 
 patches:
   - path: api-gateway-service-nodeport.yaml
+  - path: db-hosts-patch.yaml
 
 namePrefix: local-
 
