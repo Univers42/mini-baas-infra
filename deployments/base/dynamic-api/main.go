@@ -285,6 +285,75 @@ func parseLimit(r *http.Request) int {
     return parsed
 }
 
+func dynamicAPIOpenAPISpec() map[string]any {
+    return map[string]any{
+        "openapi": "3.0.3",
+        "info": map[string]any{
+            "title":       "dynamic-api",
+            "version":     "0.1.0",
+            "description": "Dynamic API service routes",
+        },
+        "servers": []map[string]any{{"url": "/"}},
+        "paths": map[string]any{
+            "/": map[string]any{
+                "get": map[string]any{
+                    "summary": "Root endpoint",
+                    "responses": map[string]any{
+                        "200": map[string]any{"description": "Service status message"},
+                    },
+                },
+            },
+            "/health": map[string]any{
+                "get": map[string]any{
+                    "summary": "Health check",
+                    "responses": map[string]any{
+                        "200": map[string]any{"description": "Healthy service"},
+                        "503": map[string]any{"description": "Service degraded"},
+                    },
+                },
+            },
+            "/records": map[string]any{
+                "get": map[string]any{
+                    "summary": "List records",
+                    "parameters": []map[string]any{
+                        {
+                            "name":     "limit",
+                            "in":       "query",
+                            "required": false,
+                            "schema": map[string]any{
+                                "type":    "integer",
+                                "minimum": 1,
+                                "maximum": 100,
+                            },
+                        },
+                    },
+                    "responses": map[string]any{
+                        "200": map[string]any{"description": "Records listed"},
+                    },
+                },
+                "post": map[string]any{
+                    "summary": "Create record",
+                    "requestBody": map[string]any{
+                        "required": true,
+                        "content": map[string]any{
+                            "application/json": map[string]any{
+                                "schema": map[string]any{
+                                    "type":                 "object",
+                                    "additionalProperties": true,
+                                },
+                            },
+                        },
+                    },
+                    "responses": map[string]any{
+                        "201": map[string]any{"description": "Record created"},
+                        "400": map[string]any{"description": "Invalid payload"},
+                    },
+                },
+            },
+        },
+    }
+}
+
 func main() {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
@@ -306,6 +375,34 @@ func main() {
     }
 
     mux := http.NewServeMux()
+	openapiSpec := dynamicAPIOpenAPISpec()
+
+	mux.HandleFunc("/openapi.json", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, openapiSpec)
+	})
+
+	mux.HandleFunc("/docs", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte(`<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>dynamic-api docs</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+        window.ui = SwaggerUIBundle({
+            url: '/openapi.json',
+            dom_id: '#swagger-ui'
+        });
+    </script>
+</body>
+</html>`))
+	})
 
     mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
         pingCtx, pingCancel := context.WithTimeout(context.Background(), 2*time.Second)
