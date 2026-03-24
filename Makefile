@@ -26,6 +26,20 @@ MINIKUBE_MEMORY ?= 8192
 MINIKUBE_DISK_SIZE ?= 30g
 RANDOM_TAG_PREFIX ?= dev
 SHOW_NEXT_STEPS ?= 1
+PREBUILT_MAKEFILE ?= Makefile.k8s-prebuilt
+PREBUILT_NAMESPACE ?= mini-baas-infra
+
+# Prebuilt infrastructure images
+KONG_IMAGE ?= kong:3.8
+TRINO_IMAGE ?= trinodb/trino
+GOTRUE_IMAGE ?= supabase/gotrue:v2.188.1
+POSTGREST_IMAGE ?= postgrest/postgrest:latest
+POSTGRES_IMAGE ?= postgres:16-alpine
+REALTIME_IMAGE ?= supabase/realtime
+MINIO_IMAGE ?= minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+REDIS_IMAGE ?= redis:7-alpine
+SUPAVISOR_IMAGE ?= supabase/supavisor:2.7.4
+STUDIO_IMAGE ?= supabase/studio
 
 define print-next
 @if [ "$(SHOW_NEXT_STEPS)" = "1" ]; then \
@@ -42,47 +56,83 @@ check-docker: ## Check if docker is installed
 
 docker-build: ## Build all service Docker images
 	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Building Docker images...$(NC)"
-	@docker build -t mini-baas/api-gateway:$(IMAGE_TAG) deployments/base/api-gateway
-	@docker build -t mini-baas/auth-service:$(IMAGE_TAG) deployments/base/auth-service
-	@docker build -t mini-baas/dynamic-api:$(IMAGE_TAG) deployments/base/dynamic-api
-	@docker build -t mini-baas/schema-service:$(IMAGE_TAG) deployments/base/schema-service
-	@echo -e "$(GREEN)✓ Docker images built$(NC)"
-	$(call print-next,Run make k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG) then make k8s-update-images ENVIRONMENT=local IMAGE_TAG=$(IMAGE_TAG).)
+	@echo -e "$(BLUE)Pulling and tagging prebuilt Docker images...$(NC)"
+	@docker pull $(KONG_IMAGE)
+	@docker pull $(TRINO_IMAGE)
+	@docker pull $(GOTRUE_IMAGE)
+	@docker pull $(POSTGREST_IMAGE)
+	@docker pull $(POSTGRES_IMAGE)
+	@docker pull $(REALTIME_IMAGE)
+	@docker pull $(MINIO_IMAGE)
+	@docker pull $(REDIS_IMAGE)
+	@docker pull $(SUPAVISOR_IMAGE)
+	@docker pull $(STUDIO_IMAGE)
+	@docker tag $(KONG_IMAGE) mini-baas/kong:$(IMAGE_TAG)
+	@docker tag $(TRINO_IMAGE) mini-baas/trino:$(IMAGE_TAG)
+	@docker tag $(GOTRUE_IMAGE) mini-baas/gotrue:$(IMAGE_TAG)
+	@docker tag $(POSTGREST_IMAGE) mini-baas/postgrest:$(IMAGE_TAG)
+	@docker tag $(POSTGRES_IMAGE) mini-baas/postgres:$(IMAGE_TAG)
+	@docker tag $(REALTIME_IMAGE) mini-baas/realtime:$(IMAGE_TAG)
+	@docker tag $(MINIO_IMAGE) mini-baas/minio:$(IMAGE_TAG)
+	@docker tag $(REDIS_IMAGE) mini-baas/redis:$(IMAGE_TAG)
+	@docker tag $(SUPAVISOR_IMAGE) mini-baas/supavisor:$(IMAGE_TAG)
+	@docker tag $(STUDIO_IMAGE) mini-baas/studio:$(IMAGE_TAG)
+	@echo -e "$(GREEN)✓ Prebuilt images ready$(NC)"
+	$(call print-next,Run make k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG) to load prebuilt images into minikube.)
 
 docker-build-no-cache: ## Build all Docker images without cache
-	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Building Docker images (no cache)...$(NC)"
-	@docker build --no-cache -t mini-baas/api-gateway:$(IMAGE_TAG) deployments/base/api-gateway
-	@docker build --no-cache -t mini-baas/auth-service:$(IMAGE_TAG) deployments/base/auth-service
-	@docker build --no-cache -t mini-baas/dynamic-api:$(IMAGE_TAG) deployments/base/dynamic-api
-	@docker build --no-cache -t mini-baas/schema-service:$(IMAGE_TAG) deployments/base/schema-service
-	@echo -e "$(GREEN)✓ Docker images built (no cache)$(NC)"
-	$(call print-next,Run make k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG) for a fresh local cluster image refresh.)
+	@$(MAKE) $(NO_PRINT) docker-clean
+	@$(MAKE) $(NO_PRINT) docker-build IMAGE_TAG=$(IMAGE_TAG)
 
-docker-build-%: ## Build specific service image (e.g., make docker-build-api-gateway)
+docker-build-%: ## Pull/tag one prebuilt image (e.g., make docker-build-kong)
 	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Building Docker image for $*...$(NC)"
-	@docker build -t mini-baas/$*:$(IMAGE_TAG) deployments/base/$*/
-	$(call print-next,Run make k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG) then make k8s-restart ENVIRONMENT=local SERVICE=$*.)
+	@echo -e "$(BLUE)Preparing prebuilt image for $*...$(NC)"
+	@case "$*" in \
+		kong) src="$(KONG_IMAGE)" ;; \
+		trino) src="$(TRINO_IMAGE)" ;; \
+		gotrue) src="$(GOTRUE_IMAGE)" ;; \
+		postgrest) src="$(POSTGREST_IMAGE)" ;; \
+		postgres) src="$(POSTGRES_IMAGE)" ;; \
+		realtime) src="$(REALTIME_IMAGE)" ;; \
+		minio) src="$(MINIO_IMAGE)" ;; \
+		redis) src="$(REDIS_IMAGE)" ;; \
+		supavisor) src="$(SUPAVISOR_IMAGE)" ;; \
+		studio) src="$(STUDIO_IMAGE)" ;; \
+		*) echo -e "$(RED)Unknown prebuilt image: $*$(NC)"; exit 1 ;; \
+	esac; \
+	docker pull "$$src"; \
+	docker tag "$$src" mini-baas/$*:$(IMAGE_TAG)
+	$(call print-next,Run make k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG).)
 
 docker-tag: ## Tag all images for registry (REGISTRY=myregistry.com make docker-tag)
 	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Tagging Docker images for registry: $(REGISTRY)$(NC)"
-	@docker tag mini-baas/api-gateway:$(IMAGE_TAG) $(REGISTRY)/api-gateway:$(IMAGE_TAG)
-	@docker tag mini-baas/auth-service:$(IMAGE_TAG) $(REGISTRY)/auth-service:$(IMAGE_TAG)
-	@docker tag mini-baas/dynamic-api:$(IMAGE_TAG) $(REGISTRY)/dynamic-api:$(IMAGE_TAG)
-	@docker tag mini-baas/schema-service:$(IMAGE_TAG) $(REGISTRY)/schema-service:$(IMAGE_TAG)
+	@echo -e "$(BLUE)Tagging prebuilt images for registry: $(REGISTRY)$(NC)"
+	@docker tag mini-baas/kong:$(IMAGE_TAG) $(REGISTRY)/kong:$(IMAGE_TAG)
+	@docker tag mini-baas/trino:$(IMAGE_TAG) $(REGISTRY)/trino:$(IMAGE_TAG)
+	@docker tag mini-baas/gotrue:$(IMAGE_TAG) $(REGISTRY)/gotrue:$(IMAGE_TAG)
+	@docker tag mini-baas/postgrest:$(IMAGE_TAG) $(REGISTRY)/postgrest:$(IMAGE_TAG)
+	@docker tag mini-baas/postgres:$(IMAGE_TAG) $(REGISTRY)/postgres:$(IMAGE_TAG)
+	@docker tag mini-baas/realtime:$(IMAGE_TAG) $(REGISTRY)/realtime:$(IMAGE_TAG)
+	@docker tag mini-baas/minio:$(IMAGE_TAG) $(REGISTRY)/minio:$(IMAGE_TAG)
+	@docker tag mini-baas/redis:$(IMAGE_TAG) $(REGISTRY)/redis:$(IMAGE_TAG)
+	@docker tag mini-baas/supavisor:$(IMAGE_TAG) $(REGISTRY)/supavisor:$(IMAGE_TAG)
+	@docker tag mini-baas/studio:$(IMAGE_TAG) $(REGISTRY)/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ Images tagged$(NC)"
 	$(call print-next,Run make docker-push REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
 
 docker-push: ## Push all tagged images to registry (REGISTRY=myregistry.com make docker-push)
 	@$(MAKE) $(NO_PRINT) docker-tag
 	@echo -e "$(BLUE)Pushing Docker images to $(REGISTRY)...$(NC)"
-	@docker push $(REGISTRY)/api-gateway:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/auth-service:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/dynamic-api:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/schema-service:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/kong:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/trino:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/gotrue:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/postgrest:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/postgres:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/realtime:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/minio:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/redis:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/supavisor:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ All images pushed$(NC)"
 	$(call print-next,Run make k8s-update-images ENVIRONMENT=local REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
 
@@ -134,11 +184,17 @@ check-k8s-cluster: ## Check if Kubernetes cluster is accessible
 k8s-load-local-images: ## Load local images into minikube
 	@$(MAKE) $(NO_PRINT) check-minikube
 	@$(MAKE) $(NO_PRINT) check-k8s-cluster
-	@echo -e "$(BLUE)Loading local Docker images into minikube...$(NC)"
-	@minikube image load mini-baas/api-gateway:$(IMAGE_TAG)
-	@minikube image load mini-baas/auth-service:$(IMAGE_TAG)
-	@minikube image load mini-baas/dynamic-api:$(IMAGE_TAG)
-	@minikube image load mini-baas/schema-service:$(IMAGE_TAG)
+	@echo -e "$(BLUE)Loading prebuilt images into minikube...$(NC)"
+	@minikube image load mini-baas/kong:$(IMAGE_TAG)
+	@minikube image load mini-baas/trino:$(IMAGE_TAG)
+	@minikube image load mini-baas/gotrue:$(IMAGE_TAG)
+	@minikube image load mini-baas/postgrest:$(IMAGE_TAG)
+	@minikube image load mini-baas/postgres:$(IMAGE_TAG)
+	@minikube image load mini-baas/realtime:$(IMAGE_TAG)
+	@minikube image load mini-baas/minio:$(IMAGE_TAG)
+	@minikube image load mini-baas/redis:$(IMAGE_TAG)
+	@minikube image load mini-baas/supavisor:$(IMAGE_TAG)
+	@minikube image load mini-baas/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ Local images loaded into minikube$(NC)"
 	$(call print-next,Run make k8s-update-images ENVIRONMENT=local IMAGE_TAG=$(IMAGE_TAG).)
 
@@ -214,14 +270,9 @@ k8s-refresh-local: ## Fast local refresh (new random tag, no infra re-apply)
 
 dev-up: ## Bootstrap once, then fast refresh with random image tags
 	@$(MAKE) $(NO_PRINT) minikube-start ENVIRONMENT=local
-	@if kubectl get deployment local-api-gateway -n $(NAMESPACE) >/dev/null 2>&1; then \
-		echo -e "$(BLUE)Detected existing local deployments. Using fast refresh path.$(NC)"; \
-		$(MAKE) $(NO_PRINT) k8s-refresh-local ENVIRONMENT=local NAMESPACE=$(NAMESPACE); \
-	else \
-		echo -e "$(YELLOW)No existing local deployments detected. Running full bootstrap once.$(NC)"; \
-		$(MAKE) $(NO_PRINT) k8s-bootstrap-local ENVIRONMENT=local NAMESPACE=$(NAMESPACE); \
-	fi
-	$(call print-next,Run make k8s-status to verify all local services.)
+	@echo -e "$(BLUE)Running prebuilt infrastructure bootstrap/refresh workflow...$(NC)"
+	@$(MAKE) $(NO_PRINT) -f $(PREBUILT_MAKEFILE) k8s-prebuilt-dev-up NAMESPACE=$(PREBUILT_NAMESPACE)
+	$(call print-next,Run make -f $(PREBUILT_MAKEFILE) k8s-prebuilt-local-url NAMESPACE=$(PREBUILT_NAMESPACE).)
 
 k8s-preview: ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
 	@$(MAKE) $(NO_PRINT) check-kustomize
@@ -427,9 +478,13 @@ deploy-production: ## Deprecated alias: local-only deploy
 	@$(MAKE) $(NO_PRINT) k8s-deploy ENVIRONMENT=local REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG)
 	$(call print-next,Verify local rollout with make k8s-wait ENVIRONMENT=local.)
 
-dashboard: ## Open Kubernetes dashboard (minikube)
-	@minikube dashboard
-	$(call print-next,Keep terminal open and monitor resources in the dashboard UI.)
+dashboard: ## Open Kubernetes dashboard for prebuilt infrastructure namespace
+	@$(MAKE) $(NO_PRINT) -f $(PREBUILT_MAKEFILE) k8s-prebuilt-dashboard NAMESPACE=$(PREBUILT_NAMESPACE)
+	$(call print-next,If the UI appears empty, switch dashboard namespace to $(PREBUILT_NAMESPACE).)
+
+dashboard-stop: ## Stop Kubernetes dashboard proxy started via Makefile rules
+	@$(MAKE) $(NO_PRINT) -f $(PREBUILT_MAKEFILE) k8s-prebuilt-dashboard-stop
+	$(call print-next,Restart dashboard with make dashboard.)
 
 help: ## ❓ Show this help message
 	@echo ""
@@ -445,5 +500,5 @@ help: ## ❓ Show this help message
 	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
 	minikube-start k8s-load-local-images k8s-deploy k8s-deploy-local k8s-wait k8s-local-url k8s-bootstrap-local dev-up k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-port-forward-% k8s-port-forward-api-gateway k8s-port-forward-auth-service k8s-port-forward-dynamic-api k8s-port-forward-schema-service make-k8s-port-fordward-api-gateway make-k8s-port-fordward-auth-service make-k8s-port-fordward-dynamic-api make-k8s-port-fordward-schema-service k8s-scale k8s-restart k8s-rollback k8s-events \
 	random-tag k8s-update-images-random \
-	build-and-push deploy-staging deploy-production \
+	build-and-push deploy-staging deploy-production dashboard-stop \
 	help
