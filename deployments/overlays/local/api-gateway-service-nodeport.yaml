@@ -10,3 +10,42 @@ spec:
     targetPort: 3000
     protocol: TCP
     nodePort: 30080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+    nodePort: 30081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dynamic-api
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+    nodePort: 30082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: schema-service
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 3001
+    targetPort: 3001
+    protocol: TCP
+    nodePort: 30083

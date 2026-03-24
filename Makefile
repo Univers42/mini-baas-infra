@@ -182,11 +182,15 @@ k8s-wait: ## Wait until service deployments are available
 	@echo -e "$(GREEN)✓ Rollouts complete$(NC)"
 	$(call print-next,Run make k8s-status to inspect pods and services.)
 
-k8s-local-url: ## Show local api-gateway URL
+k8s-local-url: ## Show local service URLs
 	@$(MAKE) $(NO_PRINT) check-minikube
-	@echo -e "$(BLUE)Local access URL:$(NC)"
-	@echo "  http://$$(minikube ip):30080/health"
-	$(call print-next,Open the same host with /docs to view Swagger UI.)
+	@ip="$$(minikube ip)"; \
+	echo -e "$(BLUE)Local service URLs:$(NC)"; \
+	echo "  api-gateway:   http://$$ip:30080/health"; \
+	echo "  auth-service:  http://$$ip:30081/health"; \
+	echo "  dynamic-api:   http://$$ip:30082/health"; \
+	echo "  schema-service:http://$$ip:30083/health"
+	$(call print-next,Use /docs on auth-service, dynamic-api, and schema-service for Swagger UIs.)
 
 k8s-bootstrap-local: ENVIRONMENT=local
 k8s-bootstrap-local: ## One-command local bootstrap (start minikube, build, deploy, wait)

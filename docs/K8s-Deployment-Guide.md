@@ -88,7 +88,11 @@ The deployment uses **kustomize overlays** for environment-specific configuratio
 - **base/**: Common manifests for all environments
 - **overlays/local/**: Local development patches (minikube-specific)
   - Adds `local-` namePrefix to resources
-  - Exposes api-gateway as NodePort (port 30080)
+  - Exposes custom services as NodePort for direct host testing:
+    - api-gateway: `30080`
+    - auth-service: `30081`
+    - dynamic-api: `30082`
+    - schema-service: `30083`
 - **overlays/staging/**: Staging environment configuration
 - **overlays/production/**: Production environment configuration
 
@@ -343,14 +347,17 @@ curl http://localhost:3000/health
 
 ### External Access via NodePort (Minikube Only)
 
-The local overlay exposes api-gateway as a NodePort service:
+The local overlay exposes custom services as NodePort services:
 
 ```bash
 # Get the minikube IP
 MINIKUBE_IP=$(minikube ip)
 
-# Access api-gateway externally
+# Access services externally
 curl http://$MINIKUBE_IP:30080/health
+curl http://$MINIKUBE_IP:30081/health
+curl http://$MINIKUBE_IP:30082/health
+curl http://$MINIKUBE_IP:30083/health
 
 # View all NodePort services
 kubectl get svc -o wide | grep NodePort
@@ -559,6 +566,9 @@ kubectl rollout status deploy/realtime
 # 11. Verify access
 MINIKUBE_IP=$(minikube ip)
 curl http://$MINIKUBE_IP:30080/health
+curl http://$MINIKUBE_IP:30081/health
+curl http://$MINIKUBE_IP:30082/health
+curl http://$MINIKUBE_IP:30083/health
 ```
 
 ## Additional Resources
