@@ -201,8 +201,26 @@ k8s-bootstrap-local: ## One-command local bootstrap (start minikube, build, depl
 	@$(MAKE) $(NO_PRINT) k8s-local-url ENVIRONMENT=$(ENVIRONMENT)
 	$(call print-next,Run make k8s-status then make k8s-logs ENVIRONMENT=local SERVICE=api-gateway.)
 
-dev-up: ## Alias for one-command local bootstrap
-	@$(MAKE) $(NO_PRINT) k8s-bootstrap-local ENVIRONMENT=local
+k8s-refresh-local: ENVIRONMENT=local
+k8s-refresh-local: ## Fast local refresh (new random tag, no infra re-apply)
+	@$(MAKE) $(NO_PRINT) check-kubectl
+	@$(MAKE) $(NO_PRINT) check-k8s-cluster
+	@echo -e "$(BLUE)Refreshing local app services with a new random image tag...$(NC)"
+	@$(MAKE) $(NO_PRINT) k8s-update-images-random ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE) REGISTRY=$(REGISTRY) RANDOM_TAG_PREFIX=$(RANDOM_TAG_PREFIX)
+	@$(MAKE) $(NO_PRINT) k8s-wait ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+	@echo -e "$(GREEN)✓ Local service refresh complete$(NC)"
+	@$(MAKE) $(NO_PRINT) k8s-local-url ENVIRONMENT=$(ENVIRONMENT)
+	$(call print-next,Run make k8s-status to verify the rollout and then test service endpoints.)
+
+dev-up: ## Bootstrap once, then fast refresh with random image tags
+	@$(MAKE) $(NO_PRINT) minikube-start ENVIRONMENT=local
+	@if kubectl get deployment local-api-gateway -n $(NAMESPACE) >/dev/null 2>&1; then \
+		echo -e "$(BLUE)Detected existing local deployments. Using fast refresh path.$(NC)"; \
+		$(MAKE) $(NO_PRINT) k8s-refresh-local ENVIRONMENT=local NAMESPACE=$(NAMESPACE); \
+	else \
+		echo -e "$(YELLOW)No existing local deployments detected. Running full bootstrap once.$(NC)"; \
+		$(MAKE) $(NO_PRINT) k8s-bootstrap-local ENVIRONMENT=local NAMESPACE=$(NAMESPACE); \
+	fi
 	$(call print-next,Run make k8s-status to verify all local services.)
 
 k8s-preview: ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
