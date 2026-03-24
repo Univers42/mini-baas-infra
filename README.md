@@ -32,30 +32,36 @@ It centralizes environment contracts, service deployment conventions, and delive
 
 This repository now includes a root `docker-compose.yml` that mirrors the service images used in `Makefile`:
 
+- `kong:3.8`
 - `trinodb/trino`
 - `supabase/gotrue:v2.188.1`
-- `postgrest/postgrest:devel`
+- `postgrest/postgrest:latest`
 - `supabase/realtime`
+- `postgres:16-alpine`
 - `minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1`
-- `redis:trixie`
+- `redis:7-alpine`
 - `supabase/supavisor:2.7.4`
 - `supabase/studio`
 
+The Compose MVP orchestrates those prebuilt services on one network, with Kong as the single HTTP entrypoint.
+
+### Kong Routes In MVP
+
+- `/auth` -> GoTrue
+- `/rest` -> PostgREST
+- `/realtime` -> Realtime
+- `/sql` -> Trino
+- `/studio` -> Supabase Studio
+
 ### Start and Stop
 
-Use Make targets:
-
-```bash
-make compose-up
-make compose-ps
-make compose-logs
-make compose-down
-```
-
-Or run Compose directly:
+Use Docker Compose commands:
 
 ```bash
 docker compose up -d
+docker compose ps
+docker compose logs -f
+docker compose down
 ```
 
 ### Notes
@@ -63,3 +69,19 @@ docker compose up -d
 - Some services (GoTrue, PostgREST, Realtime, Supavisor, Studio) expect external dependencies, especially PostgreSQL.
 - The compose file ships with default placeholder environment values so the stack can be bootstrapped quickly.
 - For a fully functional setup, provide real values via shell environment variables or a `.env` file.
+
+## Kubernetes Management For Prebuilt Images
+
+Use the dedicated makefile to manage the prebuilt stack in Kubernetes:
+
+```bash
+make -f Makefile.k8s-prebuilt k8s-prebuilt-apply
+make -f Makefile.k8s-prebuilt k8s-prebuilt-rollout
+make -f Makefile.k8s-prebuilt k8s-prebuilt-status
+```
+
+For local gateway testing:
+
+```bash
+make -f Makefile.k8s-prebuilt k8s-prebuilt-port-forward SERVICE=kong LOCAL_PORT=8000 REMOTE_PORT=8000
+```

@@ -1,0 +1,43 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: gotrue
+    url: http://gotrue:9999
+    routes:
+      - name: gotrue-route
+        paths:
+          - /auth
+        strip_path: true
+
+  - name: postgrest
+    url: http://postgrest:3000
+    routes:
+      - name: postgrest-route
+        paths:
+          - /rest
+        strip_path: true
+
+  - name: realtime
+    url: http://realtime:4000
+    routes:
+      - name: realtime-route
+        paths:
+          - /realtime
+        strip_path: true
+
+  - name: trino
+    url: http://trino:8080
+    routes:
+      - name: trino-route
+        paths:
+          - /sql
+        strip_path: true
+
+  - name: studio
+    url: http://studio:3000
+    routes:
+      - name: studio-route
+        paths:
+          - /studio
+        strip_path: true

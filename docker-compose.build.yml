@@ -84,6 +84,38 @@ services:
     restart: unless-stopped
 
   # Infrastructure services (prebuilt images)
+  kong:
+    image: kong:3.8
+    pull_policy: if_not_present
+    container_name: mini-baas-kong
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    volumes:
+      - ./deployments/base/kong/kong.yml:/etc/kong/kong.yml:ro
+    depends_on:
+      gotrue:
+        condition: service_started
+      postgrest:
+        condition: service_started
+      realtime:
+        condition: service_started
+      studio:
+        condition: service_started
+      trino:
+        condition: service_started
+    networks:
+      - mini-baas
+    restart: unless-stopped
+
   trino:
     image: trinodb/trino
     pull_policy: if_not_present
@@ -156,7 +188,7 @@ services:
     restart: unless-stopped
 
   postgrest:
-    image: postgrest/postgrest:devel
+    image: postgrest/postgrest:latest
     pull_policy: if_not_present
     container_name: mini-baas-postgrest
     ports:

@@ -1,5 +1,4 @@
 name: mini-baas
-version: '3.9'
 
 # todo: add description to services
 # 
@@ -14,6 +13,37 @@ version: '3.9'
 #   docker compose build --no-cache [service-name]
 
 services:
+  kong:
+    image: kong:3.8
+    container_name: mini-baas-kong
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    volumes:
+      - ./deployments/base/kong/kong.yml:/etc/kong/kong.yml:ro
+    depends_on:
+      gotrue:
+        condition: service_started
+      postgrest:
+        condition: service_started
+      realtime:
+        condition: service_started
+      studio:
+        condition: service_started
+      trino:
+        condition: service_started
+    networks:
+      - mini-baas
+    restart: unless-stopped
+
   trino:
     image: trinodb/trino
     container_name: mini-baas-trino
@@ -82,10 +112,10 @@ services:
     restart: unless-stopped
 
   postgrest:
-    image: postgrest/postgrest:devel
+    image: postgrest/postgrest:latest
     container_name: mini-baas-postgrest
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       PGRST_DB_URI: ${PGRST_DB_URI:-postgres://postgres:postgres@postgres:5432/postgres}
       PGRST_DB_SCHEMA: ${PGRST_DB_SCHEMA:-public}
@@ -150,7 +180,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:trixie
+    image: redis:7-alpine
     container_name: mini-baas-redis
     ports:
       - "6379:6379"
