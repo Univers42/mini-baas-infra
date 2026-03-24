@@ -28,6 +28,12 @@ spec:
           value: "production"
         - name: PORT
           value: "3001"
+        - name: MONGODB_URI
+          value: "mongodb://mongo:27017"
+        - name: MONGODB_DATABASE
+          value: "mini_baas"
+        - name: MONGODB_COLLECTION
+          value: "schema_catalog"
         resources:
           requests:
             memory: "128Mi"

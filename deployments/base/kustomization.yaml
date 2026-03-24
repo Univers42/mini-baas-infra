@@ -10,6 +10,7 @@ labels:
 
 resources:
   - postgres/deployment.yaml
+  - mongo/deployment.yaml
   - api-gateway/deployment.yaml
   - auth-service/deployment.yaml
   - dynamic-api/deployment.yaml

@@ -79,7 +79,7 @@ services:
     networks:
       - mini-baas
     depends_on:
-      postgres:
+      mongo:
         condition: service_healthy
     restart: unless-stopped
 
