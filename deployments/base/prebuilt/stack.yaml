@@ -12,7 +12,7 @@ stringData:
   DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
   PGRST_DB_URI: postgres://postgres:postgres@postgres:5432/postgres
   JWT_SECRET: super-secret-jwt-token-with-at-least-32-chars
-  SECRET_KEY_BASE: super-secret-key-base
+  SECRET_KEY_BASE: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
   METRICS_JWT_SECRET: super-secret-jwt-token-with-at-least-32-chars
   ANON_KEY: anon-key-placeholder
   SERVICE_ROLE_KEY: service-key-placeholder
@@ -647,10 +647,12 @@ metadata:
 spec:
   selector:
     app: studio
+  type: NodePort
   ports:
     - name: http
       port: 3000
       targetPort: 3000
+      nodePort: 30300
 ---
 apiVersion: apps/v1
 kind: Deployment

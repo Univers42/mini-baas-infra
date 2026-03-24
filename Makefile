@@ -275,6 +275,7 @@ dev-up: ## Bootstrap once, then fast refresh with random image tags
 	@echo -e "$(BLUE)Running prebuilt infrastructure bootstrap/refresh workflow...$(NC)"
 	@kubectl get namespace $(PREBUILT_NAMESPACE) >/dev/null 2>&1 || kubectl create namespace $(PREBUILT_NAMESPACE)
 	@kubectl apply -f $(PREBUILT_MANIFEST) -n $(PREBUILT_NAMESPACE)
+	@kubectl rollout restart deployment/realtime -n $(PREBUILT_NAMESPACE) >/dev/null 2>&1 || true
 	@echo -e "$(BLUE)Waiting for prebuilt deployments rollout...$(NC)"
 	@for dep in postgres redis minio trino gotrue postgrest realtime supavisor studio kong; do \
 		echo "- deployment/$$dep"; \
@@ -299,24 +300,28 @@ dev-up: ## Bootstrap once, then fast refresh with random image tags
 	[ -n "$$redis_ip" ] && echo "  redis:            redis://$$redis_ip:6379"; \
 	[ -n "$$minio_ip" ] && echo "  minio api:        http://$$minio_ip:9000"; \
 	[ -n "$$minio_ip" ] && echo "  minio console:    http://$$minio_ip:9001"; \
-	[ -n "$$trino_ip" ] && echo "  trino:            http://$$trino_ip:8080"; \
+	[ -n "$$trino_ip" ] && echo "  trino info:       http://$$trino_ip:8080/v1/info"; \
 	[ -n "$$gotrue_ip" ] && echo "  gotrue health:    http://$$gotrue_ip:9999/health"; \
 	[ -n "$$postgrest_ip" ] && echo "  postgrest:        http://$$postgrest_ip:3000"; \
-	[ -n "$$realtime_ip" ] && echo "  realtime health:  http://$$realtime_ip:4000/health"; \
+	[ -n "$$realtime_ip" ] && echo "  realtime:         http://$$realtime_ip:4000/"; \
 	[ -n "$$supavisor_ip" ] && echo "  supavisor:        postgres://postgres:postgres@$$supavisor_ip:6543/postgres"; \
-	[ -n "$$studio_ip" ] && echo "  studio:           http://$$studio_ip:3000"; \
+	[ -n "$$studio_ip" ] && echo "  studio:           http://$$studio_ip:3000/"; \
 	[ -n "$$kong_ip" ] && echo "  kong gateway:     http://$$kong_ip:8000"
+	@echo ""
+	@echo -e "$(YELLOW)Note: ClusterIP endpoints above are not directly reachable from your laptop; use them from inside pods.$(NC)"
 	@echo ""
 	@echo -e "$(BLUE)Local machine endpoints (reachable from your host):$(NC)"
 	@ns="$(PREBUILT_NAMESPACE)"; \
 	ip="$$(minikube ip 2>/dev/null || true)"; \
 	kong_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8000)].nodePort}' 2>/dev/null || true)"; \
+	studio_port="$$(kubectl get svc studio -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==3000)].nodePort}' 2>/dev/null || true)"; \
 	if [ -n "$$ip" ] && [ -n "$$kong_port" ]; then \
-		echo "  gateway:          http://$$ip:$$kong_port/"; \
 		echo "  auth health:      http://$$ip:$$kong_port/auth/health"; \
 		echo "  rest root:        http://$$ip:$$kong_port/rest/"; \
-		echo "  realtime health:  http://$$ip:$$kong_port/realtime/health"; \
-		echo "  studio ui:        http://$$ip:$$kong_port/studio"; \
+		echo "  realtime:         http://$$ip:$$kong_port/realtime/"; \
+		if [ -n "$$studio_port" ]; then \
+			echo "  studio ui:        http://$$ip:$$studio_port/project/default"; \
+		fi; \
 	else \
 		echo "  (could not resolve minikube IP or Kong NodePort)"; \
 	fi
