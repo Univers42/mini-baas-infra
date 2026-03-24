@@ -26,8 +26,10 @@ MINIKUBE_MEMORY ?= 8192
 MINIKUBE_DISK_SIZE ?= 30g
 RANDOM_TAG_PREFIX ?= dev
 SHOW_NEXT_STEPS ?= 1
-PREBUILT_MAKEFILE ?= Makefile.k8s-prebuilt
 PREBUILT_NAMESPACE ?= mini-baas-infra
+PREBUILT_MANIFEST ?= deployments/base/prebuilt/stack.yaml
+DASHBOARD_PID_FILE ?= /tmp/minikube-dashboard.pid
+DASHBOARD_URL_FILE ?= /tmp/minikube-dashboard.url
 
 # Prebuilt infrastructure images
 KONG_IMAGE ?= kong:3.8
@@ -271,8 +273,71 @@ k8s-refresh-local: ## Fast local refresh (new random tag, no infra re-apply)
 dev-up: ## Bootstrap once, then fast refresh with random image tags
 	@$(MAKE) $(NO_PRINT) minikube-start ENVIRONMENT=local
 	@echo -e "$(BLUE)Running prebuilt infrastructure bootstrap/refresh workflow...$(NC)"
-	@$(MAKE) $(NO_PRINT) -f $(PREBUILT_MAKEFILE) k8s-prebuilt-dev-up NAMESPACE=$(PREBUILT_NAMESPACE)
-	$(call print-next,Run make -f $(PREBUILT_MAKEFILE) k8s-prebuilt-local-url NAMESPACE=$(PREBUILT_NAMESPACE).)
+	@kubectl get namespace $(PREBUILT_NAMESPACE) >/dev/null 2>&1 || kubectl create namespace $(PREBUILT_NAMESPACE)
+	@kubectl apply -f $(PREBUILT_MANIFEST) -n $(PREBUILT_NAMESPACE)
+	@echo -e "$(BLUE)Waiting for prebuilt deployments rollout...$(NC)"
+	@for dep in postgres redis minio trino gotrue postgrest realtime supavisor studio kong; do \
+		echo "- deployment/$$dep"; \
+		kubectl rollout status deployment/$$dep -n $(PREBUILT_NAMESPACE) --timeout=$(K8S_WAIT_TIMEOUT); \
+	done
+	@echo -e "$(GREEN)✓ Prebuilt infrastructure is ready$(NC)"
+	@kubectl get deployments,pods,services -n $(PREBUILT_NAMESPACE) -l app.kubernetes.io/part-of=mini-baas-prebuilt
+	@echo ""
+	@echo -e "$(BLUE)Internal Cluster IP Endpoints (reachable from pods inside the cluster):$(NC)"
+	@ns="$(PREBUILT_NAMESPACE)"; \
+	postgres_ip="$$(kubectl get svc postgres -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	redis_ip="$$(kubectl get svc redis -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	minio_ip="$$(kubectl get svc minio -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	trino_ip="$$(kubectl get svc trino -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	gotrue_ip="$$(kubectl get svc gotrue -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	postgrest_ip="$$(kubectl get svc postgrest -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	realtime_ip="$$(kubectl get svc realtime -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	supavisor_ip="$$(kubectl get svc supavisor -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	studio_ip="$$(kubectl get svc studio -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	kong_ip="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"; \
+	[ -n "$$postgres_ip" ] && echo "  postgres:         postgres://postgres:postgres@$$postgres_ip:5432/postgres"; \
+	[ -n "$$redis_ip" ] && echo "  redis:            redis://$$redis_ip:6379"; \
+	[ -n "$$minio_ip" ] && echo "  minio api:        http://$$minio_ip:9000"; \
+	[ -n "$$minio_ip" ] && echo "  minio console:    http://$$minio_ip:9001"; \
+	[ -n "$$trino_ip" ] && echo "  trino:            http://$$trino_ip:8080"; \
+	[ -n "$$gotrue_ip" ] && echo "  gotrue health:    http://$$gotrue_ip:9999/health"; \
+	[ -n "$$postgrest_ip" ] && echo "  postgrest:        http://$$postgrest_ip:3000"; \
+	[ -n "$$realtime_ip" ] && echo "  realtime health:  http://$$realtime_ip:4000/health"; \
+	[ -n "$$supavisor_ip" ] && echo "  supavisor:        postgres://postgres:postgres@$$supavisor_ip:6543/postgres"; \
+	[ -n "$$studio_ip" ] && echo "  studio:           http://$$studio_ip:3000"; \
+	[ -n "$$kong_ip" ] && echo "  kong gateway:     http://$$kong_ip:8000"
+	@echo ""
+	@echo -e "$(BLUE)Local machine endpoints (reachable from your host):$(NC)"
+	@ns="$(PREBUILT_NAMESPACE)"; \
+	ip="$$(minikube ip 2>/dev/null || true)"; \
+	kong_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8000)].nodePort}' 2>/dev/null || true)"; \
+	if [ -n "$$ip" ] && [ -n "$$kong_port" ]; then \
+		echo "  gateway:          http://$$ip:$$kong_port/"; \
+		echo "  auth health:      http://$$ip:$$kong_port/auth/health"; \
+		echo "  rest root:        http://$$ip:$$kong_port/rest/"; \
+		echo "  realtime health:  http://$$ip:$$kong_port/realtime/health"; \
+		echo "  studio ui:        http://$$ip:$$kong_port/studio"; \
+	else \
+		echo "  (could not resolve minikube IP or Kong NodePort)"; \
+	fi
+	@echo ""
+	$(call print-next,Run make k8s-prebuilt-local-url PREBUILT_NAMESPACE=$(PREBUILT_NAMESPACE).)
+
+k8s-prebuilt-local-url: ## Show prebuilt service URLs
+	@$(MAKE) $(NO_PRINT) check-minikube
+	@ns="$(PREBUILT_NAMESPACE)"; \
+	ip="$$(minikube ip)"; \
+	kong_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8000)].nodePort}')"; \
+	if [ -z "$$kong_port" ]; then \
+		echo -e "$(RED)✗ Could not find Kong NodePort in namespace '$$ns'$(NC)"; \
+		exit 1; \
+	fi; \
+	echo -e "$(BLUE)Prebuilt endpoints (namespace: $$ns):$(NC)"; \
+	echo "  gateway:           http://$$ip:$$kong_port/"; \
+	echo "  auth health:       http://$$ip:$$kong_port/auth/health"; \
+	echo "  rest root:         http://$$ip:$$kong_port/rest/"; \
+	echo "  realtime health:   http://$$ip:$$kong_port/realtime/health"; \
+	echo "  studio ui:         http://$$ip:$$kong_port/studio"
 
 k8s-preview: ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
 	@$(MAKE) $(NO_PRINT) check-kustomize
@@ -363,35 +428,60 @@ k8s-describe: ## Describe a service deployment (SERVICE=api-gateway make k8s-des
 	@kubectl describe deployment $(SERVICE) -n $(NAMESPACE) || echo "Deployment not found"
 	$(call print-next,If needed run make k8s-restart ENVIRONMENT=$(ENVIRONMENT) SERVICE=$(SERVICE).)
 
-k8s-port-forward: ## Port forward to a service (SERVICE=api-gateway PORT=3000 make k8s-port-forward)
+k8s-port-forward: ## Port forward to a prebuilt service (SERVICE=kong PORT=8000 make k8s-port-forward)
 	@$(MAKE) $(NO_PRINT) check-kubectl
 	@svc="$(SERVICE)"; \
 	if [ -z "$$svc" ]; then \
-		svc="api-gateway"; \
+		svc="kong"; \
 	fi; \
-	if [ "$(ENVIRONMENT)" = "local" ] && [[ "$$svc" != local-* ]]; then \
-		svc="local-$$svc"; \
-	fi; \
+	ns="$(PREBUILT_NAMESPACE)"; \
 	port="$(PORT)"; \
-	kubectl get svc "$$svc" -n $(NAMESPACE) >/dev/null 2>&1 || { \
-		echo -e "$(RED)✗ Service '$$svc' not found in namespace '$(NAMESPACE)'$(NC)"; \
-		echo -e "$(YELLOW)Available services:$(NC)"; \
-		kubectl get svc -n $(NAMESPACE) -o custom-columns=NAME:.metadata.name,PORT:.spec.ports[0].port --no-headers || true; \
+	kubectl get svc "$$svc" -n "$$ns" >/dev/null 2>&1 || { \
+		echo -e "$(RED)✗ Service '$$svc' not found in namespace '$$ns'$(NC)"; \
+		echo -e "$(YELLOW)Available services in $$ns:$(NC)"; \
+		kubectl get svc -n "$$ns" -o custom-columns=NAME:.metadata.name,PORT:.spec.ports[0].port --no-headers || true; \
+		echo ""; \
+		echo -e "$(CYAN)Prebuilt services: postgres redis minio trino gotrue postgrest realtime supavisor studio kong$(NC)"; \
 		exit 1; \
 	}; \
 	if [ -z "$$port" ]; then \
-		port="$$(kubectl get svc "$$svc" -n $(NAMESPACE) -o jsonpath='{.spec.ports[0].port}')"; \
+		port="$$(kubectl get svc "$$svc" -n "$$ns" -o jsonpath='{.spec.ports[0].port}')"; \
 	fi; \
 	if [ -z "$$port" ]; then \
 		echo -e "$(RED)✗ Could not determine a port for service '$$svc'$(NC)"; \
 		exit 1; \
 	fi; \
-	echo -e "$(BLUE)Port forwarding $$svc to localhost:$$port$(NC)"; \
-	kubectl port-forward -n $(NAMESPACE) svc/$$svc $$port:$$port
+	echo -e "$(CYAN)Quick test endpoints:$(NC)"; \
+	case "$$svc" in \
+		kong) \
+			echo "  - Gateway:        http://localhost:$$port/"; \
+			echo "  - Auth health:    http://localhost:$$port/auth/health"; \
+			echo "  - REST root:      http://localhost:$$port/rest/"; \
+			echo "  - Realtime health:http://localhost:$$port/realtime/health"; \
+			echo "  - Studio UI:      http://localhost:$$port/studio"; \
+			;; \
+		studio) \
+			echo "  - Studio UI:      http://localhost:$$port/"; \
+			;; \
+		gotrue) \
+			echo "  - Auth health:    http://localhost:$$port/health"; \
+			;; \
+		postgrest) \
+			echo "  - REST root:      http://localhost:$$port/"; \
+			;; \
+		realtime) \
+			echo "  - Realtime health:http://localhost:$$port/health"; \
+			;; \
+		*) \
+			echo "  - Endpoint:       http://localhost:$$port/"; \
+			;; \
+	esac; \
+	echo -e "$(BLUE)Port forwarding $$svc to localhost:$$port in namespace $$ns$(NC)"; \
+	kubectl port-forward -n "$$ns" svc/$$svc $$port:$$port
 	$(call print-next,Open http://localhost:<port>/docs where <port> is the forwarded local port.)
 
-k8s-port-forward-%: ## Port forward one specific service (e.g., make k8s-port-forward-auth-service)
-	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=$* PORT=$(PORT) ENVIRONMENT=$(ENVIRONMENT) NAMESPACE=$(NAMESPACE)
+k8s-port-forward-%: ## Port forward one specific prebuilt service (e.g., make k8s-port-forward-kong)
+	@$(MAKE) $(NO_PRINT) k8s-port-forward SERVICE=$* PORT=$(PORT) PREBUILT_NAMESPACE=$(PREBUILT_NAMESPACE)
 	$(call print-next,Stop forwarding with Ctrl+C when done.)
 
 k8s-port-forward-api-gateway: ## Port forward only api-gateway
@@ -479,12 +569,57 @@ deploy-production: ## Deprecated alias: local-only deploy
 	$(call print-next,Verify local rollout with make k8s-wait ENVIRONMENT=local.)
 
 dashboard: ## Open Kubernetes dashboard for prebuilt infrastructure namespace
-	@$(MAKE) $(NO_PRINT) -f $(PREBUILT_MAKEFILE) k8s-prebuilt-dashboard NAMESPACE=$(PREBUILT_NAMESPACE)
-	$(call print-next,If the UI appears empty, switch dashboard namespace to $(PREBUILT_NAMESPACE).)
+	@$(MAKE) $(NO_PRINT) check-minikube
+	@minikube dashboard || { echo -e "$(RED)✗ Failed to start dashboard$(NC)"; exit 1; }
+# 	@pid_file="$(DASHBOARD_PID_FILE)"; \
+# 	url_file="$(DASHBOARD_URL_FILE)"; \
+# 	if [ -f "$$pid_file" ] && kill -0 "$$(cat "$$pid_file")" >/dev/null 2>&1; then \
+# 		dashboard_url="$$(grep -Eo 'https?://[^[:space:]]+' "$$url_file" 2>/dev/null | tail -n1 || true)"; \
+# 		echo -e "$(GREEN)✓ Reusing dashboard proxy (PID $$(cat "$$pid_file"))$(NC)"; \
+# 	else \
+# 		rm -f "$$pid_file" "$$url_file"; \
+# 		nohup minikube dashboard --url >"$$url_file" 2>/dev/null & echo $$! > "$$pid_file"; \
+# 		echo -e "$(BLUE)Starting dashboard proxy...$(NC)"; \
+# 		for i in $$(seq 1 45); do \
+# 			if [ -s "$$url_file" ]; then \
+# 				dashboard_url="$$(grep -Eo 'https?://[^[:space:]]+' "$$url_file" 2>/dev/null | tail -n1 || true)"; \
+# 				if [ -n "$$dashboard_url" ]; then \
+# 				break; \
+# 				fi; \
+# 			fi; \
+# 			sleep 1; \
+# 		done; \
+# 	fi; \
+# 	if [ -z "$$dashboard_url" ]; then \
+# 		echo -e "$(RED)✗ Failed to retrieve dashboard URL$(NC)"; \
+# 		exit 1; \
+# 	fi; \
+# 	echo -e "$(GREEN)Dashboard URL: $$dashboard_url$(NC)"; \
+# 	echo -e "$(YELLOW)In dashboard, switch namespace to '$(PREBUILT_NAMESPACE)' to view prebuilt services.$(NC)"; \
+# 	if command -v xdg-open >/dev/null 2>&1; then \
+# 		xdg-open "$$dashboard_url" >/dev/null 2>&1 || true; \
+# 	elif command -v open >/dev/null 2>&1; then \
+# 		open "$$dashboard_url" >/dev/null 2>&1 || true; \
+# 	fi
+	$(call print-next,If the UI appears empty then switch dashboard namespace to $(PREBUILT_NAMESPACE).)
 
 dashboard-stop: ## Stop Kubernetes dashboard proxy started via Makefile rules
-	@$(MAKE) $(NO_PRINT) -f $(PREBUILT_MAKEFILE) k8s-prebuilt-dashboard-stop
+	@pid_file="$(DASHBOARD_PID_FILE)"; \
+	if [ -f "$$pid_file" ] && kill -0 "$$(cat "$$pid_file")" >/dev/null 2>&1; then \
+		kill "$$(cat "$$pid_file")" >/dev/null 2>&1 || true; \
+		echo -e "$(GREEN)✓ Stopped dashboard proxy (PID $$(cat "$$pid_file"))$(NC)"; \
+	else \
+		echo -e "$(YELLOW)No running dashboard proxy found$(NC)"; \
+	fi; \
+	rm -f "$(DASHBOARD_PID_FILE)" "$(DASHBOARD_URL_FILE)"
 	$(call print-next,Restart dashboard with make dashboard.)
+
+fclean: ## Clean all built artifacts (images, deployments)
+	@$(MAKE) $(NO_PRINT) docker-clean
+	@$(MAKE) $(NO_PRINT) k8s-delete ENVIRONMENT=local
+	@minikube delete --all || echo "No minikube clusters to delete"
+	@echo -e "$(GREEN)✓ Full clean complete$(NC)"
+	$(call print-next,Rebuild and redeploy with make k8s-deploy-local.)
 
 help: ## ❓ Show this help message
 	@echo ""
@@ -501,4 +636,5 @@ help: ## ❓ Show this help message
 	minikube-start k8s-load-local-images k8s-deploy k8s-deploy-local k8s-wait k8s-local-url k8s-bootstrap-local dev-up k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-port-forward-% k8s-port-forward-api-gateway k8s-port-forward-auth-service k8s-port-forward-dynamic-api k8s-port-forward-schema-service make-k8s-port-fordward-api-gateway make-k8s-port-fordward-auth-service make-k8s-port-fordward-dynamic-api make-k8s-port-fordward-schema-service k8s-scale k8s-restart k8s-rollback k8s-events \
 	random-tag k8s-update-images-random \
 	build-and-push deploy-staging deploy-production dashboard-stop \
+	dashboard \
 	help
