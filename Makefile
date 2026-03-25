@@ -250,6 +250,29 @@ k8s-local-url: ## Show local service URLs
 	echo "  schema-service:http://$$ip:30083/health"
 	$(call print-next,Use /docs on auth-service, dynamic-api, and schema-service for Swagger UIs.)
 
+k8s-probe-internal: ## Probe internal service reachability from inside the cluster
+	@$(MAKE) $(NO_PRINT) check-kubectl
+	@$(MAKE) $(NO_PRINT) check-k8s-cluster
+	@echo -e "$(BLUE)Probing internal service endpoints from an in-cluster pod...$(NC)"
+	@kubectl run mini-baas-internal-probe --rm -i --restart=Never -n $(PREBUILT_NAMESPACE) --image=curlimages/curl:8.8.0 --command -- sh -lc '\
+	set -e; \
+	echo "- gotrue:   $$(curl -sS -o /dev/null -w %{http_code} http://gotrue:9999/health)"; \
+	echo "- postgrest:$$(curl -sS -o /dev/null -w %{http_code} http://postgrest:3000/)"; \
+	echo "- realtime: $$(curl -sS -o /dev/null -w %{http_code} http://realtime:4000/)"; \
+	echo "- trino:    $$(curl -sS -o /dev/null -w %{http_code} http://trino:8080/v1/info)"; \
+	echo "- minio:    $$(curl -sS -o /dev/null -w %{http_code} http://minio:9000/minio/health/live)"; \
+	echo "- kong-http:$$(curl -sS -o /dev/null -w %{http_code} http://kong:8000/auth/health)"; \
+	echo "- kong-https:$$(curl -ksS -o /dev/null -w %{http_code} https://kong:8443/auth/health)"; \
+	echo "- kong-sql-http:$$(curl -sS -o /dev/null -w %{http_code} http://kong:8000/sql/v1/info)"; \
+	echo "- kong-sql-https:$$(curl -ksS -o /dev/null -w %{http_code} https://kong:8443/sql/v1/info)"; \
+	echo "- kong-storage-http:$$(curl -sS -o /dev/null -w %{http_code} http://kong:8000/storage/minio/health/live)"; \
+	echo "- kong-storage-https:$$(curl -ksS -o /dev/null -w %{http_code} https://kong:8443/storage/minio/health/live)"; \
+	echo "- studio:   $$(curl -sS -o /dev/null -w %{http_code} http://studio:3000/)"; \
+	echo "Note: Kong TLS uses a self-signed/default cert for local testing; use curl -k for HTTPS checks."\
+	'
+	@echo -e "$(GREEN)✓ Internal probe completed$(NC)"
+	$(call print-next,If any status is non-2xx/3xx, run make k8s-logs ENVIRONMENT=local SERVICE=<service>.)
+
 k8s-bootstrap-local: ENVIRONMENT=local
 k8s-bootstrap-local: ## One-command local bootstrap (start minikube, build, deploy, wait)
 	@$(MAKE) $(NO_PRINT) minikube-start ENVIRONMENT=$(ENVIRONMENT)
@@ -306,7 +329,10 @@ dev-up: ## Bootstrap once, then fast refresh with random image tags
 	[ -n "$$realtime_ip" ] && echo "  realtime:         http://$$realtime_ip:4000/"; \
 	[ -n "$$supavisor_ip" ] && echo "  supavisor:        postgres://postgres:postgres@$$supavisor_ip:6543/postgres"; \
 	[ -n "$$studio_ip" ] && echo "  studio:           http://$$studio_ip:3000/"; \
-	[ -n "$$kong_ip" ] && echo "  kong gateway:     http://$$kong_ip:8000"
+	[ -n "$$kong_ip" ] && echo "  kong gateway:     http://$$kong_ip:8000"; \
+	[ -n "$$kong_ip" ] && echo "  kong gateway tls: https://$$kong_ip:8443"
+	@echo ""
+	@echo -e "$(CYAN)Internal reachability smoke test: make k8s-probe-internal$(NC)"
 	@echo ""
 	@echo -e "$(YELLOW)Note: ClusterIP endpoints above are not directly reachable from your laptop; use them from inside pods.$(NC)"
 	@echo ""
@@ -314,11 +340,20 @@ dev-up: ## Bootstrap once, then fast refresh with random image tags
 	@ns="$(PREBUILT_NAMESPACE)"; \
 	ip="$$(minikube ip 2>/dev/null || true)"; \
 	kong_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8000)].nodePort}' 2>/dev/null || true)"; \
+	kong_tls_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8443)].nodePort}' 2>/dev/null || true)"; \
 	studio_port="$$(kubectl get svc studio -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==3000)].nodePort}' 2>/dev/null || true)"; \
 	if [ -n "$$ip" ] && [ -n "$$kong_port" ]; then \
 		echo "  auth health:      http://$$ip:$$kong_port/auth/health"; \
 		echo "  rest root:        http://$$ip:$$kong_port/rest/"; \
 		echo "  realtime:         http://$$ip:$$kong_port/realtime/"; \
+		echo "  trino info:       http://$$ip:$$kong_port/sql/v1/info"; \
+		if [ -n "$$kong_tls_port" ]; then \
+			echo "  auth health tls:  https://$$ip:$$kong_tls_port/auth/health (use -k)"; \
+			echo "  rest root tls:    https://$$ip:$$kong_tls_port/rest/ (use -k)"; \
+			echo "  trino info tls:   https://$$ip:$$kong_tls_port/sql/v1/info (use -k)"; \
+			echo "  minio api tls:    https://$$ip:$$kong_tls_port/storage/ (use -k)"; \
+		fi; \
+		echo "  minio api:        http://$$ip:$$kong_port/storage/"; \
 		if [ -n "$$studio_port" ]; then \
 			echo "  studio ui:        http://$$ip:$$studio_port/project/default"; \
 		fi; \
@@ -333,6 +368,7 @@ k8s-prebuilt-local-url: ## Show prebuilt service URLs
 	@ns="$(PREBUILT_NAMESPACE)"; \
 	ip="$$(minikube ip)"; \
 	kong_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8000)].nodePort}')"; \
+	kong_tls_port="$$(kubectl get svc kong -n "$$ns" -o jsonpath='{.spec.ports[?(@.port==8443)].nodePort}')"; \
 	if [ -z "$$kong_port" ]; then \
 		echo -e "$(RED)✗ Could not find Kong NodePort in namespace '$$ns'$(NC)"; \
 		exit 1; \
@@ -342,6 +378,17 @@ k8s-prebuilt-local-url: ## Show prebuilt service URLs
 	echo "  auth health:       http://$$ip:$$kong_port/auth/health"; \
 	echo "  rest root:         http://$$ip:$$kong_port/rest/"; \
 	echo "  realtime health:   http://$$ip:$$kong_port/realtime/health"; \
+	echo "  trino info:        http://$$ip:$$kong_port/sql/v1/info"; \
+	echo "  minio api:         http://$$ip:$$kong_port/storage/"; \
+	echo "  minio health:      http://$$ip:$$kong_port/storage/minio/health/live"; \
+	if [ -n "$$kong_tls_port" ]; then \
+		echo "  gateway tls:       https://$$ip:$$kong_tls_port/ (use -k)"; \
+		echo "  auth health tls:   https://$$ip:$$kong_tls_port/auth/health (use -k)"; \
+		echo "  rest root tls:     https://$$ip:$$kong_tls_port/rest/ (use -k)"; \
+		echo "  realtime tls:      https://$$ip:$$kong_tls_port/realtime/health (use -k)"; \
+		echo "  trino info tls:    https://$$ip:$$kong_tls_port/sql/v1/info (use -k)"; \
+		echo "  minio health tls:  https://$$ip:$$kong_tls_port/storage/minio/health/live (use -k)"; \
+	fi; \
 	echo "  studio ui:         http://$$ip:$$kong_port/studio"
 
 k8s-preview: ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)

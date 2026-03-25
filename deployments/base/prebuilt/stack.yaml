@@ -66,14 +66,64 @@ data:
             paths:
               - /sql
             strip_path: true
+            plugins:
+              - name: request-transformer
+                config:
+                  remove:
+                    headers:
+                      - x-forwarded-for
+                      - forwarded
+
+      - name: minio-api
+        url: http://minio:9000
+        routes:
+          - name: minio-api-route
+            paths:
+              - /storage
+            strip_path: true
+
+      - name: minio-console
+        url: http://minio:9001
+        routes:
+          - name: minio-console-route
+            paths:
+              - /storage-console
+            strip_path: true
 
       - name: studio
         url: http://studio:3000
         routes:
-          - name: studio-route
+          - name: studio-entry-route
             paths:
               - /studio
             strip_path: true
+          - name: studio-project-route
+            paths:
+              - /project
+            strip_path: false
+          - name: studio-next-route
+            paths:
+              - /_next
+            strip_path: false
+          - name: studio-api-route
+            paths:
+              - /api
+            strip_path: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trino-config
+  labels:
+    app.kubernetes.io/part-of: mini-baas-prebuilt
+data:
+  config.properties: |
+    coordinator=true
+    node-scheduler.include-coordinator=true
+    http-server.http.port=8080
+    http-server.process-forwarded=true
+    discovery.uri=http://localhost:8080
+    catalog.management=${ENV:CATALOG_MANAGEMENT}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -253,11 +303,22 @@ spec:
         app: trino
         app.kubernetes.io/part-of: mini-baas-prebuilt
     spec:
+      volumes:
+        - name: trino-config
+          configMap:
+            name: trino-config
+            items:
+              - key: config.properties
+                path: config.properties
       containers:
         - name: trino
           image: trinodb/trino
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: trino-config
+              mountPath: /etc/trino/config.properties
+              subPath: config.properties
 ---
 apiVersion: v1
 kind: Service
@@ -684,12 +745,15 @@ spec:
           image: kong:3.8
           ports:
             - containerPort: 8000
+            - containerPort: 8443
             - containerPort: 8001
           env:
             - name: KONG_DATABASE
               value: "off"
             - name: KONG_DECLARATIVE_CONFIG
               value: /etc/kong/kong.yml
+            - name: KONG_PROXY_LISTEN
+              value: 0.0.0.0:8000, 0.0.0.0:8443 ssl
             - name: KONG_PROXY_ACCESS_LOG
               value: /dev/stdout
             - name: KONG_ADMIN_ACCESS_LOG
@@ -720,6 +784,10 @@ spec:
     - name: proxy
       port: 8000
       targetPort: 8000
+    - name: proxy-tls
+      port: 8443
+      targetPort: 8443
+      nodePort: 30443
     - name: admin
       port: 8001
       targetPort: 8001
