@@ -65,7 +65,9 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - mini-baas
+      mini-baas:
+        aliases:
+          - db
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}" ]
@@ -85,10 +87,10 @@ services:
     command: >
       sh -ec '
         until pg_isready -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"; do sleep 1; done;
-        psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS auth;";
-        psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -tAc "SELECT datname FROM pg_database" | grep -Fx "$${REALTIME_DB_NAME}" >/dev/null || \
-          psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$${REALTIME_DB_NAME}\";";
+        psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -v ON_ERROR_STOP=1 -v pwd="$${POSTGRES_PASSWORD}" -v realtime_db="$${REALTIME_DB_NAME}" -f /bootstrap/db-bootstrap.sql;
       '
+    volumes:
+      - ./scripts/db-bootstrap.sql:/bootstrap/db-bootstrap.sql:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,6 +148,23 @@ services:
       PGRST_SERVER_PORT: 3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+
+  pg-meta:
+    image: supabase/postgres-meta:v0.91.0
+    container_name: mini-baas-pg-meta
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: ${PG_META_DB_HOST:-postgres}
+      PG_META_DB_PORT: ${PG_META_DB_PORT:-${POSTGRES_PORT:-5432}}
+      PG_META_DB_NAME: ${PG_META_DB_NAME:-${POSTGRES_DB:-postgres}}
+      PG_META_DB_USER: ${PG_META_DB_USER:-${POSTGRES_USER:-postgres}}
+      PG_META_DB_PASSWORD: ${PG_META_DB_PASSWORD:-${POSTGRES_PASSWORD:-postgres}}
     depends_on:
       postgres:
         condition: service_healthy
@@ -239,11 +258,14 @@ services:
       - "3001:3000"
     environment:
       HOSTNAME: 0.0.0.0
-      STUDIO_PG_META_URL: ${STUDIO_PG_META_URL:-http://host.docker.internal:8080}
+      STUDIO_PG_META_URL: http://pg-meta:8080
       SUPABASE_URL: ${SUPABASE_URL:-http://localhost:9999}
       SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:9999}
       SUPABASE_ANON_KEY: ${ANON_KEY:-anon-key-placeholder}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:-service-key-placeholder}
+    depends_on:
+      pg-meta:
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
