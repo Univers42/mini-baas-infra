@@ -14,7 +14,6 @@ NO_PRINT = --no-print-directory
 IMAGE_TAG ?= latest
 REGISTRY ?= localhost:5000
 COMPOSE_FILE ?= docker-compose.yml
-COMPOSE_BUILD_FILE ?= docker-compose.build.yml
 SHOW_NEXT_STEPS ?= 1
 
 # Prebuilt infrastructure images
@@ -70,14 +69,6 @@ docker-build: ## Pull and tag all prebuilt images locally
 	@docker tag $(STUDIO_IMAGE) mini-baas/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ Prebuilt images ready$(NC)"
 	$(call print-next,Run make compose-up to start the stack.)
-
-docker-build-no-cache: ## Build custom services from source without cache
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@echo -e "$(BLUE)Building custom services with --no-cache...$(NC)"
-	@docker compose -f $(COMPOSE_BUILD_FILE) build --no-cache api-gateway auth-service dynamic-api schema-service
-	@echo -e "$(GREEN)✓ Custom service images rebuilt$(NC)"
-	$(call print-next,Run make compose-up-build to start with built services.)
 
 docker-build-%: ## Pull/tag one prebuilt image (e.g., make docker-build-kong)
 	@$(MAKE) $(NO_PRINT) check-docker
@@ -137,29 +128,32 @@ docker-images: ## Show local mini-baas images
 
 docker-clean: ## Remove local mini-baas images
 	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) compose-down
 	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
-	@docker rmi -f $$(docker images -q mini-baas/* 2>/dev/null) 2>/dev/null || echo "No images to remove"
+	@docker rmi -f $$(docker images --filter=reference='mini-baas/*' -q) >/dev/null 2>&1 || true
 	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
 
 # ============================================================================
 # Docker Compose Workflow
 # ============================================================================
 
+compose-rm-stale: ## Remove stale mini-baas containers (created/exited) to avoid name conflicts
+	@$(MAKE) $(NO_PRINT) check-docker
+	@stale_ids="$$(docker ps -a --format '{{.ID}} {{.Names}} {{.Status}}' | awk '/ mini-baas-/ && ($$3 == "Created" || $$3 == "Exited") {print $$1}')"; \
+	if [ -n "$$stale_ids" ]; then \
+		echo -e "$(YELLOW)Removing stale mini-baas containers to avoid name conflicts...$(NC)"; \
+		docker rm -f $$stale_ids >/dev/null; \
+		echo -e "$(GREEN)✓ Stale containers removed$(NC)"; \
+	fi
+
 compose-up: ## Start stack in detached mode
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
+	@$(MAKE) $(NO_PRINT) compose-rm-stale
 	@echo -e "$(BLUE)Starting stack from $(COMPOSE_FILE)...$(NC)"
 	@docker compose -f $(COMPOSE_FILE) up -d
 	@echo -e "$(GREEN)✓ Stack started$(NC)"
 	$(call print-next,Run make compose-ps or make compose-health.)
-
-compose-up-build: ## Start stack using build-enabled compose file
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@echo -e "$(BLUE)Starting build-enabled stack from $(COMPOSE_BUILD_FILE)...$(NC)"
-	@docker compose -f $(COMPOSE_BUILD_FILE) up -d --build
-	@echo -e "$(GREEN)✓ Build stack started$(NC)"
-	$(call print-next,Run make compose-ps or make compose-logs SERVICE=api-gateway.)
 
 compose-down: ## Stop and remove stack resources
 	@$(MAKE) $(NO_PRINT) check-docker
@@ -215,6 +209,11 @@ dev-up: ## Start local stack with docker compose
 dev-down: ## Stop local stack
 	@$(MAKE) $(NO_PRINT) compose-down
 
+dev-re: ## Restart local stack
+	@$(MAKE) $(NO_PRINT) compose-down
+	@$(MAKE) $(NO_PRINT) docker-clean
+	@$(MAKE) $(NO_PRINT) compose-up
+
 build-and-push: ## Build/pull, tag and push images
 	@$(MAKE) $(NO_PRINT) docker-build
 	@$(MAKE) $(NO_PRINT) docker-push
@@ -236,6 +235,6 @@ help: ## Show this help message
 
 .PHONY: \
 	check-docker check-compose \
-	docker-build docker-build-no-cache docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-up compose-up-build compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health \
-	dev-up dev-down build-and-push fclean help
+	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health \
+	dev-up dev-down dev-re build-and-push fclean help

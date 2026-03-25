@@ -73,6 +73,29 @@ services:
       timeout: 5s
       retries: 20
 
+  db-bootstrap:
+    image: postgres:16-alpine
+    container_name: mini-baas-db-bootstrap
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      REALTIME_DB_NAME: realtime
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    command: >
+      sh -ec '
+        until pg_isready -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"; do sleep 1; done;
+        psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS auth;";
+        psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -tAc "SELECT datname FROM pg_database" | grep -Fx "$${REALTIME_DB_NAME}" >/dev/null || \
+          psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$${REALTIME_DB_NAME}\";";
+      '
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: "no"
+
   mongo:
     image: mongo:7
     container_name: mini-baas-mongo
@@ -105,8 +128,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     networks:
       - mini-baas
     restart: unless-stopped
@@ -140,7 +163,7 @@ services:
       DB_PORT: ${REALTIME_DB_PORT:-5432}
       DB_USER: ${REALTIME_DB_USER:-postgres}
       DB_PASSWORD: ${REALTIME_DB_PASSWORD:-postgres}
-      DB_NAME: ${REALTIME_DB_NAME:-postgres}
+      DB_NAME: realtime
       PORT: 4000
       APP_NAME: ${REALTIME_APP_NAME:-realtime-dev}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE:-super-secret-key-base}
@@ -152,8 +175,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     networks:
       - mini-baas
     restart: unless-stopped
@@ -215,6 +238,7 @@ services:
     ports:
       - "3001:3000"
     environment:
+      HOSTNAME: 0.0.0.0
       STUDIO_PG_META_URL: ${STUDIO_PG_META_URL:-http://host.docker.internal:8080}
       SUPABASE_URL: ${SUPABASE_URL:-http://localhost:9999}
       SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:9999}
@@ -225,6 +249,12 @@ services:
     networks:
       - mini-baas
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000').then(() => process.exit(0)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 networks:
   mini-baas:
