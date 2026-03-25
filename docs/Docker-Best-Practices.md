@@ -136,7 +136,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 
 **Benefits:**
 - Docker can restart unhealthy containers automatically
-- Kubernetes uses this data for pod replacement
+- Compose and external supervisors can use this signal for automatic recovery
 - Load balancers can route traffic away from unhealthy instances
 
 ### 6. Layer Caching Optimization

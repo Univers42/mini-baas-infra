@@ -1,3 +1,3 @@
 # Base Deployments
 
-Environment-neutral Kubernetes definitions shared across local/staging/production.
+Service source code, Dockerfiles, and runtime configuration used by the Compose stack.

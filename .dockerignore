@@ -54,10 +54,9 @@ Dockerfile*
 docker-compose*.yml
 .dockerignore
 
-# Kubernetes
+# Deployment descriptors
 *.yaml
 *.yml
-k8s/
 kubeconfig
 
 # Temporary files
