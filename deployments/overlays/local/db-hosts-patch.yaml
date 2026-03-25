@@ -9,7 +9,7 @@ spec:
       - name: auth-service
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:postgres@local-postgres:5432/postgres"
+          value: "postgresql://postgres:postgres@postgres:5432/postgres"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -22,9 +22,9 @@ spec:
       - name: dynamic-api
         env:
         - name: DB_DSN
-          value: "postgres://postgres:postgres@local-postgres:5432/postgres"
+          value: "postgres://postgres:postgres@postgres:5432/postgres"
         - name: MONGODB_URI
-          value: "mongodb://local-mongo:27017"
+          value: "mongodb://mongo:27017"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,4 +37,4 @@ spec:
       - name: schema-service
         env:
         - name: MONGODB_URI
-          value: "mongodb://local-mongo:27017"
+          value: "mongodb://mongo:27017"
