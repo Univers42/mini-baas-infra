@@ -133,6 +133,13 @@ docker-clean: ## Remove local mini-baas images
 	@docker rmi -f $$(docker images --filter=reference='mini-baas/*' -q) >/dev/null 2>&1 || true
 	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
 
+docker-fclean: ## Remove local mini-baas images and stop stack
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) compose-down
+	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
+	@docker rmi $$(docker images -q) --force
+	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
+
 # ============================================================================
 # Docker Compose Workflow
 # ============================================================================

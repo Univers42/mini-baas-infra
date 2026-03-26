@@ -14,21 +14,13 @@ name: mini-baas
 
 services:
   kong:
-    image: kong:3.8
+    build:
+      context: ./deployments/base/kong
+      dockerfile: Dockerfile
     container_name: mini-baas-kong
     ports:
       - "8000:8000"
       - "8001:8001"
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-    volumes:
-      - ./deployments/base/kong/kong.yml:/etc/kong/kong.yml:ro
     depends_on:
       gotrue:
         condition: service_started
@@ -45,7 +37,9 @@ services:
     restart: unless-stopped
 
   trino:
-    image: trinodb/trino
+    build:
+      context: ./deployments/base/trino
+      dockerfile: Dockerfile
     container_name: mini-baas-trino
     ports:
       - "8080:8080"
@@ -54,7 +48,9 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./deployments/base/postgres
+      dockerfile: Dockerfile
     container_name: mini-baas-postgres
     ports:
       - "5432:5432"
@@ -76,7 +72,9 @@ services:
       retries: 20
 
   db-bootstrap:
-    image: postgres:16-alpine
+    build:
+      context: ./deployments/base/postgres
+      dockerfile: Dockerfile
     container_name: mini-baas-db-bootstrap
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -99,7 +97,9 @@ services:
     restart: "no"
 
   mongo:
-    image: mongo:7
+    build:
+      context: ./deployments/base/mongo
+      dockerfile: Dockerfile
     container_name: mini-baas-mongo
     ports:
       - "27017:27017"
@@ -115,7 +115,9 @@ services:
       retries: 20
 
   gotrue:
-    image: supabase/gotrue:v2.188.1
+    build:
+      context: ./deployments/base/gotrue
+      dockerfile: Dockerfile
     container_name: mini-baas-gotrue
     ports:
       - "9999:9999"
@@ -137,7 +139,9 @@ services:
     restart: unless-stopped
 
   postgrest:
-    image: postgrest/postgrest:latest
+    build:
+      context: ./deployments/base/postgrest
+      dockerfile: Dockerfile
     container_name: mini-baas-postgrest
     ports:
       - "3002:3000"
@@ -156,7 +160,9 @@ services:
     restart: unless-stopped
 
   pg-meta:
-    image: supabase/postgres-meta:v0.91.0
+    build:
+      context: ./deployments/base/pg-meta
+      dockerfile: Dockerfile
     container_name: mini-baas-pg-meta
     environment:
       PG_META_PORT: 8080
@@ -173,7 +179,9 @@ services:
     restart: unless-stopped
 
   realtime:
-    image: supabase/realtime
+    build:
+      context: ./deployments/base/realtime
+      dockerfile: Dockerfile
     container_name: mini-baas-realtime
     ports:
       - "4000:4000"
@@ -206,7 +214,9 @@ services:
       retries: 3
 
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+    build:
+      context: ./deployments/base/minio
+      dockerfile: Dockerfile
     container_name: mini-baas-minio
     command: server /data --console-address ":9001"
     ports:
@@ -222,7 +232,9 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    build:
+      context: ./deployments/base/redis
+      dockerfile: Dockerfile
     container_name: mini-baas-redis
     ports:
       - "6379:6379"
@@ -234,7 +246,9 @@ services:
     restart: unless-stopped
 
   supavisor:
-    image: supabase/supavisor:2.7.4
+    build:
+      context: ./deployments/base/supavisor
+      dockerfile: Dockerfile
     container_name: mini-baas-supavisor
     ports:
       - "6543:6543"
@@ -252,7 +266,9 @@ services:
     restart: unless-stopped
 
   studio:
-    image: supabase/studio
+    build:
+      context: ./deployments/base/studio
+      dockerfile: Dockerfile
     container_name: mini-baas-studio
     ports:
       - "3001:3000"
