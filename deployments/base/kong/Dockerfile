@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM kong:3.8
 
 # Copy Kong configuration file

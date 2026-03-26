@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM trinodb/trino:latest
 
 # Trino configuration can be added here if needed

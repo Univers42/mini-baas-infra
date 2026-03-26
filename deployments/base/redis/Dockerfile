@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM redis:7-alpine
 
 # Redis configuration can be added here if needed

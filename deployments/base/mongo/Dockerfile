@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM mongo:7
 
 # MongoDB configuration can be added here if needed
