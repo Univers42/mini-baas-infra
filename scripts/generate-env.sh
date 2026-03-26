@@ -75,7 +75,7 @@ DATABASE_URL=${DATABASE_URL}
 PGRST_DB_URI=${PGRST_DB_URI}
 
 # GoTrue
-API_EXTERNAL_URL=http://localhost:9999
+API_EXTERNAL_URL=http://localhost:8000/auth/v1
 GOTRUE_SITE_URL=http://localhost:3001
 JWT_SECRET=${JWT_SECRET}
 
@@ -108,8 +108,8 @@ VAULT_ENC_KEY=${VAULT_ENC_KEY}
 
 # Studio
 STUDIO_PG_META_URL=http://host.docker.internal:8080
-SUPABASE_URL=http://localhost:9999
-SUPABASE_PUBLIC_URL=http://localhost:9999
+SUPABASE_URL=http://localhost:8000
+SUPABASE_PUBLIC_URL=http://localhost:8000
 EOF
 
 chmod 600 "$ENV_FILE"

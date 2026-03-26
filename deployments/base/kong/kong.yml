@@ -1,37 +1,102 @@
 _format_version: "3.0"
 _transform: true
 
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Authorization
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - X-Auth-Token
+        - X-Client-Info
+        - X-Requested-With
+        - apikey
+      exposed_headers:
+        - X-Kong-Upstream-Latency
+        - X-Kong-Proxy-Latency
+      credentials: true
+      max_age: 3600
+
 services:
   - name: gotrue
     url: http://gotrue:9999
     routes:
       - name: gotrue-route
         paths:
+          - /auth/v1
           - /auth
         strip_path: true
+        methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
 
   - name: postgrest
     url: http://postgrest:3000
     routes:
       - name: postgrest-route
         paths:
+          - /rest/v1
           - /rest
         strip_path: true
+        methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
 
   - name: realtime
     url: http://realtime:4000
     routes:
       - name: realtime-route
         paths:
+          - /realtime/v1
           - /realtime
         strip_path: true
+        protocols:
+          - http
+          - https
 
   - name: trino
     url: http://trino:8080
+    plugins:
+      - name: request-transformer
+        config:
+          remove:
+            headers:
+              - x-forwarded-for
     routes:
       - name: trino-route
         paths:
           - /sql
+        strip_path: true
+
+  - name: pg-meta
+    url: http://pg-meta:8080
+    routes:
+      - name: pg-meta-route
+        paths:
+          - /meta/v1
+          - /meta
         strip_path: true
 
   - name: studio

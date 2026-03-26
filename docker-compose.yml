@@ -14,13 +14,21 @@ name: mini-baas
 
 services:
   kong:
-    build:
-      context: ./deployments/base/kong
-      dockerfile: Dockerfile
+    image: ${KONG_IMAGE:-kong:3.8}
     container_name: mini-baas-kong
     ports:
       - "8000:8000"
       - "8001:8001"
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    volumes:
+      - ./deployments/base/kong/kong.yml:/etc/kong/kong.yml:ro
     depends_on:
       gotrue:
         condition: service_started
@@ -43,6 +51,8 @@ services:
     container_name: mini-baas-trino
     ports:
       - "8080:8080"
+    volumes:
+      - ./deployments/base/trino/config.properties:/etc/trino/config.properties:ro
     networks:
       - mini-baas
     restart: unless-stopped
@@ -124,7 +134,7 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:9999}
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}
       GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:3001}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
@@ -275,8 +285,8 @@ services:
     environment:
       HOSTNAME: 0.0.0.0
       STUDIO_PG_META_URL: http://pg-meta:8080
-      SUPABASE_URL: ${SUPABASE_URL:-http://localhost:9999}
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:9999}
+      SUPABASE_URL: ${SUPABASE_URL:-http://localhost:8000}
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8000}
       SUPABASE_ANON_KEY: ${ANON_KEY:-anon-key-placeholder}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:-service-key-placeholder}
     depends_on:

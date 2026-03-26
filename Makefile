@@ -219,6 +219,7 @@ dev-down: ## Stop local stack
 dev-re: ## Restart local stack
 	@$(MAKE) $(NO_PRINT) compose-down
 	@$(MAKE) $(NO_PRINT) docker-clean
+	@$(MAKE) $(NO_PRINT) docker-fclean
 	@$(MAKE) $(NO_PRINT) compose-up
 
 build-and-push: ## Build/pull, tag and push images
