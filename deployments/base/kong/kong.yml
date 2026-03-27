@@ -112,6 +112,14 @@
 _format_version: "3.0"
 _transform: true
 
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: public-anon-key
+  - username: service_role
+    keyauth_credentials:
+      - key: service-role-key
+
 services:
   - name: auth
     url: http://gotrue:9999
@@ -119,12 +127,34 @@ services:
       - name: auth-routes
         paths: [/auth/v1]
         strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 2000
   - name: rest
     url: http://postgrest:3000
     routes:
       - name: rest-routes
         paths: [/rest/v1]
         strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 180
+              hour: 5000
 
   - name: realtime
     url: http://realtime:4000
@@ -133,6 +163,17 @@ services:
         paths: [/realtime/v1]
         strip_path: true
         protocols: [http, https]
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
 
   - name: storage
     url: http://minio:9000
@@ -140,6 +181,21 @@ services:
       - name: storage-routes
         paths: [/storage/v1]
         strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1500
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 10
+              size_unit: megabytes
 
 plugins:
   - name: cors

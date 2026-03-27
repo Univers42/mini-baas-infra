@@ -68,6 +68,37 @@ make compose-up-build
 - SQL info (via gateway): `http://localhost:8000/sql/v1/info`
 - Studio: `http://localhost:3001/`
 
+## Gateway Security (Phase 2)
+
+Kong now enforces API key auth on core BaaS routes:
+- `/auth/v1`
+- `/rest/v1`
+- `/realtime/v1`
+- `/storage/v1`
+
+Local default keys are defined in `.env.example` and declarative Kong config:
+- Public key: `public-anon-key`
+- Service key: `service-role-key`
+
+Example:
+
+```bash
+curl -i http://localhost:8000/rest/v1/ \
+	-H "apikey: public-anon-key"
+```
+
+Phase 2 security smoke test:
+
+```bash
+make test-phase2
+```
+
+Optional rate-limit stress check:
+
+```bash
+RUN_RATE_LIMIT_TEST=true RATE_LIMIT_BURST=70 make test-phase2
+```
+
 ## Notes
 
 - Use a `.env` file for production-like values.

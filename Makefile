@@ -208,6 +208,12 @@ compose-health: ## Quick health checks for key routes
 	@curl -fsS http://localhost:8000/sql/v1/info >/dev/null && echo "  ✓ Kong -> /sql/v1/info" || echo "  ✗ Kong -> /sql/v1/info"
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
+test-phase1: ## Run Phase 1 auth/rest smoke test through Kong
+	@bash ./scripts/phase1-smoke-test.sh
+
+test-phase2: ## Run Phase 2 gateway security smoke test
+	@bash ./scripts/phase2-smoke-test.sh
+
 # Convenience aliases
 
 dev-up: ## Start local stack with docker compose
@@ -244,5 +250,5 @@ help: ## Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health test-phase1 test-phase2 \
 	dev-up dev-down dev-re build-and-push fclean help

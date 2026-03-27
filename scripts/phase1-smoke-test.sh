@@ -5,6 +5,7 @@
 
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 TIMEOUT="${TIMEOUT:-10}"
+APIKEY="${APIKEY:-public-anon-key}"
 TMPDIR="/tmp/phase1_smoke"
 
 mkdir -p "$TMPDIR"
@@ -39,6 +40,7 @@ echo "========================================"
 echo "Phase 1 Smoke Test Suite"
 echo "========================================"
 echo "Base URL: $BASE_URL"
+echo "API key: ${APIKEY}"
 echo ""
 
 # 1. SIGNUP TEST
@@ -49,6 +51,7 @@ PASS='test1234!'
 SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w '%{http_code}' \
     -X POST "$BASE_URL/auth/v1/signup" \
     -H 'Content-Type: application/json' \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
@@ -69,6 +72,7 @@ echo "Test 2: Login via Kong /auth/v1/token"
 LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
     -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
     -H 'Content-Type: application/json' \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
@@ -113,6 +117,7 @@ echo "Test 3: PostgREST access without token (should allow anon)"
 
 REST_NO_AUTH=$(curl -sS -o "$TMPDIR/rest_no_auth.json" -w '%{http_code}' \
     -X GET "$BASE_URL/rest/v1/" \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
 # 200 is good (anon role works), 401 also acceptable (no anon access)
@@ -132,6 +137,7 @@ echo "Test 4: PostgREST access with JWT (authenticated)"
 if [[ -n "${TOKEN:-}" ]]; then
     REST_WITH_AUTH=$(curl -sS -o "$TMPDIR/rest_with_auth.json" -w '%{http_code}' \
         -X GET "$BASE_URL/rest/v1/" \
+        -H "apikey: $APIKEY" \
         -H "Authorization: Bearer $TOKEN" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     
@@ -151,6 +157,7 @@ echo ""
 echo "Test 5: Verify Kong proxied request (check headers)"
 
 HEADERS=$(curl -sS -i -X GET "$BASE_URL/auth/v1/health" \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | head -n 20 || true)
 
 if echo "$HEADERS" | grep -qi "kong\|x-kong"; then
