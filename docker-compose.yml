@@ -138,6 +138,8 @@ services:
       GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:3001}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       # GOTRUE_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-chars}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 3600
