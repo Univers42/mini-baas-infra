@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Phase 2 Smoke Test: Kong gateway security controls
-# Validates key-auth enforcement and storage request-size-limiting
+# Validates key-auth enforcement, CORS, and storage request-size-limiting
 
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 TIMEOUT="${TIMEOUT:-10}"
@@ -34,6 +34,33 @@ fail() {
     ((TESTS_FAILED++))
 }
 
+assert_code() {
+    local name="$1"
+    local expected="$2"
+    local actual="$3"
+    if [[ "$actual" == "$expected" ]]; then
+        pass "$name"
+    else
+        fail "$name" "expected $expected, got $actual"
+    fi
+}
+
+assert_one_of() {
+    local name="$1"
+    local actual="$2"
+    shift 2
+    local allowed=("$@")
+
+    for expected in "${allowed[@]}"; do
+        if [[ "$actual" == "$expected" ]]; then
+            pass "$name"
+            return
+        fi
+    done
+
+    fail "$name" "expected one of: ${allowed[*]}, got $actual"
+}
+
 echo "========================================"
 echo "Phase 2 Smoke Test Suite"
 echo "========================================"
@@ -42,62 +69,90 @@ echo "Public API key: $PUBLIC_APIKEY"
 echo "Run rate limit stress test: $RUN_RATE_LIMIT_TEST"
 echo ""
 
-# 1) Missing apikey must be blocked by Kong key-auth
-MISSING_CODE=$(curl -sS -o "$TMPDIR/no_apikey.json" -w '%{http_code}' \
+# 1) key-auth on auth route
+MISSING_AUTH_CODE=$(curl -sS -o "$TMPDIR/no_apikey_auth.json" -w '%{http_code}' \
   -X GET "$BASE_URL/auth/v1/health" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_code "Missing apikey rejected on /auth/v1" "401" "$MISSING_AUTH_CODE"
 
-if [[ "$MISSING_CODE" == "401" ]]; then
-    pass "Missing apikey rejected on /auth/v1"
-else
-    fail "Missing apikey rejected on /auth/v1" "expected 401, got $MISSING_CODE"
-fi
-
-# 2) Invalid apikey must be blocked by Kong key-auth
-INVALID_CODE=$(curl -sS -o "$TMPDIR/invalid_apikey.json" -w '%{http_code}' \
+INVALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/invalid_apikey_auth.json" -w '%{http_code}' \
   -X GET "$BASE_URL/auth/v1/health" \
   -H "apikey: $INVALID_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_code "Invalid apikey rejected on /auth/v1" "401" "$INVALID_AUTH_CODE"
 
-if [[ "$INVALID_CODE" == "401" ]]; then
-    pass "Invalid apikey rejected on /auth/v1"
-else
-    fail "Invalid apikey rejected on /auth/v1" "expected 401, got $INVALID_CODE"
-fi
-
-# 3) Valid apikey must pass gateway auth and reach upstream
-VALID_CODE=$(curl -sS -o "$TMPDIR/valid_apikey.json" -w '%{http_code}' \
+VALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_auth.json" -w '%{http_code}' \
   -X GET "$BASE_URL/auth/v1/health" \
   -H "apikey: $PUBLIC_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_code "Valid apikey accepted on /auth/v1" "200" "$VALID_AUTH_CODE"
 
-if [[ "$VALID_CODE" == "200" ]]; then
-    pass "Valid apikey accepted on /auth/v1"
-else
-    fail "Valid apikey accepted on /auth/v1" "expected 200, got $VALID_CODE"
-fi
+# 2) key-auth on rest route
+MISSING_REST_CODE=$(curl -sS -o "$TMPDIR/no_apikey_rest.json" -w '%{http_code}' \
+  -X GET "$BASE_URL/rest/v1/" \
+  --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_code "Missing apikey rejected on /rest/v1" "401" "$MISSING_REST_CODE"
 
-# 4) Storage route request-size-limiting should reject >10MB payload
-# Build a deterministic payload once to avoid memory spikes during curl.
+VALID_REST_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_rest.json" -w '%{http_code}' \
+  -X GET "$BASE_URL/rest/v1/" \
+  -H "apikey: $PUBLIC_APIKEY" \
+  --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_one_of "Valid apikey reaches /rest/v1 upstream" "$VALID_REST_CODE" "200" "401"
+
+# 3) key-auth on storage route
+MISSING_STORAGE_CODE=$(curl -sS -o "$TMPDIR/no_apikey_storage.json" -w '%{http_code}' \
+  -X GET "$BASE_URL/storage/v1/" \
+  --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_code "Missing apikey rejected on /storage/v1" "401" "$MISSING_STORAGE_CODE"
+
+# 4) request-size-limiting behavior on storage route
 LARGE_PAYLOAD="$TMPDIR/payload_11mb.bin"
+SMALL_PAYLOAD="$TMPDIR/payload_1kb.bin"
+
 if [[ ! -f "$LARGE_PAYLOAD" ]]; then
     dd if=/dev/zero of="$LARGE_PAYLOAD" bs=1M count=11 status=none
 fi
 
-SIZE_CODE=$(curl -sS -o "$TMPDIR/storage_size_limit.json" -w '%{http_code}' \
+if [[ ! -f "$SMALL_PAYLOAD" ]]; then
+    dd if=/dev/zero of="$SMALL_PAYLOAD" bs=1K count=1 status=none
+fi
+
+SIZE_BLOCKED_CODE=$(curl -sS -o "$TMPDIR/storage_size_limit.json" -w '%{http_code}' \
   -X POST "$BASE_URL/storage/v1/phase2-size-check" \
   -H "apikey: $PUBLIC_APIKEY" \
   -H 'Content-Type: application/octet-stream' \
   --data-binary "@$LARGE_PAYLOAD" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+assert_code "Storage payload >10MB rejected with 413" "413" "$SIZE_BLOCKED_CODE"
 
-if [[ "$SIZE_CODE" == "413" ]]; then
-    pass "Storage payload >10MB rejected with 413"
+SIZE_ALLOWED_CODE=$(curl -sS -o "$TMPDIR/storage_small_payload.json" -w '%{http_code}' \
+  -X POST "$BASE_URL/storage/v1/phase2-size-check" \
+  -H "apikey: $PUBLIC_APIKEY" \
+  -H 'Content-Type: application/octet-stream' \
+  --data-binary "@$SMALL_PAYLOAD" \
+  --max-time "$TIMEOUT" 2>/dev/null || echo "000")
+
+if [[ "$SIZE_ALLOWED_CODE" == "413" ]] || [[ "$SIZE_ALLOWED_CODE" == "401" ]]; then
+    fail "Storage small payload passes gateway limits" "unexpected code $SIZE_ALLOWED_CODE"
 else
-    fail "Storage payload >10MB rejected with 413" "expected 413, got $SIZE_CODE"
+    pass "Storage small payload passes gateway limits"
 fi
 
-# 5) Optional stress test for route rate-limiting (disabled by default)
+# 5) CORS preflight should include origin header through Kong plugin
+CORS_HEADERS=$(curl -sS -D - -o /dev/null \
+  -X OPTIONS "$BASE_URL/rest/v1/" \
+  -H 'Origin: http://example.local' \
+  -H 'Access-Control-Request-Method: GET' \
+  -H "apikey: $PUBLIC_APIKEY" \
+  --max-time "$TIMEOUT" 2>/dev/null || true)
+
+if echo "$CORS_HEADERS" | grep -qi '^access-control-allow-origin:'; then
+    pass "CORS preflight returns access-control-allow-origin"
+else
+    fail "CORS preflight returns access-control-allow-origin" "header missing"
+fi
+
+# 6) Optional stress test for route rate-limiting
 if [[ "$RUN_RATE_LIMIT_TEST" == "true" ]]; then
     echo -e "${YELLOW}[INFO]${NC} Running rate-limit burst test with $RATE_LIMIT_BURST requests..."
     HIT_429=false

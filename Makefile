@@ -208,6 +208,11 @@ compose-health: ## Quick health checks for key routes
 	@curl -fsS http://localhost:8000/sql/v1/info >/dev/null && echo "  ✓ Kong -> /sql/v1/info" || echo "  ✗ Kong -> /sql/v1/info"
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
+tests: ## Run all smoke tests
+	@$(MAKE) $(NO_PRINT) test-phase1
+	@$(MAKE) $(NO_PRINT) test-phase2
+	@echo -e "$(GREEN)✓ All tests passed$(NC)"
+
 test-phase1: ## Run Phase 1 auth/rest smoke test through Kong
 	@bash ./scripts/phase1-smoke-test.sh
 
