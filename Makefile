@@ -211,6 +211,8 @@ compose-health: ## Quick health checks for key routes
 tests: ## Run all smoke tests
 	@$(MAKE) $(NO_PRINT) test-phase1
 	@$(MAKE) $(NO_PRINT) test-phase2
+	@$(MAKE) $(NO_PRINT) test-phase3
+	@$(MAKE) $(NO_PRINT) test-phase4
 	@echo -e "$(GREEN)✓ All tests passed$(NC)"
 
 test-phase1: ## Run Phase 1 auth/rest smoke test through Kong
@@ -218,6 +220,12 @@ test-phase1: ## Run Phase 1 auth/rest smoke test through Kong
 
 test-phase2: ## Run Phase 2 gateway security smoke test
 	@bash ./scripts/phase2-smoke-test.sh
+
+test-phase3: ## Run Phase 3 authenticated database access test
+	@bash ./scripts/phase3-authenticated-db-test.sh
+
+test-phase4: ## Run Phase 4 user data isolation test
+	@bash ./scripts/phase4-user-isolation-test.sh
 
 # Convenience aliases
 
@@ -255,5 +263,5 @@ help: ## Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health test-phase1 test-phase2 \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health tests test-phase1 test-phase2 test-phase3 test-phase4 \
 	dev-up dev-down dev-re build-and-push fclean help

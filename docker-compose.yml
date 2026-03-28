@@ -172,6 +172,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     networks:
       - mini-baas
     restart: unless-stopped
