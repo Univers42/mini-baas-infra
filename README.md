@@ -99,6 +99,12 @@ Optional rate-limit stress check:
 RUN_RATE_LIMIT_TEST=true RATE_LIMIT_BURST=70 make test-phase2
 ```
 
+Phase 5 database info retrieval test:
+
+```bash
+make test-phase5
+```
+
 ## Notes
 
 - Use a `.env` file for production-like values.

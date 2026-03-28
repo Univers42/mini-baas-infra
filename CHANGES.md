@@ -63,8 +63,9 @@
 - Phase 1 (routing) and Phase 2 (security) tests remain compatible.
 - Phase 3 tests verify authenticated access to database through Kong.
 - Phase 4 tests verify user data isolation via RLS policies.
+- Added Phase 5 database information retrieval test (`/sql/v1/info`) with `make test-phase5`.
 - JWT token generation, validation, and claims extraction fully functional.
-- `make tests` runs all 4 phases for comprehensive validation.
+- `make tests` runs all 5 phases for comprehensive validation.
 
 ## 2026-03-27
 
