@@ -219,7 +219,10 @@ tests: ## Run all smoke tests
 		./scripts/phase2-smoke-test.sh \
 		./scripts/phase3-authenticated-db-test.sh \
 		./scripts/phase4-user-isolation-test.sh \
-		./scripts/phase5-db-info-test.sh; do \
+		./scripts/phase5-db-info-test.sh \
+		./scripts/phase6-http-methods-test.sh \
+		./scripts/phase7-error-handling-test.sh \
+		./scripts/phase8-token-lifecycle-test.sh; do \
 		tmp_file="$$(mktemp)"; \
 		FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
 		status=$${PIPESTATUS[0]}; \
@@ -259,6 +262,15 @@ test-phase4: ## Run Phase 4 user data isolation test
 
 test-phase5: ## Run Phase 5 database information retrieval test
 	@FORCE_COLORS=1 bash ./scripts/phase5-db-info-test.sh
+
+test-phase6: ## Run Phase 6 HTTP methods & data mutations test
+	@FORCE_COLORS=1 bash ./scripts/phase6-http-methods-test.sh
+
+test-phase7: ## Run Phase 7 error handling & edge cases test
+	@FORCE_COLORS=1 bash ./scripts/phase7-error-handling-test.sh
+
+test-phase8: ## Run Phase 8 token lifecycle & refresh test
+	@FORCE_COLORS=1 bash ./scripts/phase8-token-lifecycle-test.sh
 
 # Convenience aliases
 

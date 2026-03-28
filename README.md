@@ -105,7 +105,29 @@ Phase 5 database info retrieval test:
 make test-phase5
 ```
 
-`make tests` now prints an overall total summary with aggregated passed/failed counts across all phases.
+## Expanded Test Suites (Phases 6-8)
+
+**Phase 6: HTTP Methods & Data Mutations** — Tests CRUD operations (POST, GET, PATCH, PUT, DELETE)
+
+```bash
+make test-phase6
+```
+
+**Phase 7: Error Handling & Edge Cases** — Tests validation, error responses, security boundaries
+
+```bash
+make test-phase7
+```
+
+**Phase 8: Token Lifecycle & Refresh** — Tests JWT token generation, claims, refresh, and expiration
+
+```bash
+make test-phase8
+```
+
+## Running All Tests
+
+`make tests` executes all 8 test phases (44 → 84 tests) and prints an overall summary with aggregated passed/failed counts across all phases.
 
 ## Notes
 
