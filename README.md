@@ -105,7 +105,7 @@ Phase 5 database info retrieval test:
 make test-phase5
 ```
 
-## Expanded Test Suites (Phases 6-8)
+## Expanded Test Suites (Phases 6-9)
 
 **Phase 6: HTTP Methods & Data Mutations** — Tests CRUD operations (POST, GET, PATCH, PUT, DELETE)
 
@@ -125,9 +125,15 @@ make test-phase7
 make test-phase8
 ```
 
+**Phase 9: Storage Service Operations (MinIO)** — Tests bucket/object lifecycle plus storage gateway limits
+
+```bash
+make test-phase9
+```
+
 ## Running All Tests
 
-`make tests` executes all 8 test phases (44 → 84 tests) and prints an overall summary with aggregated passed/failed counts across all phases.
+`make tests` executes all 9 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
 
 ## Notes
 

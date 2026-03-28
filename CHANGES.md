@@ -1,5 +1,23 @@
 # Infrastructure Change Log
 
+## 2026-03-28 - Phase 9 Storage Service Operations ✅ PASSING
+
+### New Test Phase Added
+
+**Phase 9: Storage Service Operations** (`phase9-storage-operations-test.sh`) - ✅ All 11 tests passing
+- Validates Kong storage route security behavior (`/storage/v1`) with missing/valid API keys
+- Verifies MinIO bucket lifecycle: create and delete
+- Verifies object lifecycle: upload, list visibility, download validation, delete
+- Re-validates storage route payload limiting (`>10MB` rejected with `413`)
+
+### Test Infrastructure Updates
+- Added `test-phase9` target to `Makefile`
+- Included Phase 9 in aggregate `make tests` execution flow
+- Updated `.PHONY` declarations to include `test-phase6`, `test-phase7`, `test-phase8`, and `test-phase9`
+
+### Validation
+- `make test-phase9` runs successfully end-to-end in the current Compose stack.
+
 ## 2026-03-28 - Expanded Test Suite (Phases 6-8) ✅ ALL 90 TESTS PASSING
 
 ### New Test Phases Added
