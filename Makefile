@@ -223,7 +223,8 @@ tests: ## Run all smoke tests
 		./scripts/phase6-http-methods-test.sh \
 		./scripts/phase7-error-handling-test.sh \
 		./scripts/phase8-token-lifecycle-test.sh \
-		./scripts/phase9-storage-operations-test.sh; do \
+		./scripts/phase9-storage-operations-test.sh \
+		./scripts/phase10-data-mutation-complex-queries-test.sh; do \
 		tmp_file="$$(mktemp)"; \
 		FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
 		status=$${PIPESTATUS[0]}; \
@@ -276,6 +277,9 @@ test-phase8: ## Run Phase 8 token lifecycle & refresh test
 test-phase9: ## Run Phase 9 storage service operations test
 	@FORCE_COLORS=1 bash ./scripts/phase9-storage-operations-test.sh
 
+test-phase10: ## Run Phase 10 data mutation and complex query test
+	@FORCE_COLORS=1 bash ./scripts/phase10-data-mutation-complex-queries-test.sh
+
 # Convenience aliases
 
 dev-up: ## Start local stack with docker compose
@@ -312,5 +316,5 @@ help: ## Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 \
 	dev-up dev-down dev-re build-and-push fclean help

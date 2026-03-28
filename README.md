@@ -105,7 +105,7 @@ Phase 5 database info retrieval test:
 make test-phase5
 ```
 
-## Expanded Test Suites (Phases 6-9)
+## Expanded Test Suites (Phases 6-10)
 
 **Phase 6: HTTP Methods & Data Mutations** — Tests CRUD operations (POST, GET, PATCH, PUT, DELETE)
 
@@ -131,9 +131,15 @@ make test-phase8
 make test-phase9
 ```
 
+**Phase 10: Data Mutations & Complex Queries** — Tests batch insert, upsert, pagination, ordering, filters, and count headers
+
+```bash
+make test-phase10
+```
+
 ## Running All Tests
 
-`make tests` executes all 9 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
+`make tests` executes all 10 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
 
 ## Notes
 

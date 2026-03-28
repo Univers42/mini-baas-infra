@@ -1,5 +1,25 @@
 # Infrastructure Change Log
 
+## 2026-03-28 - Phase 10 Data Mutation & Complex Queries ✅ PASSING
+
+### New Test Phase Added
+
+**Phase 10: Data Mutation & Complex Queries** (`phase10-data-mutation-complex-queries-test.sh`) - ✅ All 16 tests passing
+- Validates authenticated advanced PostgREST flows through Kong
+- Covers batch insert behavior for `users` (including RLS-protected outcomes)
+- Covers upsert with `on_conflict=email`
+- Covers filtered updates and filtered deletes
+- Covers complex read queries: projection, OR filters, sorting, limit/offset pagination
+- Validates `HEAD` queries with `Prefer: count=exact` and `Content-Range` headers
+- Validates invalid UUID filter rejection behavior
+
+### Test Infrastructure Updates
+- Added `test-phase10` target to `Makefile`
+- Included Phase 10 in aggregate `make tests` execution flow
+
+### Validation
+- `make test-phase10` passes end-to-end in the current Compose stack.
+
 ## 2026-03-28 - Phase 9 Storage Service Operations ✅ PASSING
 
 ### New Test Phase Added
