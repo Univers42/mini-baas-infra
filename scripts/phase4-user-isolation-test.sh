@@ -19,6 +19,10 @@ NC='\033[0m'
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./test-ui.sh
+source "$SCRIPT_DIR/test-ui.sh"
+
 test_case() {
     local name="$1"
     local expected="$2"
@@ -81,11 +85,9 @@ get_jwt_token() {
     fi
 }
 
-echo "========================================"
-echo "Phase 4 Test Suite: User Data Isolation"
-echo "========================================"
-echo "Base URL: $BASE_URL"
-echo ""
+ui_banner "Phase 4 Test Suite" "User data isolation and access control"
+ui_kv "Base URL" "$BASE_URL"
+ui_hr
 
 # Create two test users
 TIMESTAMP=$(date +%s)
@@ -93,8 +95,7 @@ EMAIL1="user_${TIMESTAMP}_a@example.com"
 EMAIL2="user_${TIMESTAMP}_b@example.com"
 PASS='TestPass123!'
 
-printf '%b\n' "${BLUE}Step 1: Create test users${NC}"
-echo ""
+ui_step "Step 1: Create test users"
 
 USER1_ID=$(create_test_user "$EMAIL1" "$PASS" "$TMPDIR/user1_signup.json")
 if [[ -n "$USER1_ID" ]]; then
@@ -114,9 +115,7 @@ else
     ((TESTS_FAILED++))
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 2: Obtain JWT tokens for both users${NC}"
-echo ""
+ui_step "Step 2: Obtain JWT tokens for both users"
 
 JWT1=$(get_jwt_token "$EMAIL1" "$PASS" "$TMPDIR/user1_login.json")
 if [[ -n "$JWT1" ]]; then
@@ -138,9 +137,7 @@ else
     JWT2=""
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 3: Test data isolation - User 1 can only access own data${NC}"
-echo ""
+ui_step "Step 3: Test data isolation for User 1"
 
 if [[ -z "$JWT1" ]]; then
     echo -e "${YELLOW}  (Skipping - no JWT for User 1)${NC}"
@@ -160,9 +157,7 @@ else
     fi
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 4: Test JWT token swap - User 2 token cannot access User 1 data${NC}"
-echo ""
+ui_step "Step 4: Test JWT token swap protection"
 
 if [[ -z "$JWT1" ]] || [[ -z "$JWT2" ]]; then
     echo -e "${YELLOW}  (Skipping - missing JWT tokens)${NC}"
@@ -178,9 +173,7 @@ else
     test_case "User 2 can authenticate and access data" "200" "$USER2_AUTH_HTTP"
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 5: Test access without valid JWT${NC}"
-echo ""
+ui_step "Step 5: Test access without valid JWT"
 
 NO_JWT_HTTP=$(curl -sS -o "$TMPDIR/no_jwt.json" -w '%{http_code}' \
     -X GET "$BASE_URL/rest/v1/users" \
@@ -195,9 +188,7 @@ else
     ((TESTS_PASSED++))
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 6: Test malformed JWT rejection${NC}"
-echo ""
+ui_step "Step 6: Test malformed JWT rejection"
 
 MALFORMED_JWT="not-a-valid-jwt-token"
 
@@ -215,17 +206,10 @@ else
     ((TESTS_PASSED++))
 fi
 
-echo ""
-echo "========================================"
-echo "Phase 4 Test Results"
-echo "========================================"
-echo -e "${GREEN}Passed: $TESTS_PASSED${NC}"
-echo -e "${RED}Failed: $TESTS_FAILED${NC}"
-echo ""
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "All isolation tests passed!" "Phase 4 has failing tests"
 
 if [[ $TESTS_FAILED -gt 0 ]]; then
     exit 1
 else
-    echo -e "${GREEN}All isolation tests passed!${NC}"
     exit 0
 fi

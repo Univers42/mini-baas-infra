@@ -21,6 +21,10 @@ NC='\033[0m'
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./test-ui.sh
+source "$SCRIPT_DIR/test-ui.sh"
+
 pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
@@ -61,13 +65,13 @@ assert_one_of() {
     fail "$name" "expected one of: ${allowed[*]}, got $actual"
 }
 
-echo "========================================"
-echo "Phase 2 Smoke Test Suite"
-echo "========================================"
-echo "Base URL: $BASE_URL"
-echo "Public API key: $PUBLIC_APIKEY"
-echo "Run rate limit stress test: $RUN_RATE_LIMIT_TEST"
-echo ""
+ui_banner "Phase 2 Smoke Test Suite" "Kong gateway security controls"
+ui_kv "Base URL" "$BASE_URL"
+ui_kv "Public API key" "$PUBLIC_APIKEY"
+ui_kv "Rate limit stress test" "$RUN_RATE_LIMIT_TEST"
+ui_hr
+
+ui_step "Test 1: key-auth on /auth/v1"
 
 # 1) key-auth on auth route
 MISSING_AUTH_CODE=$(curl -sS -o "$TMPDIR/no_apikey_auth.json" -w '%{http_code}' \
@@ -88,6 +92,7 @@ VALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_auth.json" -w '%{http_code}'
 assert_code "Valid apikey accepted on /auth/v1" "200" "$VALID_AUTH_CODE"
 
 # 2) key-auth on rest route
+ui_step "Test 2: key-auth on /rest/v1"
 MISSING_REST_CODE=$(curl -sS -o "$TMPDIR/no_apikey_rest.json" -w '%{http_code}' \
   -X GET "$BASE_URL/rest/v1/" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
@@ -100,6 +105,7 @@ VALID_REST_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_rest.json" -w '%{http_code}'
 assert_one_of "Valid apikey reaches /rest/v1 upstream" "$VALID_REST_CODE" "200" "401"
 
 # 3) key-auth on storage route
+ui_step "Test 3: key-auth and payload limits on /storage/v1"
 MISSING_STORAGE_CODE=$(curl -sS -o "$TMPDIR/no_apikey_storage.json" -w '%{http_code}' \
   -X GET "$BASE_URL/storage/v1/" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
@@ -139,6 +145,7 @@ else
 fi
 
 # 5) CORS preflight should include origin header through Kong plugin
+ui_step "Test 4: CORS preflight headers"
 CORS_HEADERS=$(curl -sS -D - -o /dev/null \
   -X OPTIONS "$BASE_URL/rest/v1/" \
   -H 'Origin: http://example.local' \
@@ -153,6 +160,7 @@ else
 fi
 
 # 6) Optional stress test for route rate-limiting
+ui_step "Test 5: Optional rate-limit burst"
 if [[ "$RUN_RATE_LIMIT_TEST" == "true" ]]; then
     echo -e "${YELLOW}[INFO]${NC} Running rate-limit burst test with $RATE_LIMIT_BURST requests..."
     HIT_429=false
@@ -178,18 +186,10 @@ else
     echo -e "${YELLOW}[SKIP]${NC} Rate-limit burst test skipped (set RUN_RATE_LIMIT_TEST=true to enable)"
 fi
 
-echo ""
-echo "========================================"
-echo "Summary"
-echo "========================================"
-echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
-echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
-echo "========================================"
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 2 gateway controls validated." "Phase 2 gateway controls have failures."
 
 if [[ $TESTS_FAILED -eq 0 ]]; then
-    echo -e "${GREEN}Phase 2 gateway controls validated.${NC}"
     exit 0
 else
-    echo -e "${RED}Phase 2 gateway controls have failures.${NC}"
     exit 1
 fi

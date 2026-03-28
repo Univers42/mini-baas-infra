@@ -20,6 +20,10 @@ NC='\033[0m'
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./test-ui.sh
+source "$SCRIPT_DIR/test-ui.sh"
+
 test_case() {
     local name="$1"
     local expected="$2"
@@ -48,19 +52,16 @@ test_contains() {
     fi
 }
 
-echo "========================================"
-echo "Phase 3 Smoke Test Suite: Authenticated DB Access"
-echo "========================================"
-echo "Base URL: $BASE_URL"
-echo "Admin API Key: $APIKEY"
-echo ""
+ui_banner "Phase 3 Smoke Test Suite" "Authenticated database access"
+ui_kv "Base URL" "$BASE_URL"
+ui_kv "Admin API key" "$APIKEY"
+ui_hr
 
 # Generate unique user for this test run
 EMAIL="user_$(date +%s)@example.com"
 PASS='TestPass123!'
 
-printf '%b\n' "${BLUE}Step 1: Create test user via GoTrue${NC}"
-echo ""
+ui_step "Step 1: Create test user via GoTrue"
 
 # 1. Signup
 SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w '%{http_code}' \
@@ -84,9 +85,7 @@ if [[ "$SIGNUP_HTTP" == "200" ]]; then
     fi
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 2: Login and obtain JWT token${NC}"
-echo ""
+ui_step "Step 2: Login and obtain JWT token"
 
 # 2. Login
 LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
@@ -113,9 +112,7 @@ if [[ "$LOGIN_HTTP" == "200" ]]; then
     fi
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 3: Test REST API authenticated access${NC}"
-echo ""
+ui_step "Step 3: Test REST API authenticated access"
 
 if [[ -z "$JWT_TOKEN" ]]; then
     echo -e "${YELLOW}  (Skipping REST tests - no JWT token)${NC}"
@@ -152,9 +149,7 @@ else
     fi
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 4: Test JWT token validation${NC}"
-echo ""
+ui_step "Step 4: Test JWT token validation"
 
 if [[ -n "$JWT_TOKEN" ]]; then
     # Verify JWT has required fields
@@ -170,9 +165,7 @@ if [[ -n "$JWT_TOKEN" ]]; then
     fi
 fi
 
-echo ""
-printf '%b\n' "${BLUE}Step 5: Test expired/invalid token rejection${NC}"
-echo ""
+ui_step "Step 5: Test expired/invalid token rejection"
 
 INVALID_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.invalid-signature"
 
@@ -190,17 +183,10 @@ else
     ((TESTS_PASSED++))
 fi
 
-echo ""
-echo "========================================"
-echo "Phase 3 Test Results"
-echo "========================================"
-echo -e "${GREEN}Passed: $TESTS_PASSED${NC}"
-echo -e "${RED}Failed: $TESTS_FAILED${NC}"
-echo ""
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "All tests passed!" "Phase 3 has failing tests"
 
 if [[ $TESTS_FAILED -gt 0 ]]; then
     exit 1
 else
-    echo -e "${GREEN}All tests passed!${NC}"
     exit 0
 fi

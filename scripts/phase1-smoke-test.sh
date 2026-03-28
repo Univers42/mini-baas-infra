@@ -18,6 +18,10 @@ NC='\033[0m'
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./test-ui.sh
+source "$SCRIPT_DIR/test-ui.sh"
+
 test_case() {
     local name="$1"
     local expected="$2"
@@ -50,24 +54,21 @@ test_one_of() {
     ((TESTS_FAILED++))
 }
 
-echo "========================================"
-echo "Phase 1 Smoke Test Suite"
-echo "========================================"
-echo "Base URL: $BASE_URL"
-echo "API key: $APIKEY"
-echo ""
+ui_banner "Phase 1 Smoke Test Suite" "Kong routing + Auth + REST access"
+ui_kv "Base URL" "$BASE_URL"
+ui_kv "API key" "$APIKEY"
+ui_hr
 
 # 1. Gateway health with API key
-echo "Test 1: Kong -> GoTrue health"
+ui_step "Test 1: Kong -> GoTrue health"
 HEALTH_HTTP=$(curl -sS -o "$TMPDIR/health.json" -w '%{http_code}' \
     -X GET "$BASE_URL/auth/v1/health" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 test_case "Auth health HTTP status" "200" "$HEALTH_HTTP"
-echo ""
 
 # 2. SIGNUP TEST
-echo "Test 2: Signup via Kong /auth/v1/signup"
+ui_step "Test 2: Signup via Kong /auth/v1/signup"
 EMAIL="phase1_$(date +%s)@example.com"
 PASS='test1234!'
 
@@ -91,10 +92,8 @@ if [[ "$SIGNUP_HTTP" == "200" ]]; then
     fi
 fi
 
-echo ""
-
 # 3. LOGIN TEST
-echo "Test 3: Login via Kong /auth/v1/token"
+ui_step "Test 3: Login via Kong /auth/v1/token"
 
 LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
     -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
@@ -139,20 +138,16 @@ except Exception:
 
 test_case "JWT role claim" "authenticated" "$ROLE"
 
-echo ""
-
 # 4. REST WITHOUT TOKEN TEST
-echo "Test 4: PostgREST access without token (anon behavior)"
+ui_step "Test 4: PostgREST access without token (anon behavior)"
 REST_NO_AUTH=$(curl -sS -o "$TMPDIR/rest_no_auth.json" -w '%{http_code}' \
     -X GET "$BASE_URL/rest/v1/" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 test_one_of "PostgREST no bearer token" "$REST_NO_AUTH" "200" "401"
 
-echo ""
-
 # 5. REST WITH TOKEN TEST (main validation)
-echo "Test 5: PostgREST access with JWT"
+ui_step "Test 5: PostgREST access with JWT"
 if [[ -n "$TOKEN" ]]; then
     REST_WITH_AUTH=$(curl -sS -o "$TMPDIR/rest_with_auth.json" -w '%{http_code}' \
         -X GET "$BASE_URL/rest/v1/" \
@@ -164,10 +159,8 @@ else
     test_case "JWT-authenticated access" "200" "skip"
 fi
 
-echo ""
-
 # 6. NEGATIVE JWT TEST
-echo "Test 6: Invalid JWT is rejected"
+ui_step "Test 6: Invalid JWT is rejected"
 INVALID_REST_HTTP=$(curl -sS -o "$TMPDIR/rest_invalid_jwt.json" -w '%{http_code}' \
     -X GET "$BASE_URL/rest/v1/" \
     -H "apikey: $APIKEY" \
@@ -175,10 +168,8 @@ INVALID_REST_HTTP=$(curl -sS -o "$TMPDIR/rest_invalid_jwt.json" -w '%{http_code}
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 test_one_of "Invalid JWT rejected" "$INVALID_REST_HTTP" "401" "403"
 
-echo ""
-
 # 7. KONG HEADERS TEST
-echo "Test 7: Verify Kong proxied request"
+ui_step "Test 7: Verify Kong proxied request"
 HEADERS=$(curl -sS -i -X GET "$BASE_URL/auth/v1/health" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | head -n 20 || true)
@@ -189,18 +180,10 @@ else
     test_case "Kong proxy identified" "true" "false"
 fi
 
-echo ""
-echo "========================================"
-echo "Summary"
-echo "========================================"
-echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
-echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
-echo "========================================"
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 1 flow validated!" "Some tests failed"
 
 if [[ $TESTS_FAILED -eq 0 ]]; then
-    echo -e "${GREEN}✓ Phase 1 flow validated!${NC}"
     exit 0
 else
-    echo -e "${RED}✗ Some tests failed${NC}"
     exit 1
 fi

@@ -19,6 +19,10 @@ NC='\033[0m'
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./test-ui.sh
+source "$SCRIPT_DIR/test-ui.sh"
+
 pass() {
     local name="$1"
     echo -e "${GREEN}✓${NC} $name"
@@ -32,15 +36,12 @@ fail() {
     ((TESTS_FAILED++))
 }
 
-echo "========================================"
-echo "Phase 5 Test Suite: Database Info"
-echo "========================================"
-echo "Base URL: $BASE_URL"
-echo "API key: $APIKEY"
-echo ""
+ui_banner "Phase 5 Test Suite" "Database metadata retrieval"
+ui_kv "Base URL" "$BASE_URL"
+ui_kv "API key" "$APIKEY"
+ui_hr
 
-printf '%b\n' "${BLUE}Step 1: Retrieve database info from available gateway route${NC}"
-echo ""
+ui_step "Step 1: Retrieve database info from available gateway route"
 
 SELECTED_ENDPOINT=""
 SELECTED_FILE=""
@@ -85,8 +86,7 @@ else
     fail "Response is valid JSON" "invalid JSON payload"
 fi
 
-printf '%b\n' "${BLUE}Step 2: Validate database metadata presence${NC}"
-echo ""
+ui_step "Step 2: Validate database metadata presence"
 
 if [[ -n "$SELECTED_FILE" ]] && jq -e '
     (.info.version? != null) or
@@ -115,17 +115,10 @@ if [[ -n "$SELECTED_ENDPOINT" ]]; then
     echo -e "${YELLOW}Info payload preview:${NC} ${BODY:0:200}"
 fi
 
-echo ""
-echo "========================================"
-echo "Phase 5 Test Results"
-echo "========================================"
-echo -e "${GREEN}Passed: $TESTS_PASSED${NC}"
-echo -e "${RED}Failed: $TESTS_FAILED${NC}"
-echo ""
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Database info retrieval test passed!" "Phase 5 has failing tests"
 
 if [[ $TESTS_FAILED -gt 0 ]]; then
     exit 1
 else
-    echo -e "${GREEN}Database info retrieval test passed!${NC}"
     exit 0
 fi

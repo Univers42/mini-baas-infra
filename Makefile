@@ -6,6 +6,8 @@ BLUE    := \033[0;34m
 GREEN   := \033[0;32m
 YELLOW  := \033[1;33m
 RED     := \033[0;31m
+CYAN    := \033[0;36m
+BOLD    := \033[1m
 DIM     := \033[2m
 NC      := \033[0m
 
@@ -209,27 +211,54 @@ compose-health: ## Quick health checks for key routes
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
 tests: ## Run all smoke tests
-	@$(MAKE) $(NO_PRINT) test-phase1
-	@$(MAKE) $(NO_PRINT) test-phase2
-	@$(MAKE) $(NO_PRINT) test-phase3
-	@$(MAKE) $(NO_PRINT) test-phase4
-	@$(MAKE) $(NO_PRINT) test-phase5
-	@echo -e "$(GREEN)✓ All tests passed$(NC)"
+	@total_passed=0; \
+	total_failed=0; \
+	overall_status=0; \
+	for script in \
+		./scripts/phase1-smoke-test.sh \
+		./scripts/phase2-smoke-test.sh \
+		./scripts/phase3-authenticated-db-test.sh \
+		./scripts/phase4-user-isolation-test.sh \
+		./scripts/phase5-db-info-test.sh; do \
+		tmp_file="$$(mktemp)"; \
+		FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
+		status=$${PIPESTATUS[0]}; \
+		clean_log="$$(sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' "$$tmp_file")"; \
+		passed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Passed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
+		failed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Failed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
+		total_passed=$$((total_passed + passed)); \
+		total_failed=$$((total_failed + failed)); \
+		rm -f "$$tmp_file"; \
+		if [ "$$status" -ne 0 ]; then overall_status=1; fi; \
+	done; \
+	echo ""; \
+	echo -e "$(CYAN)$(BOLD)╔════════════════════════════════════════════════════════════╗$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)║$(NC) $(BOLD)Overall Tests Summary$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)╠════════════════════════════════════════════════════════════╣$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)║$(NC) $(GREEN)$(BOLD)✔ Passed:$(NC) $(GREEN)$(BOLD)$$total_passed$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)║$(NC) $(RED)$(BOLD)✖ Failed:$(NC) $(RED)$(BOLD)$$total_failed$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)╚════════════════════════════════════════════════════════════╝$(NC)"; \
+	if [ "$$overall_status" -eq 0 ]; then \
+		echo -e "$(GREEN)$(BOLD)✔ All test phases passed$(NC)"; \
+	else \
+		echo -e "$(RED)$(BOLD)✖ One or more test phases failed$(NC)"; \
+		exit 1; \
+	fi
 
 test-phase1: ## Run Phase 1 auth/rest smoke test through Kong
-	@bash ./scripts/phase1-smoke-test.sh
+	@FORCE_COLORS=1 bash ./scripts/phase1-smoke-test.sh
 
 test-phase2: ## Run Phase 2 gateway security smoke test
-	@bash ./scripts/phase2-smoke-test.sh
+	@FORCE_COLORS=1 bash ./scripts/phase2-smoke-test.sh
 
 test-phase3: ## Run Phase 3 authenticated database access test
-	@bash ./scripts/phase3-authenticated-db-test.sh
+	@FORCE_COLORS=1 bash ./scripts/phase3-authenticated-db-test.sh
 
 test-phase4: ## Run Phase 4 user data isolation test
-	@bash ./scripts/phase4-user-isolation-test.sh
+	@FORCE_COLORS=1 bash ./scripts/phase4-user-isolation-test.sh
 
 test-phase5: ## Run Phase 5 database information retrieval test
-	@bash ./scripts/phase5-db-info-test.sh
+	@FORCE_COLORS=1 bash ./scripts/phase5-db-info-test.sh
 
 # Convenience aliases
 

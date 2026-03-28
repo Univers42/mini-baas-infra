@@ -105,6 +105,8 @@ Phase 5 database info retrieval test:
 make test-phase5
 ```
 
+`make tests` now prints an overall total summary with aggregated passed/failed counts across all phases.
+
 ## Notes
 
 - Use a `.env` file for production-like values.
