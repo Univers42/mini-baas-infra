@@ -1,5 +1,7 @@
 # mini-baas-infra
 
+![CI](https://github.com/Univers42/mini-baas-infra/actions/workflows/ci.yml/badge.svg)
+
 Docker Compose infrastructure repository for the mini-baas platform.
 
 ## Purpose
@@ -140,6 +142,16 @@ make test-phase10
 ## Running All Tests
 
 `make tests` executes all 10 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
+
+## Continuous Integration
+
+GitHub Actions now runs CI on push and pull requests:
+
+- Shell checks (`bash -n` and `shellcheck`) for all scripts in `scripts/`
+- Full Docker Compose integration run with `make tests`
+- Automatic compose log artifact upload on success/failure
+
+Workflow file: `.github/workflows/ci.yml`
 
 ## Notes
 
