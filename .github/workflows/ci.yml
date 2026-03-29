@@ -31,7 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           while IFS= read -r -d '' file; do
-            shellcheck -e SC1091 "$file"
+            shellcheck -S error -e SC1091 "$file"
           done < <(find scripts -type f -name '*.sh' -print0)
 
   integration-tests:

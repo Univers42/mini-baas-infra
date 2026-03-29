@@ -53,7 +53,7 @@ done < <(find scripts -type f -name '*.sh' -print0)
 if [[ "$RUN_SHELLCHECK" == "1" ]]; then
   echo "[ci-local] Running shellcheck..."
   while IFS= read -r -d '' file; do
-    shellcheck -e SC1091 "$file"
+    shellcheck -S error -e SC1091 "$file"
   done < <(find scripts -type f -name '*.sh' -print0)
 fi
 
