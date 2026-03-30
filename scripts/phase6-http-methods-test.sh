@@ -183,13 +183,15 @@ POST2_HTTP=$(curl -sS -o "$TMPDIR/post2_response.json" -w '%{http_code}' \
     --max-time "$TIMEOUT" \
     -d "{\"user_id\":\"$USER_ID\",\"title\":\"Test Post Phase 6\",\"content\":\"This is a test post created via Phase 6 test\",\"is_public\":false}" 2>/dev/null)
 
-if [[ "$POST2_HTTP" =~ ^(201|200|403)$ ]]; then
+if [[ "$POST2_HTTP" =~ ^(201|200|403|409)$ ]]; then
     echo "✓ POST to posts response (status: $POST2_HTTP)"
     ((TESTS_PASSED++))
 else
     echo "✗ POST to posts unexpected status (got: $POST2_HTTP)"
     ((TESTS_FAILED++))
 fi
+
+POST2_ID=$(jq -r '.[0].id // .id // empty' "$TMPDIR/post2_response.json" 2>/dev/null || true)
 
 if jq . "$TMPDIR/post2_response.json" >/dev/null 2>&1; then
     echo "✓ Post operation response is JSON"

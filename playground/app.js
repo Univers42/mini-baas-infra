@@ -659,6 +659,19 @@ function setupContainerViews() {
     });
   });
 
+  bindClick('postgresShowMvpFlow', () => {
+    writeTo(outputRefs.postgres, 'POSTGRES MVP FLOW', {
+      command: 'make flow-postgres-mvp',
+      script: './scripts/postgres-mvp-flow.sh',
+      purpose: 'Runs signup/login, CRUD on public.posts, JWT rejection check, and user isolation verification.',
+      preconditions: [
+        'docker compose stack is running',
+        'Kong is available on http://localhost:8000',
+      ],
+      quickStart: ['make compose-up', 'make flow-postgres-mvp'],
+    });
+  });
+
   bindClick('clearPostgresOutput', () => clearOutput(outputRefs.postgres, 'No Postgres checks yet.'));
 
   bindClick('postgresGenerateData', async () => {
