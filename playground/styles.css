@@ -8,6 +8,7 @@
   --pg-warning: #f6b73c;
   --pg-danger: #ff6767;
   --pg-ok: #4edba1;
+  --pg-generate: #f28a2f;
   --pg-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
@@ -136,36 +137,57 @@ input {
   padding: 0.62rem 0.7rem;
 }
 
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+select,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(154, 176, 204, 0.28);
+  border-radius: 10px;
+  background: var(--pg-bg-soft);
+  color: var(--pg-text);
+  padding: 0.62rem 0.7rem;
+  font-family: inherit;
 }
 
-.status-card {
-  display: grid;
-  gap: 0.7rem;
+textarea {
+  resize: vertical;
 }
 
-.status-card h3 {
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.view-switcher {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.view-switcher h2 {
   margin: 0;
 }
 
-.status {
+.view-switcher__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.view-btn--active {
+  background: linear-gradient(180deg, #18c4be 0%, #089b99 100%);
+  color: #071017;
+  border: none;
+}
+
+.module-view {
+  display: none;
+  gap: 0.9rem;
+}
+
+.module-view h2 {
   margin: 0;
-  font-weight: 600;
 }
 
-.status--idle {
-  color: var(--pg-warning);
-}
-
-.status--ok {
-  color: var(--pg-ok);
-}
-
-.status--error {
-  color: var(--pg-danger);
+.module-view--active {
+  display: grid;
 }
 
 .button-like {
@@ -191,7 +213,25 @@ input {
 }
 
 .button-like--ghost {
-  background: transparent;
+  border: 1px solid rgba(255, 103, 103, 0.6);
+  background: linear-gradient(180deg, rgba(255, 103, 103, 0.2) 0%, rgba(170, 47, 47, 0.22) 100%);
+  color: #ffdede;
+}
+
+.button-like--ghost:hover {
+  box-shadow: 0 12px 20px rgba(255, 103, 103, 0.28);
+}
+
+button[id$="GenerateData"],
+#restGenerateData {
+  border: 1px solid color-mix(in srgb, var(--pg-generate) 72%, white 28%);
+  background: linear-gradient(180deg, #f6a54c 0%, var(--pg-generate) 100%);
+  color: #1a1005;
+}
+
+button[id$="GenerateData"]:hover,
+#restGenerateData:hover {
+  box-shadow: 0 12px 20px rgba(242, 138, 47, 0.35);
 }
 
 .hint {
@@ -223,8 +263,12 @@ input {
 
 @media (max-width: 900px) {
   .grid-two,
-  .status-grid {
+  .view-switcher__buttons {
     grid-template-columns: 1fr;
+  }
+
+  .view-switcher__buttons {
+    display: grid;
   }
 
   .hero {

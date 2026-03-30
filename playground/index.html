@@ -14,7 +14,7 @@
         <p class="hero__eyebrow">mini-baas infrastructure</p>
         <h1 class="hero__title">Visual Playground</h1>
         <p class="hero__subtitle">
-          Inspect API behavior and verify UI changes with the libcss design language.
+          Inspect API behavior and test containers one by one using dedicated route views.
         </p>
       </header>
 
@@ -44,46 +44,233 @@
         </div>
       </section>
 
-      <section class="status-grid">
-        <article class="panel status-card">
-          <h3>/auth/health (fallback /auth/v1/health)</h3>
-          <p id="authHealthStatus" class="status status--idle">Idle</p>
-          <button id="checkAuthHealth" class="button-like">Check</button>
-        </article>
-        <article class="panel status-card">
-          <h3>/sql/v1/info (fallback /rest/v1/)</h3>
-          <p id="sqlInfoStatus" class="status status--idle">Idle</p>
-          <button id="checkSqlInfo" class="button-like">Check</button>
-        </article>
-        <article class="panel status-card">
-          <h3>/rest/v1/</h3>
-          <p id="restStatus" class="status status--idle">Idle</p>
-          <button id="checkRest" class="button-like">Check</button>
-        </article>
+      <section class="panel view-switcher">
+        <h2>Container Views</h2>
+        <div class="view-switcher__buttons">
+          <button type="button" class="button-like view-btn view-btn--active" data-view="auth">Auth (GoTrue)</button>
+          <button type="button" class="button-like view-btn" data-view="rest">REST (PostgREST)</button>
+          <button type="button" class="button-like view-btn" data-view="realtime">Realtime (WebSocket)</button>
+          <button type="button" class="button-like view-btn" data-view="kong">Kong Gateway</button>
+          <button type="button" class="button-like view-btn" data-view="studio">Studio</button>
+          <button type="button" class="button-like view-btn" data-view="trino">Trino</button>
+          <button type="button" class="button-like view-btn" data-view="pgmeta">pg-meta</button>
+          <button type="button" class="button-like view-btn" data-view="postgres">Postgres</button>
+          <button type="button" class="button-like view-btn" data-view="dbbootstrap">DB Bootstrap</button>
+          <button type="button" class="button-like view-btn" data-view="mongo">Mongo</button>
+          <button type="button" class="button-like view-btn" data-view="minio">MinIO</button>
+          <button type="button" class="button-like view-btn" data-view="redis">Redis</button>
+          <button type="button" class="button-like view-btn" data-view="supavisor">Supavisor</button>
+        </div>
       </section>
 
-      <section class="panel auth-panel">
-        <h2>Auth Flow Probe</h2>
-        <p class="hint">Create a temporary user to quickly validate GoTrue wiring through Kong.</p>
+      <section id="view-auth" class="panel module-view module-view--active">
+        <h2>Auth Container View</h2>
+        <p class="hint">Health, signup, and login flow against GoTrue through Kong.</p>
+        <div class="grid-two">
+          <button id="checkAuthHealth" class="button-like">Check /auth health</button>
+          <button id="authGenerateData" class="button-like">Generate Random Auth Data</button>
+          <button id="clearAuthOutput" class="button-like button-like--ghost">Clear Auth Output</button>
+        </div>
         <form id="signupForm" class="grid-two">
           <label>
-            Email
+            Signup Email
             <input id="signupEmail" type="email" placeholder="tester@example.com" required />
           </label>
           <label>
-            Password
+            Signup Password
             <input id="signupPassword" type="password" minlength="6" placeholder="StrongPassword123!" required />
           </label>
           <button type="submit" class="button-like button-like--accent">Create User</button>
         </form>
+        <form id="loginForm" class="grid-two">
+          <label>
+            Login Email
+            <input id="loginEmail" type="email" placeholder="tester@example.com" required />
+          </label>
+          <label>
+            Login Password
+            <input id="loginPassword" type="password" minlength="6" placeholder="StrongPassword123!" required />
+          </label>
+          <button type="submit" class="button-like">Login and Get Token</button>
+        </form>
+        <pre id="authOutput" class="response-output">No auth requests yet.</pre>
       </section>
 
-      <section class="panel response-panel">
-        <div class="response-panel__head">
-          <h2>Response Console</h2>
-          <button id="clearConsole" class="button-like button-like--ghost">Clear</button>
+      <section id="view-rest" class="panel module-view">
+        <h2>REST Container View</h2>
+        <p class="hint">Run schema checks and custom REST requests against PostgREST.</p>
+        <form id="restRequestForm" class="grid-two">
+          <label>
+            Method
+            <select id="restMethod">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PATCH">PATCH</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </label>
+          <label>
+            Endpoint Path
+            <input id="restPath" type="text" value="/rest/v1/" required />
+          </label>
+          <label class="full-width">
+            JSON Body (optional)
+            <textarea id="restBody" rows="5" placeholder='{"name":"example"}'></textarea>
+          </label>
+          <button type="submit" class="button-like button-like--accent">Send REST Request</button>
+          <button id="restGenerateData" type="button" class="button-like">Generate Random REST Data</button>
+          <button id="clearRestOutput" type="button" class="button-like button-like--ghost">Clear REST Output</button>
+        </form>
+        <pre id="restOutput" class="response-output">No REST requests yet.</pre>
+      </section>
+
+      <section id="view-realtime" class="panel module-view">
+        <h2>Realtime Container View</h2>
+        <p class="hint">Open a WebSocket session and inspect realtime connection behavior.</p>
+        <div class="grid-two">
+          <label>
+            WebSocket Path
+            <input id="wsPath" type="text" value="/realtime/v1/websocket" />
+          </label>
+          <label>
+            JWT Token (optional)
+            <input id="wsToken" type="text" placeholder="Paste JWT for authenticated channels" />
+          </label>
         </div>
-        <pre id="responseOutput" class="response-output">No requests yet.</pre>
+        <div class="grid-two">
+          <button id="connectRealtime" type="button" class="button-like button-like--accent">Connect WebSocket</button>
+          <button id="disconnectRealtime" type="button" class="button-like">Disconnect WebSocket</button>
+        </div>
+        <div class="grid-two">
+          <button id="sendRealtimePing" type="button" class="button-like">Send Ping Message</button>
+          <button id="realtimeGenerateData" type="button" class="button-like">Generate Random Realtime Data</button>
+          <button id="clearRealtimeOutput" type="button" class="button-like button-like--ghost">Clear Realtime Output</button>
+        </div>
+        <pre id="realtimeOutput" class="response-output">No realtime activity yet.</pre>
+      </section>
+
+      <section id="view-kong" class="panel module-view">
+        <h2>Kong Container View</h2>
+        <p class="hint">Validate gateway behavior and inspect admin interface endpoints.</p>
+        <div class="grid-two">
+          <button id="kongCheckAuth" type="button" class="button-like">Probe /auth/v1/health</button>
+          <button id="kongCheckRest" type="button" class="button-like">Probe /rest/v1/</button>
+          <button id="kongGenerateData" type="button" class="button-like">Generate Random Kong Data</button>
+          <button id="kongOpenAdmin" type="button" class="button-like">Open Kong Admin (8001)</button>
+          <button id="clearKongOutput" type="button" class="button-like button-like--ghost">Clear Kong Output</button>
+        </div>
+        <pre id="kongOutput" class="response-output">No Kong checks yet.</pre>
+      </section>
+
+      <section id="view-studio" class="panel module-view">
+        <h2>Studio Container View</h2>
+        <p class="hint">Open Studio through direct port and gateway route.</p>
+        <div class="grid-two">
+          <button id="studioOpenDirect" type="button" class="button-like">Open Studio (localhost:3001)</button>
+          <button id="studioOpenGateway" type="button" class="button-like">Open /studio via Kong</button>
+          <button id="studioGenerateData" type="button" class="button-like">Generate Random Studio Data</button>
+          <button id="studioProbeGateway" type="button" class="button-like">Probe /studio</button>
+          <button id="clearStudioOutput" type="button" class="button-like button-like--ghost">Clear Studio Output</button>
+        </div>
+        <pre id="studioOutput" class="response-output">No Studio checks yet.</pre>
+      </section>
+
+      <section id="view-trino" class="panel module-view">
+        <h2>Trino Container View</h2>
+        <p class="hint">Validate Trino port and SQL gateway route wiring.</p>
+        <div class="grid-two">
+          <button id="trinoOpenUi" type="button" class="button-like">Open Trino (localhost:8080)</button>
+          <button id="trinoProbeSqlRoute" type="button" class="button-like">Probe /sql/v1/info</button>
+          <button id="trinoGenerateData" type="button" class="button-like">Generate Random Trino Data</button>
+          <button id="trinoShowInfo" type="button" class="button-like">Show Required Trino Info</button>
+          <button id="clearTrinoOutput" type="button" class="button-like button-like--ghost">Clear Trino Output</button>
+        </div>
+        <pre id="trinoOutput" class="response-output">No Trino checks yet.</pre>
+      </section>
+
+      <section id="view-pgmeta" class="panel module-view">
+        <h2>pg-meta Container View</h2>
+        <p class="hint">Check metadata route availability and required DB credentials.</p>
+        <div class="grid-two">
+          <button id="pgmetaProbeRoute" type="button" class="button-like">Probe /meta/v1/</button>
+          <button id="pgmetaGenerateData" type="button" class="button-like">Generate Random pg-meta Data</button>
+          <button id="pgmetaShowInfo" type="button" class="button-like">Show pg-meta Settings</button>
+          <button id="clearPgmetaOutput" type="button" class="button-like button-like--ghost">Clear pg-meta Output</button>
+        </div>
+        <pre id="pgmetaOutput" class="response-output">No pg-meta checks yet.</pre>
+      </section>
+
+      <section id="view-postgres" class="panel module-view">
+        <h2>Postgres Container View</h2>
+        <p class="hint">Use REST schema probe as DB readiness indicator and show DB connection requirements.</p>
+        <div class="grid-two">
+          <button id="postgresProbeRest" type="button" class="button-like">Probe /rest/v1/ (DB via PostgREST)</button>
+          <button id="postgresGenerateData" type="button" class="button-like">Generate Random Postgres Data</button>
+          <button id="postgresShowInfo" type="button" class="button-like">Show Postgres Connection Info</button>
+          <button id="clearPostgresOutput" type="button" class="button-like button-like--ghost">Clear Postgres Output</button>
+        </div>
+        <pre id="postgresOutput" class="response-output">No Postgres checks yet.</pre>
+      </section>
+
+      <section id="view-dbbootstrap" class="panel module-view">
+        <h2>DB Bootstrap Container View</h2>
+        <p class="hint">Validate bootstrap effect indirectly through auth and REST readiness.</p>
+        <div class="grid-two">
+          <button id="dbbootstrapProbeAuth" type="button" class="button-like">Probe /auth/v1/health</button>
+          <button id="dbbootstrapProbeRest" type="button" class="button-like">Probe /rest/v1/</button>
+          <button id="dbbootstrapGenerateData" type="button" class="button-like">Generate Random Bootstrap Data</button>
+          <button id="dbbootstrapShowInfo" type="button" class="button-like">Show Bootstrap Responsibilities</button>
+          <button id="clearDbbootstrapOutput" type="button" class="button-like button-like--ghost">Clear Bootstrap Output</button>
+        </div>
+        <pre id="dbbootstrapOutput" class="response-output">No bootstrap checks yet.</pre>
+      </section>
+
+      <section id="view-mongo" class="panel module-view">
+        <h2>Mongo Container View</h2>
+        <p class="hint">Mongo uses native wire protocol; browser provides command guidance and port link checks.</p>
+        <div class="grid-two">
+          <button id="mongoOpenPort" type="button" class="button-like">Open localhost:27017</button>
+          <button id="mongoGenerateData" type="button" class="button-like">Generate Random Mongo Data</button>
+          <button id="mongoShowInfo" type="button" class="button-like">Show Mongo Test Commands</button>
+          <button id="clearMongoOutput" type="button" class="button-like button-like--ghost">Clear Mongo Output</button>
+        </div>
+        <pre id="mongoOutput" class="response-output">No Mongo checks yet.</pre>
+      </section>
+
+      <section id="view-minio" class="panel module-view">
+        <h2>MinIO Container View</h2>
+        <p class="hint">Open MinIO API/console and validate storage route through Kong.</p>
+        <div class="grid-two">
+          <button id="minioOpenApi" type="button" class="button-like">Open MinIO API (9000)</button>
+          <button id="minioOpenConsole" type="button" class="button-like">Open MinIO Console (9001)</button>
+          <button id="minioGenerateData" type="button" class="button-like">Generate Random MinIO Data</button>
+          <button id="minioProbeStorageRoute" type="button" class="button-like">Probe /storage/v1/</button>
+          <button id="clearMinioOutput" type="button" class="button-like button-like--ghost">Clear MinIO Output</button>
+        </div>
+        <pre id="minioOutput" class="response-output">No MinIO checks yet.</pre>
+      </section>
+
+      <section id="view-redis" class="panel module-view">
+        <h2>Redis Container View</h2>
+        <p class="hint">Redis uses TCP protocol; use command guidance for runtime checks.</p>
+        <div class="grid-two">
+          <button id="redisGenerateData" type="button" class="button-like">Generate Random Redis Data</button>
+          <button id="redisShowInfo" type="button" class="button-like">Show Redis Test Commands</button>
+          <button id="clearRedisOutput" type="button" class="button-like button-like--ghost">Clear Redis Output</button>
+        </div>
+        <pre id="redisOutput" class="response-output">No Redis checks yet.</pre>
+      </section>
+
+      <section id="view-supavisor" class="panel module-view">
+        <h2>Supavisor Container View</h2>
+        <p class="hint">Supavisor exposes Postgres-compatible pooling on port 6543.</p>
+        <div class="grid-two">
+          <button id="supavisorOpenPort" type="button" class="button-like">Open localhost:6543</button>
+          <button id="supavisorGenerateData" type="button" class="button-like">Generate Random Supavisor Data</button>
+          <button id="supavisorShowInfo" type="button" class="button-like">Show Supavisor Test Commands</button>
+          <button id="clearSupavisorOutput" type="button" class="button-like button-like--ghost">Clear Supavisor Output</button>
+        </div>
+        <pre id="supavisorOutput" class="response-output">No Supavisor checks yet.</pre>
       </section>
     </main>
 
