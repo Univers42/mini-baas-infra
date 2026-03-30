@@ -224,7 +224,10 @@ tests: ## Run all smoke tests
 		./scripts/phase7-error-handling-test.sh \
 		./scripts/phase8-token-lifecycle-test.sh \
 		./scripts/phase9-storage-operations-test.sh \
-		./scripts/phase10-data-mutation-complex-queries-test.sh; do \
+		./scripts/phase10-data-mutation-complex-queries-test.sh \
+		./scripts/phase11-realtime-websocket-test.sh \
+		./scripts/phase12-rate-limiting-test.sh \
+		./scripts/phase13-cors-preflight-test.sh; do \
 		tmp_file="$$(mktemp)"; \
 		FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
 		status=$${PIPESTATUS[0]}; \
@@ -280,6 +283,15 @@ test-phase9: ## Run Phase 9 storage service operations test
 test-phase10: ## Run Phase 10 data mutation and complex query test
 	@FORCE_COLORS=1 bash ./scripts/phase10-data-mutation-complex-queries-test.sh
 
+test-phase11: ## Run Phase 11 realtime WebSocket communication test
+	@FORCE_COLORS=1 bash ./scripts/phase11-realtime-websocket-test.sh
+
+test-phase12: ## Run Phase 12 rate limiting policy enforcement test
+	@FORCE_COLORS=1 bash ./scripts/phase12-rate-limiting-test.sh
+
+test-phase13: ## Run Phase 13 CORS preflight and cross-origin test
+	@FORCE_COLORS=1 bash ./scripts/phase13-cors-preflight-test.sh
+
 # Convenience aliases
 
 dev-up: ## Start local stack with docker compose
@@ -316,5 +328,5 @@ help: ## Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 \
 	dev-up dev-down dev-re build-and-push fclean help

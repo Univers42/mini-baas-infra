@@ -197,6 +197,38 @@ services:
               allowed_payload_size: 10
               size_unit: megabytes
 
+  - name: admin-meta
+    url: http://pg-meta:8080
+    routes:
+      - name: meta-routes
+        paths: [/meta/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: admin-studio
+    url: http://studio:3000
+    routes:
+      - name: studio-routes
+        paths: [/studio]
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 300
+              hour: 5000
+
 plugins:
   - name: cors
     config:
