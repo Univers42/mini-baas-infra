@@ -215,6 +215,24 @@ services:
               minute: 120
               hour: 3000
 
+  - name: mongo-api
+    url: http://mongo-api:3010
+    routes:
+      - name: mongo-api-routes
+        paths: [/mongo/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 180
+              hour: 5000
+
   - name: admin-studio
     url: http://studio:3000
     routes:
