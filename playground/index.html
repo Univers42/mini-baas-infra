@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-palette="ocean">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini-BaaS Playground</title>
+    <link rel="stylesheet" href="/libcss.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient-gradient" aria-hidden="true"></div>
+    <main class="playground-shell">
+      <header class="hero">
+        <p class="hero__eyebrow">mini-baas infrastructure</p>
+        <h1 class="hero__title">Visual Playground</h1>
+        <p class="hero__subtitle">
+          Inspect API behavior and verify UI changes with the libcss design language.
+        </p>
+      </header>
+
+      <nav class="panel routes-nav" aria-label="Available routes">
+        <h2>Available Routes</h2>
+        <div class="routes-nav__list">
+          <span class="route-chip">GET /auth/health</span>
+          <span class="route-chip">GET /sql/v1/info</span>
+          <span class="route-chip">GET /rest/v1/</span>
+          <span class="route-chip">POST /auth/v1/signup</span>
+          <span class="route-chip">GET /realtime/v1/</span>
+          <span class="route-chip">GET /storage/v1/</span>
+        </div>
+      </nav>
+
+      <section class="config panel">
+        <h2>Gateway Config</h2>
+        <div class="grid-two">
+          <label>
+            Gateway URL
+            <input id="gatewayUrl" type="url" value="http://localhost:8000" />
+          </label>
+          <label>
+            Public API Key
+            <input id="publicApiKey" type="text" value="public-anon-key" />
+          </label>
+        </div>
+      </section>
+
+      <section class="status-grid">
+        <article class="panel status-card">
+          <h3>/auth/health</h3>
+          <p id="authHealthStatus" class="status status--idle">Idle</p>
+          <button id="checkAuthHealth" class="button-like">Check</button>
+        </article>
+        <article class="panel status-card">
+          <h3>/sql/v1/info</h3>
+          <p id="sqlInfoStatus" class="status status--idle">Idle</p>
+          <button id="checkSqlInfo" class="button-like">Check</button>
+        </article>
+        <article class="panel status-card">
+          <h3>/rest/v1/</h3>
+          <p id="restStatus" class="status status--idle">Idle</p>
+          <button id="checkRest" class="button-like">Check</button>
+        </article>
+      </section>
+
+      <section class="panel auth-panel">
+        <h2>Auth Flow Probe</h2>
+        <p class="hint">Create a temporary user to quickly validate GoTrue wiring through Kong.</p>
+        <form id="signupForm" class="grid-two">
+          <label>
+            Email
+            <input id="signupEmail" type="email" placeholder="tester@example.com" required />
+          </label>
+          <label>
+            Password
+            <input id="signupPassword" type="password" minlength="6" placeholder="StrongPassword123!" required />
+          </label>
+          <button type="submit" class="button-like button-like--accent">Create User</button>
+        </form>
+      </section>
+
+      <section class="panel response-panel">
+        <div class="response-panel__head">
+          <h2>Response Console</h2>
+          <button id="clearConsole" class="button-like button-like--ghost">Clear</button>
+        </div>
+        <pre id="responseOutput" class="response-output">No requests yet.</pre>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

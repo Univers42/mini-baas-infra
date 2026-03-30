@@ -210,6 +210,34 @@ compose-health: ## Quick health checks for key routes
 	@curl -fsS http://localhost:8000/sql/v1/info >/dev/null && echo "  ✓ Kong -> /sql/v1/info" || echo "  ✗ Kong -> /sql/v1/info"
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
+playground-css: ## Build libcss CSS assets used by the frontend playground
+	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required to build libcss assets."; exit 1; }
+	@echo -e "$(BLUE)Building libcss CSS assets for playground...$(NC)"
+	@npm --prefix ./vendor/libcss install --legacy-peer-deps
+	@npm --prefix ./vendor/libcss run build:min
+	@echo -e "$(GREEN)✓ libcss CSS ready at vendor/libcss/dist/css/libcss.min.css$(NC)"
+
+playground-up: ## Build CSS and start playground frontend container
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@$(MAKE) $(NO_PRINT) playground-css
+	@echo -e "$(BLUE)Starting playground frontend...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) up -d playground
+	@echo -e "$(GREEN)✓ Playground available at http://localhost:3100$(NC)"
+	$(call print-next,Open http://localhost:3100 and run visual checks.)
+
+playground-down: ## Stop playground frontend container
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) stop playground >/dev/null 2>&1 || true
+	@docker compose -f $(COMPOSE_FILE) rm -f playground >/dev/null 2>&1 || true
+	@echo -e "$(GREEN)✓ Playground stopped$(NC)"
+
+playground-logs: ## Show playground frontend logs
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) logs -f --tail=100 playground
+
 tests: ## Run all smoke tests
 	@total_passed=0; \
 	total_failed=0; \
@@ -328,5 +356,5 @@ help: ## Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 \
 	dev-up dev-down dev-re build-and-push fclean help

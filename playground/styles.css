@@ -1,0 +1,226 @@
+:root {
+  --pg-bg: #090d13;
+  --pg-bg-soft: #101826;
+  --pg-card: rgba(13, 24, 40, 0.84);
+  --pg-text: #e9f0ff;
+  --pg-muted: #9ab0cc;
+  --pg-accent: #12c7c1;
+  --pg-warning: #f6b73c;
+  --pg-danger: #ff6767;
+  --pg-ok: #4edba1;
+  --pg-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--pg-text);
+  font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at 12% 10%, #123152 0%, transparent 33%),
+    radial-gradient(circle at 88% 20%, #243c5a 0%, transparent 38%),
+    linear-gradient(135deg, var(--pg-bg) 0%, #0e1624 100%);
+}
+
+.ambient-gradient {
+  position: fixed;
+  inset: 0;
+  background: conic-gradient(from 80deg at 70% 20%, transparent, rgba(18, 199, 193, 0.12), transparent);
+  pointer-events: none;
+}
+
+.playground-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.playground-shell > * {
+  min-width: 0;
+}
+
+.hero {
+  padding: 1.2rem 1.4rem;
+}
+
+.hero__eyebrow {
+  margin: 0;
+  color: var(--pg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+}
+
+.hero__title {
+  margin: 0.4rem 0;
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  line-height: 1;
+}
+
+.hero__subtitle {
+  margin: 0;
+  color: var(--pg-muted);
+  max-width: 62ch;
+}
+
+.routes-nav {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.routes-nav h2 {
+  margin: 0;
+}
+
+.routes-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.route-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(18, 199, 193, 0.42);
+  background: rgba(18, 199, 193, 0.12);
+  color: #d8fffd;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  max-width: 100%;
+}
+
+.panel {
+  border: 1px solid rgba(154, 176, 204, 0.2);
+  border-radius: 16px;
+  background: var(--pg-card);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--pg-shadow);
+  padding: 1rem;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--pg-muted);
+}
+
+input {
+  width: 100%;
+  border: 1px solid rgba(154, 176, 204, 0.28);
+  border-radius: 10px;
+  background: var(--pg-bg-soft);
+  color: var(--pg-text);
+  padding: 0.62rem 0.7rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.status-card {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.status-card h3 {
+  margin: 0;
+}
+
+.status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.status--idle {
+  color: var(--pg-warning);
+}
+
+.status--ok {
+  color: var(--pg-ok);
+}
+
+.status--error {
+  color: var(--pg-danger);
+}
+
+.button-like {
+  border: 1px solid rgba(154, 176, 204, 0.36);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #243853 0%, #172336 100%);
+  color: var(--pg-text);
+  padding: 0.58rem 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.button-like:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
+}
+
+.button-like--accent {
+  background: linear-gradient(180deg, #18c4be 0%, #089b99 100%);
+  color: #071017;
+  border: none;
+}
+
+.button-like--ghost {
+  background: transparent;
+}
+
+.hint {
+  margin-top: 0;
+  color: var(--pg-muted);
+}
+
+.response-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.response-output {
+  margin: 0;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(154, 176, 204, 0.24);
+  background: #0a1423;
+  color: #dce8ff;
+  overflow: auto;
+  min-height: 210px;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .grid-two,
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 1rem 0.2rem;
+  }
+}

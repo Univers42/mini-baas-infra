@@ -34,6 +34,7 @@ This repository centralizes local infrastructure orchestration, image workflows,
 - `redis`
 - `supavisor`
 - `studio`
+- `playground`
 
 ## Quick Start
 
@@ -69,6 +70,30 @@ make compose-up-build
 - Auth health: `http://localhost:8000/auth/health`
 - SQL info (via gateway): `http://localhost:8000/sql/v1/info`
 - Studio: `http://localhost:3001/`
+- Playground: `http://localhost:3100/`
+
+## Frontend Playground (libcss Submodule)
+
+The repository includes a visual playground frontend in `playground/` that uses CSS built from the `vendor/libcss` submodule.
+
+Start it with:
+
+```bash
+make playground-up
+```
+
+This target:
+
+- installs `vendor/libcss` dependencies,
+- builds `vendor/libcss/dist/css/libcss.min.css`,
+- starts an nginx container serving the playground at `http://localhost:3100`.
+
+Useful playground commands:
+
+```bash
+make playground-logs
+make playground-down
+```
 
 ## Gateway Security (Phase 2)
 
