@@ -316,6 +316,7 @@ services:
   playground:
     image: nginx:1.27-alpine
     container_name: mini-baas-playground
+    profiles: ["playground"]
     ports:
       - "3100:80"
     volumes:
