@@ -57,11 +57,39 @@ if [[ "$RUN_SHELLCHECK" == "1" ]]; then
   done < <(find scripts -type f -name '*.sh' -print0)
 fi
 
+echo "[ci-local] Resetting compose state (including volumes) for deterministic credentials..."
+make compose-down-volumes || true
+
 echo "[ci-local] Generating .env..."
 FORCE=1 bash ./scripts/generate-env.sh .env
 
 echo "[ci-local] Starting compose stack..."
 make compose-up
+
+echo "[ci-local] Verifying db-bootstrap completion..."
+for _ in $(seq 1 60); do
+  status="$(docker inspect -f '{{.State.Status}}' mini-baas-db-bootstrap 2>/dev/null || true)"
+  exit_code="$(docker inspect -f '{{.State.ExitCode}}' mini-baas-db-bootstrap 2>/dev/null || true)"
+
+  if [[ "$status" == "exited" ]]; then
+    if [[ "$exit_code" == "0" ]]; then
+      echo "[ci-local] db-bootstrap completed successfully"
+      break
+    fi
+
+    echo "[ci-local] db-bootstrap failed (exit code: ${exit_code:-unknown})" >&2
+    docker logs mini-baas-db-bootstrap >&2 || true
+    exit 1
+  fi
+
+  sleep 1
+done
+
+if [[ "${status:-}" != "exited" ]]; then
+  echo "[ci-local] db-bootstrap did not finish in time" >&2
+  docker logs mini-baas-db-bootstrap >&2 || true
+  exit 1
+fi
 
 echo "[ci-local] Waiting for gateway health..."
 for _ in $(seq 1 60); do
