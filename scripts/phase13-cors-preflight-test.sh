@@ -191,12 +191,7 @@ else
 fi
 
 ui_hr
-echo ""
-echo "Phase 13 Summary:"
-echo -e "  ${GREEN}Passed: $TESTS_PASSED${NC}"
-echo -e "  ${RED}Failed: $TESTS_FAILED${NC}"
-echo -e "  Total: $((TESTS_PASSED + TESTS_FAILED))"
-echo ""
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 13 CORS tests passed!" "Phase 13 CORS tests failed"
 echo -e "${YELLOW}CORS configuration allows:"
 echo -e "  • Requests from any origin (*)"
 echo -e "  • Standard HTTP methods (GET, POST, PUT, PATCH, DELETE, OPTIONS)"

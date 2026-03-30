@@ -174,12 +174,7 @@ else
 fi
 
 ui_hr
-echo ""
-echo "Phase 12 Summary:"
-echo -e "  ${GREEN}Passed: $TESTS_PASSED${NC}"
-echo -e "  ${RED}Failed: $TESTS_FAILED${NC}"
-echo -e "  Total: $((TESTS_PASSED + TESTS_FAILED))"
-echo ""
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 12 rate-limiting tests passed!" "Phase 12 rate-limiting tests failed"
 echo -e "${YELLOW}Note: Rate limiting is best tested over longer periods or with"
 echo -e "high concurrency. This phase validates configuration and basic behavior.${NC}"
 echo ""

@@ -164,11 +164,6 @@ else
 fi
 
 ui_hr
-echo ""
-echo "Phase 11 Summary:"
-echo -e "  ${GREEN}Passed: $TESTS_PASSED${NC}"
-echo -e "  ${RED}Failed: $TESTS_FAILED${NC}"
-echo -e "  Total: $((TESTS_PASSED + TESTS_FAILED))"
-echo ""
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 11 realtime tests passed!" "Phase 11 realtime tests failed"
 
 exit $TESTS_FAILED
