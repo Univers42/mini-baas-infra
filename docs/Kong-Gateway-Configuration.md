@@ -226,12 +226,12 @@ services:
 
 ### Remove headers
 
-Use `request-transformer` to strip problematic headers (like Trino's incompatibility with X-Forwarded-For):
+Use `request-transformer` to strip problematic headers for an upstream service:
 
 ```yaml
 services:
-  - name: trino
-    url: http://trino:8080
+  - name: internal-service
+    url: http://internal-service:8080
     plugins:
       - name: request-transformer
         config:
@@ -239,9 +239,9 @@ services:
             headers:
               - x-forwarded-for
     routes:
-      - name: trino-route
+      - name: internal-route
         paths:
-          - /sql
+          - /internal
         strip_path: true
 ```
 
@@ -356,8 +356,7 @@ curl -H "apikey: your-key" http://localhost:8000/your/new/path
 
 ### Trino (SQL federation)
 - **Port**: 8080
-- **Rejects**: X-Forwarded-For header (header transformer removes it)
-- **Config**: Accepts `http-server.process-forwarded=true`
+- **Note**: Not exposed via Kong gateway in the near-term product contract
 
 ### PG Meta (Schema introspection)
 - **Port**: 8080
@@ -389,14 +388,14 @@ curl -H "apikey: your-key" http://localhost:8000/your/new/path
 
 ## Example: Adding a new BaaS module endpoint
 
-Here's a complete example of adding a `/sql` route to Trino:
+Here's a complete example of adding a custom internal route:
 
 ```yaml
 # In deployments/base/kong/kong.yml, add:
 
 services:
-  - name: trino
-    url: http://trino:8080
+  - name: internal-service
+    url: http://internal-service:8080
     plugins:
       - name: request-transformer
         config:
@@ -404,9 +403,9 @@ services:
             headers:
               - x-internal-origin: gateway
     routes:
-      - name: trino-route
+      - name: internal-route
         paths:
-          - /sql
+          - /internal/v1
         strip_path: true
         methods:
           - GET
@@ -415,10 +414,10 @@ services:
 ```
 
 Then:
-1. Ensure `trino` service is available in `docker-compose.yml`
+1. Ensure your target service is available in `docker-compose.yml`
 2. Validate: `docker run ... kong config parse`
 3. Restart: `docker compose restart kong`
-4. Test: `curl http://localhost:8000/sql/v1/info`
+4. Test: `curl http://localhost:8000/internal/v1/health`
 
 ## Further reading
 

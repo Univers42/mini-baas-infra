@@ -30,7 +30,7 @@ The main remaining issues are alignment and hardening rather than initial integr
 
 1. Keep docs aligned with the current stack behavior and available Make targets.
 2. Tighten Phase 11-13 assertions so soft-pass checks become explicit validations.
-3. Decide and document SQL route policy (`/sql/v1/info`) versus REST metadata fallback behavior.
+3. Keep REST metadata endpoints as the near-term contract for gateway health and documentation.
 4. Define an environment-specific security profile for CORS origins and key management.
 
 ## Summary

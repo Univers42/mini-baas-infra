@@ -207,7 +207,7 @@ compose-pull: ## Pull latest images for all services
 compose-health: ## Quick health checks for key routes
 	@echo -e "$(BLUE)Checking local endpoints...$(NC)"
 	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null && echo "  ✓ Kong -> /auth/v1/health" || echo "  ✗ Kong -> /auth/v1/health"
-	@curl -fsS http://localhost:8000/sql/v1/info >/dev/null && echo "  ✓ Kong -> /sql/v1/info" || echo "  ✗ Kong -> /sql/v1/info"
+	@curl -fsS http://localhost:8000/rest/v1/ >/dev/null && echo "  ✓ Kong -> /rest/v1/" || echo "  ✗ Kong -> /rest/v1/"
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
 playground-css: ## Build libcss CSS assets used by the frontend playground
@@ -293,7 +293,7 @@ test-phase3: ## Run Phase 3 authenticated database access test
 test-phase4: ## Run Phase 4 user data isolation test
 	@FORCE_COLORS=1 bash ./scripts/phase4-user-isolation-test.sh
 
-test-phase5: ## Run Phase 5 database information retrieval test
+test-phase5: ## Run Phase 5 REST metadata retrieval test
 	@FORCE_COLORS=1 bash ./scripts/phase5-db-info-test.sh
 
 test-phase6: ## Run Phase 6 HTTP methods & data mutations test

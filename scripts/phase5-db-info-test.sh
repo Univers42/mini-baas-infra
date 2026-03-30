@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Phase 5 Test: Database Information Retrieval
-# Validates SQL metadata endpoint exposure through Kong
+# Phase 5 Test: REST Metadata Retrieval
+# Validates REST metadata endpoint exposure through Kong
 
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 TIMEOUT="${TIMEOUT:-10}"
@@ -36,43 +36,26 @@ fail() {
     ((TESTS_FAILED++))
 }
 
-ui_banner "Phase 5 Test Suite" "Database metadata retrieval"
+ui_banner "Phase 5 Test Suite" "REST metadata retrieval"
 ui_kv "Base URL" "$BASE_URL"
 ui_kv "API key" "$APIKEY"
 ui_hr
 
 ui_step "Step 1: Retrieve database info from available gateway route"
 
-SELECTED_ENDPOINT=""
-SELECTED_FILE=""
+SELECTED_ENDPOINT="/rest/v1/"
+SELECTED_FILE="$TMPDIR/rest_openapi.json"
 
-# Try SQL metadata endpoint first, then PostgREST OpenAPI as fallback.
-SQL_HTTP=$(curl -sS -o "$TMPDIR/sql_info.json" -w '%{http_code}' \
-    -X GET "$BASE_URL/sql/v1/info" \
+REST_HTTP=$(curl -sS -o "$SELECTED_FILE" -w '%{http_code}' \
+    -X GET "$BASE_URL$SELECTED_ENDPOINT" \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
-if [[ "$SQL_HTTP" == "200" ]]; then
-    SELECTED_ENDPOINT="/sql/v1/info"
-    SELECTED_FILE="$TMPDIR/sql_info.json"
-fi
-
-if [[ -z "$SELECTED_ENDPOINT" ]]; then
-    REST_HTTP=$(curl -sS -o "$TMPDIR/rest_openapi.json" -w '%{http_code}' \
-        -X GET "$BASE_URL/rest/v1/" \
-        -H "apikey: $APIKEY" \
-        --max-time "$TIMEOUT" 2>/dev/null || echo "000")
-
-    if [[ "$REST_HTTP" == "200" ]]; then
-        SELECTED_ENDPOINT="/rest/v1/"
-        SELECTED_FILE="$TMPDIR/rest_openapi.json"
-    fi
-fi
-
-if [[ -n "$SELECTED_ENDPOINT" ]]; then
+if [[ "$REST_HTTP" == "200" ]]; then
     pass "Database info endpoint reachable"
     echo -e "${GREEN}  └─${NC} Using endpoint: $SELECTED_ENDPOINT"
 else
-    fail "Database info endpoint reachable" "tried /sql/v1/info (HTTP: $SQL_HTTP) and /rest/v1/ (HTTP: ${REST_HTTP:-not-tried})"
+    fail "Database info endpoint reachable" "tried /rest/v1/ (HTTP: $REST_HTTP)"
 fi
 
 BODY=""
@@ -115,7 +98,7 @@ if [[ -n "$SELECTED_ENDPOINT" ]]; then
     echo -e "${YELLOW}Info payload preview:${NC} ${BODY:0:200}"
 fi
 
-ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Database info retrieval test passed!" "Phase 5 has failing tests"
+ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "REST metadata retrieval test passed!" "Phase 5 has failing tests"
 
 if [[ $TESTS_FAILED -gt 0 ]]; then
     exit 1

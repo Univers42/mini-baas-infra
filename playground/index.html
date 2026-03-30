@@ -22,7 +22,6 @@
         <h2>Available Routes</h2>
         <div class="routes-nav__list">
           <button type="button" class="route-btn" data-route="/auth/v1/health" data-needs-key="true">GET /auth/v1/health (active)</button>
-          <button type="button" class="route-btn" data-route="/sql/v1/info">GET /sql/v1/info (legacy)</button>
           <button type="button" class="route-btn" data-route="/rest/v1/" data-needs-key="true">GET /rest/v1/ (schema fallback)</button>
           <button type="button" class="route-btn" data-route="/realtime/v1/" data-needs-key="true">GET /realtime/v1/</button>
           <button type="button" class="route-btn" data-route="/storage/v1/" data-needs-key="true">GET /storage/v1/</button>
@@ -66,7 +65,7 @@
         <h2>Auth Container View</h2>
         <p class="hint">Health, signup, and login flow against GoTrue through Kong.</p>
         <div class="grid-two">
-          <button id="checkAuthHealth" class="button-like">Check /auth health</button>
+          <button id="checkAuthHealth" class="button-like">Check /auth/v1/health</button>
           <button id="authGenerateData" class="button-like">Generate Random Auth Data</button>
           <button id="clearAuthOutput" class="button-like button-like--ghost">Clear Auth Output</button>
         </div>
@@ -176,10 +175,9 @@
 
       <section id="view-trino" class="panel module-view">
         <h2>Trino Container View</h2>
-        <p class="hint">Validate Trino port and SQL gateway route wiring.</p>
+        <p class="hint">Validate Trino direct availability and local connection info.</p>
         <div class="grid-two">
           <button id="trinoOpenUi" type="button" class="button-like">Open Trino (localhost:8080)</button>
-          <button id="trinoProbeSqlRoute" type="button" class="button-like">Probe /sql/v1/info</button>
           <button id="trinoGenerateData" type="button" class="button-like">Generate Random Trino Data</button>
           <button id="trinoShowInfo" type="button" class="button-like">Show Required Trino Info</button>
           <button id="clearTrinoOutput" type="button" class="button-like button-like--ghost">Clear Trino Output</button>

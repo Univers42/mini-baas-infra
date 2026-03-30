@@ -44,7 +44,7 @@ CI currently validates:
 ## Current Gaps (Hardening Phase)
 
 1. Some late-phase checks are permissive and should fail harder on weak behavior.
-2. SQL route behavior (`/sql/v1/info`) versus REST metadata fallback should be formalized.
+2. Metadata and health checks should consistently target the supported REST gateway surface.
 3. Production-oriented policy checks (strict CORS origin strategy, key rotation workflows) are not yet codified as tests.
 4. Service-contract-level assertions for non-core services are still limited.
 

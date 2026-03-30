@@ -125,7 +125,7 @@ Optional rate-limit stress check:
 RUN_RATE_LIMIT_TEST=true RATE_LIMIT_BURST=70 make test-phase2
 ```
 
-Phase 5 database info retrieval test:
+Phase 5 REST metadata retrieval test:
 
 ```bash
 make test-phase5

@@ -580,20 +580,12 @@ function setupContainerViews() {
     writeTo(outputRefs.trino, 'OPEN', 'Opened Trino UI on http://localhost:8080/');
   });
 
-  bindClick('trinoProbeSqlRoute', async () => {
-    try {
-      writeTo(outputRefs.trino, 'GET /sql/v1/info', await probe('/sql/v1/info'));
-    } catch (error) {
-      writeTo(outputRefs.trino, 'GET /sql/v1/info', { error: error.message });
-    }
-  });
-
   bindClick('trinoShowInfo', () => {
     writeTo(outputRefs.trino, 'INFO', {
       container: 'mini-baas-trino',
       hostPort: '8080',
       expectedConfig: '/deployments/base/trino/config.properties',
-      checks: ['Open http://localhost:8080', 'Probe /sql/v1/info through Kong when route exists'],
+      checks: ['Open http://localhost:8080', 'Run direct Trino queries from SQL clients'],
     });
   });
 
@@ -610,11 +602,11 @@ function setupContainerViews() {
         `SELECT * FROM postgresql.${schema}.${table} LIMIT ${randomInt(1, 25)}`,
       ],
       expectedStatus: [200],
-      target: '/sql/v1/info',
+      target: 'direct-trino:8080',
     };
 
     writeTo(outputRefs.trino, 'RANDOM TRINO TEST DATA', generated);
-    await runGeneratedRequest(outputRefs.trino, 'GET /sql/v1/info', '/sql/v1/info', false);
+    writeTo(outputRefs.trino, 'TRINO NOTE', 'Gateway probing is intentionally out of near-term scope. Use direct Trino endpoint on port 8080.');
   });
 
   bindClick('pgmetaProbeRoute', async () => {
