@@ -15,7 +15,6 @@ This repository centralizes local infrastructure orchestration, image workflows,
 - `deployments/base/`: service source code, Dockerfiles, and runtime configuration.
 - `scripts/`: helper scripts.
 - `docker-compose.yml`: prebuilt stack definition.
-- `docker-compose.build.yml`: build-from-source stack definition.
 
 ## Services in Scope
 
@@ -58,17 +57,17 @@ Pull and tag prebuilt images:
 make docker-build IMAGE_TAG=latest
 ```
 
-Start build-enabled stack (builds app services from source):
+Pull upstream images defined in compose:
 
 ```bash
-make compose-up-build
+make compose-pull
 ```
 
 ## Useful Endpoints
 
 - Gateway: `http://localhost:8000/`
-- Auth health: `http://localhost:8000/auth/health`
-- SQL info (via gateway): `http://localhost:8000/sql/v1/info`
+- Auth health: `http://localhost:8000/auth/v1/health`
+- REST OpenAPI info (via gateway): `http://localhost:8000/rest/v1/`
 - Studio: `http://localhost:3001/`
 - Playground: `http://localhost:3100/`
 
@@ -132,7 +131,7 @@ Phase 5 database info retrieval test:
 make test-phase5
 ```
 
-## Expanded Test Suites (Phases 6-10)
+## Expanded Test Suites (Phases 6-13)
 
 **Phase 6: HTTP Methods & Data Mutations** — Tests CRUD operations (POST, GET, PATCH, PUT, DELETE)
 
@@ -164,9 +163,27 @@ make test-phase9
 make test-phase10
 ```
 
+**Phase 11: Realtime WebSocket Communication** — Tests realtime gateway accessibility and key-based WebSocket upgrade behavior
+
+```bash
+make test-phase11
+```
+
+**Phase 12: Rate Limiting Policy Enforcement** — Tests route-level rate-limiting behavior and response handling
+
+```bash
+make test-phase12
+```
+
+**Phase 13: CORS Preflight and Cross-Origin Requests** — Tests preflight handling and CORS headers across BaaS routes
+
+```bash
+make test-phase13
+```
+
 ## Running All Tests
 
-`make tests` executes all 10 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
+`make tests` executes all 13 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
 
 ## Continuous Integration
 

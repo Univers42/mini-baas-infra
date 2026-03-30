@@ -26,7 +26,6 @@ This document describes the Compose-first infrastructure model for mini-baas.
 ## Operational Model
 
 - Local startup: `make compose-up`
-- Build-enabled startup: `make compose-up-build`
 - Logs: `make compose-logs` or `make compose-logs SERVICE=<service>`
 - Health check: `make compose-health`
 - Shutdown: `make compose-down`
@@ -41,5 +40,5 @@ This document describes the Compose-first infrastructure model for mini-baas.
 ## Next Steps
 
 1. Add a `.env` with real secrets and service URLs.
-2. Add startup validation scripts for dependency readiness.
-3. Add service-specific smoke tests wired to CI.
+2. Tighten permissive assertions in realtime/rate-limit/CORS phase tests.
+3. Keep endpoint documentation aligned with active Kong declarative routes.

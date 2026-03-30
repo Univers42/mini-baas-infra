@@ -11,14 +11,14 @@ Client
   ↓
 Kong Gateway (port 8000)
   ├─ /auth/v1 → GoTrue (9999)  [API Key Auth]
-  ├─ /rest/v1 → PostgREST (3000) [API Key Auth + JWT]
+  ├─ /rest/v1 → PostgREST (3000) [API Key Auth + upstream JWT validation]
   └─ /realtime/v1 → Realtime (4000) [API Key Auth]
   
 Components:
   - PostgreSQL: Main database with user auth schema
   - GoTrue: OAuth/JWT token issuer
   - PostgREST: REST API to database with JWT validation
-  - Kong: API gateway with key-auth and JWT validation
+  - Kong: API gateway with route policies (key-auth, rate limits, CORS)
 ```
 
 ## Authentication Flow
@@ -37,8 +37,7 @@ POST /auth/v1/signup or /auth/v1/token
 GET /rest/v1/users
 ├─ Client provides: Authorization: Bearer <JWT> + apikey header
 ├─ Kong validates: apikey is present and valid
-├─ Kong validates: JWT signature (if present)
-├─ Kong transforms: Removes apikey, adds Authorization header to upstream
+├─ Kong forwards Authorization header to PostgREST
 ├─ PostgREST validates: JWT signature against shared JWT_SECRET
 ├─ PostgREST maps: JWT 'sub' claim to authenticated database role
 └─ Database: Enforces RLS policies based on authenticated user
@@ -57,26 +56,11 @@ plugins:
       hide_credentials: false
 ```
 
-**JWT Plugin**: On /rest/v1 route (optional, can be enforced per-route)
-```yaml
-plugins:
-  - name: jwt
-    config:
-      key_claim_name: sub
-      secret_is_base64: false
-      algorithms: [HS256]
-```
-
-**Request Transformer**: Converts apikey auth to JWT header
-```yaml
-plugins:
-  - name: request-transformer
-    config:
-      remove:
-        headers: [apikey]
-      add:
-        headers: ["Authorization: Bearer $(jwt)"]
-```
+**Current route plugins**:
+- `key-auth` for API key enforcement
+- `rate-limiting` per route
+- `request-size-limiting` on storage route
+- global `cors`
 
 ### Environment Variables
 
@@ -162,13 +146,15 @@ $$ LANGUAGE SQL STABLE;
 
 **Run**: `make test-phase4`
 
-## Running All Tests
+## Running Tests
 
 ```bash
 make tests
 # Or individual phases:
 make test-phase1 test-phase2 test-phase3 test-phase4
 ```
+
+The current suite includes phases 1 through 13. Use individual `make test-phaseX` targets as needed.
 
 ## Common Issues & Solutions
 
@@ -181,14 +167,14 @@ make test-phase1 test-phase2 test-phase3 test-phase4
 **Solution**: 
 1. Verify JWT_SECRET in docker-compose.yml
 2. Ensure same secret is used by GoTrue and PostgREST
-3. Check Kong JWT plugin configuration
+3. Check PostgREST logs and role/claim mapping behavior
 
-### Issue: JWT token rejected in gateway
-**Cause**: Token validation failure or expired token
+### Issue: JWT token rejected on REST access
+**Cause**: Token validation failure in PostgREST or JWT secret mismatch
 **Solution**:
 1. Check token expiration: `JWT_EXP` in GoTrue config
-2. Verify JWT signature algorithm (should be HS256)
-3. Look at Kong logs: `make compose-logs SERVICE=kong`
+2. Verify `JWT_SECRET`/`PGRST_JWT_SECRET` consistency between GoTrue and PostgREST
+3. Look at PostgREST logs: `make compose-logs SERVICE=postgrest`
 
 ### Issue: PostgREST cannot access database roles
 **Cause**: Database bootstrap script did not run successfully

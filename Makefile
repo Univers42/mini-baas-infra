@@ -206,7 +206,7 @@ compose-pull: ## Pull latest images for all services
 
 compose-health: ## Quick health checks for key routes
 	@echo -e "$(BLUE)Checking local endpoints...$(NC)"
-	@curl -fsS http://localhost:8000/auth/health >/dev/null && echo "  ✓ Kong -> /auth/health" || echo "  ✗ Kong -> /auth/health"
+	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null && echo "  ✓ Kong -> /auth/v1/health" || echo "  ✗ Kong -> /auth/v1/health"
 	@curl -fsS http://localhost:8000/sql/v1/info >/dev/null && echo "  ✓ Kong -> /sql/v1/info" || echo "  ✗ Kong -> /sql/v1/info"
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 

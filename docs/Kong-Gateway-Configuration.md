@@ -22,14 +22,10 @@ No source code modification is required. Changes are purely declarative and appl
 
 | Public Path | Service | Internal Target |
 |-------------|---------|-----------------|
-| `/auth` | GoTrue | `http://gotrue:9999` |
 | `/auth/v1` | GoTrue | `http://gotrue:9999` |
-| `/rest` | PostgREST | `http://postgrest:3000` |
 | `/rest/v1` | PostgREST | `http://postgrest:3000` |
-| `/realtime` | Realtime | `http://realtime:4000` |
 | `/realtime/v1` | Realtime | `http://realtime:4000` |
-| `/sql` | Trino | `http://trino:8080` |
-| `/meta` | PG Meta | `http://pg-meta:8080` |
+| `/storage/v1` | MinIO | `http://minio:9000` |
 | `/meta/v1` | PG Meta | `http://pg-meta:8080` |
 | `/studio` | Studio | `http://studio:3000` |
 
@@ -145,7 +141,7 @@ services:
 
 ### `strip_path`
 - `true`: Kong removes the matched path prefix before forwarding to upstream
-  - Request: `GET /auth/health` → Upstream receives: `GET /health`
+  - Request: `GET /auth/v1/health` → Upstream receives: `GET /health`
 - `false`: Path is forwarded as-is (less common)
 
 ### `methods`
@@ -154,8 +150,7 @@ List of HTTP methods the route should accept. Omit to accept all methods.
 ### `protocols`
 Allowed protocols for the route:
 - `http`, `https` (standard)
-- `ws`, `wss` (websocket)—upgrade `http`/`https` routes to support WebSocket if needed
-- Kong 3.8 does not recognize `ws`/`wss` directly; use HTTP routes and Upgrade headers
+- WebSocket proxying should use `http`/`https` routes plus Upgrade headers
 
 ### `hosts`
 Optional: match on Host header
@@ -175,9 +170,8 @@ routes:
 All routes inherit CORS settings. Current config allows:
 - All origins (`*`)
 - All standard methods
-- Standard headers + `apikey`, `x-auth-token`
+- Headers: `Authorization`, `Content-Type`, `apikey`, `x-client-info`
 - Credentials enabled
-- Max age: 3600s
 
 To restrict, modify the global plugin in `kong.yml`:
 
@@ -353,7 +347,7 @@ curl -H "apikey: your-key" http://localhost:8000/your/new/path
 ### PostgREST (SQL REST API)
 - **Port**: 3000
 - **Expects**: Postgres authentication headers or JWT
-- **Note**: Works well with Kong's JWT plugin
+- **Note**: In the current stack, PostgREST validates JWTs directly via `PGRST_JWT_SECRET`
 
 ### Realtime (WebSocket)
 - **Port**: 4000
@@ -388,10 +382,6 @@ curl -H "apikey: your-key" http://localhost:8000/your/new/path
 - Check: `docker compose ps` to see if upstream is running
 - Check upstream logs: `docker compose logs <service-name>`
 
-### 406 Not Acceptable
-- Upstream rejected the request (e.g., Trino with X-Forwarded-For)
-- Solution: Add a request-transformer plugin to remove/modify headers
-
 ### 404 Not Found
 - Path doesn't match any Kong route
 - Check path in `kong.yml` (case-sensitive)
@@ -399,41 +389,36 @@ curl -H "apikey: your-key" http://localhost:8000/your/new/path
 
 ## Example: Adding a new BaaS module endpoint
 
-Here's a complete example of adding a hypothetical `/storage` service:
+Here's a complete example of adding a `/sql` route to Trino:
 
 ```yaml
 # In deployments/base/kong/kong.yml, add:
 
 services:
-  # ... existing services ...
-
-  - name: storage-service
-    url: http://storage:9090
+  - name: trino
+    url: http://trino:8080
     plugins:
       - name: request-transformer
         config:
           add:
             headers:
-              - x-internal-origin:gateway
+              - x-internal-origin: gateway
     routes:
-      - name: storage-route
+      - name: trino-route
         paths:
-          - /storage
-          - /storage/v1
+          - /sql
         strip_path: true
         methods:
           - GET
           - POST
-          - PUT
-          - DELETE
           - OPTIONS
 ```
 
 Then:
-1. Add a `storage` service to `docker-compose.yml` (or external service)
+1. Ensure `trino` service is available in `docker-compose.yml`
 2. Validate: `docker run ... kong config parse`
 3. Restart: `docker compose restart kong`
-4. Test: `curl http://localhost:8000/storage/health`
+4. Test: `curl http://localhost:8000/sql/v1/info`
 
 ## Further reading
 

@@ -1,71 +1,38 @@
-# Project Status: BaaS Integration Blockers
+# Project Status: BaaS Integration Snapshot
 
 ## Purpose
 
-This note summarizes where the project currently stands, the main technical blocker I am facing, and where I need feedback from partners.
+This note captures the current state of the local BaaS infrastructure and the practical next steps.
 
-## Current Situation
+## Current State
 
-I have the infrastructure stack running with Docker Compose and prebuilt images for key services (Kong, Postgres, GoTrue, PostgREST, Realtime, Redis, MinIO, Supavisor, Studio, and Trino).
+The project is running as a Docker Compose-first stack with Kong as ingress and GoTrue/PostgREST/Realtime/MinIO/Studio and supporting services wired into the same environment.
 
-The main blocker is adapting those prebuilt images to our specific Backend as a Service behavior without changing service source code.
+The previous gateway-integration blocker is no longer the primary issue. Route-level API key enforcement, CORS, and test automation are already implemented and running through CI.
 
-## Main Blocker
+## What Is Working
 
-### 1) Prebuilt image customization limits
+- Kong declarative routing is active for auth, rest, realtime, storage, and admin endpoints.
+- Route-level plugins are active for key-auth, rate limiting, and storage request-size limiting.
+- Repeatable test suites exist for Phases 1 through 13 and are wired through `make tests`.
+- GitHub Actions runs shell checks and full compose integration tests on push and pull request.
 
-I am relying on already built images, so I cannot edit internal application code. This limits customization to:
+## Current Gaps
 
-- Environment variables
-- Mounted configuration files
-- Startup command flags
-- Sidecar or companion containers
+The main remaining issues are alignment and hardening rather than initial integration:
 
-If required behavior is not exposed through those mechanisms, I currently have no direct way to implement it.
+1. Documentation drift in a few files (status wording, command references, and endpoint expectations).
+2. A few late-phase test assertions are permissive and should be tightened.
+3. Gateway policy is suitable for local development but still needs production-oriented hardening.
+4. Service contract docs need deeper operational detail beyond placeholders.
 
-### 2) Kong API gateway configuration is not yet functional for our BaaS flow
+## Immediate Priorities
 
-The biggest practical issue right now is Kong.
-
-I still need to make Kong route and enforce policies correctly for this BaaS setup, including:
-
-- Route mapping for auth, REST, realtime, storage, and admin endpoints
-- Correct upstream targets and ports for each internal service
-- Plugin behavior (auth, key handling, CORS, request/response transforms)
-- Service-to-service and public client access patterns
-
-Because Kong is running from a prebuilt image, I cannot change internal source behavior. I need to solve this only through declarative config and runtime settings.
-
-## Why This Is Difficult
-
-- Each service has specific expectations for headers, tokens, and URL paths.
-- Kong must be configured as the central ingress, but mistakes in one route/plugin can break cross-service flows.
-- Without source-level changes, debugging options are narrower and often depend on logs plus iterative config updates.
-
-## What I Need Feedback On
-
-I would like partner feedback on these decisions:
-
-1. Should we keep a strict prebuilt-image-only strategy, or allow custom image layers when configuration is insufficient?
-2. What is the minimal gateway policy set we want in phase 1 (routing only vs. routing + auth + transforms)?
-3. Do we agree on a canonical endpoint map for all BaaS modules before continuing Kong fine-tuning?
-4. Should we add a dedicated validation checklist (smoke tests per route) before marking gateway setup as complete?
-
-## Proposed Short-Term Plan
-
-1. Freeze and document expected external API paths.
-2. Build a minimal Kong declarative config that only performs route-to-upstream mapping.
-3. Add plugins incrementally (CORS, auth, transforms) and validate each step.
-4. Add repeatable smoke tests for auth, SQL/REST access, and realtime paths.
-
-## Risks If Unresolved
-
-- Delays in making the stack usable by application developers
-- Inconsistent behavior between local environments
-- Rework risk if we later decide the prebuilt-only approach is too restrictive
+1. Keep docs aligned with the current stack behavior and available Make targets.
+2. Tighten Phase 11-13 assertions so soft-pass checks become explicit validations.
+3. Decide and document SQL route policy (`/sql/v1/info`) versus REST metadata fallback behavior.
+4. Define an environment-specific security profile for CORS origins and key management.
 
 ## Summary
 
-The project is progressing, but gateway integration is currently the critical bottleneck. The key challenge is making Kong fully operational for our BaaS architecture while staying within prebuilt image constraints.
-
-I need alignment on customization boundaries and gateway scope to unblock the next implementation phase.
+The project is in a functional and testable state for local BaaS development. The next phase is reliability and documentation hardening, not first-time gateway bring-up.

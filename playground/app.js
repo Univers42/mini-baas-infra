@@ -267,17 +267,10 @@ function setupAuthView() {
 
   bindClick('checkAuthHealth', async () => {
     try {
-      let result = await probe('/auth/health');
-      let routeLabel = 'GET /auth/health';
-
-      if (isNoRouteMatch(result)) {
-        result = await probe('/auth/v1/health', true);
-        routeLabel = 'GET /auth/v1/health (fallback)';
-      }
-
-      writeTo(outputRefs.auth, routeLabel, result);
+      const result = await probe('/auth/v1/health', true);
+      writeTo(outputRefs.auth, 'GET /auth/v1/health', result);
     } catch (error) {
-      writeTo(outputRefs.auth, 'GET /auth/health', { error: error.message });
+      writeTo(outputRefs.auth, 'GET /auth/v1/health', { error: error.message });
     }
   });
 

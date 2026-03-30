@@ -182,6 +182,8 @@ Fixed 6 failing tests in Phase 6 by:
 
 ### Switched To Docker Compose-Only Management
 
+> Historical note: this entry reflects the 2026-03-25 state. Some commands listed here (such as `compose-up-build`) are no longer present in the current `Makefile`.
+
 - Replaced the root `Makefile` with a Docker Compose-first workflow.
 - Removed all orchestration targets tied to cluster-based deployment tooling.
 - Added clear Compose lifecycle targets:
