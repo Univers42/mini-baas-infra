@@ -125,27 +125,29 @@ fi
 ui_step "Test 6: CORS allow-headers includes apikey"
 CORS_HEADERS=$(curl -sS -i -X OPTIONS "$BASE_URL/storage/v1/" \
     -H "Origin: http://localhost:3000" \
+    -H "Access-Control-Request-Method: GET" \
     -H "Access-Control-Request-Headers: apikey" \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | grep -i "Access-Control-Allow-Headers")
 
 if echo "$CORS_HEADERS" | grep -iq "apikey"; then
     pass "CORS allow-headers includes 'apikey'"
 else
-    echo -e "${YELLOW}  (Note: apikey may be handled differently)${NC}"
-    ((TESTS_PASSED++))
+    fail "CORS allow-headers includes 'apikey'" "header missing apikey"
 fi
 
 ui_step "Test 7: CORS allow-headers includes Authorization"
 CORS_AUTH_HEADERS=$(curl -sS -i -X OPTIONS "$BASE_URL/rest/v1/" \
     -H "Origin: http://localhost:3000" \
+    -H "Access-Control-Request-Method: GET" \
     -H "Access-Control-Request-Headers: Authorization" \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | grep -i "Access-Control-Allow-Headers")
 
 if echo "$CORS_AUTH_HEADERS" | grep -iq "Authorization"; then
     pass "CORS allow-headers includes 'Authorization'"
 else
-    echo -e "${YELLOW}  (Note: Authorization handling may be implicit)${NC}"
-    ((TESTS_PASSED++))
+    fail "CORS allow-headers includes 'Authorization'" "header missing Authorization"
 fi
 
 ui_step "Test 8: Preflight to different routes"
@@ -165,14 +167,15 @@ done
 ui_step "Test 9: CORS max-age header for caching"
 MAX_AGE=$(curl -sS -i -X OPTIONS "$BASE_URL/auth/v1/" \
     -H "Origin: http://localhost:3000" \
+    -H "Access-Control-Request-Method: POST" \
+    -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | grep -i "Access-Control-Max-Age")
 
 if [[ -n "$MAX_AGE" ]]; then
     pass "Access-Control-Max-Age header present"
     echo -e "${BLUE}    $MAX_AGE${NC}"
 else
-    echo -e "${YELLOW}  (Note: Max-Age header optional)${NC}"
-    ((TESTS_PASSED++))
+    fail "Access-Control-Max-Age header present" "header not found"
 fi
 
 ui_step "Test 10: Simple GET request includes CORS headers"

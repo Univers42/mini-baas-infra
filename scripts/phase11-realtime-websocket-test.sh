@@ -47,6 +47,26 @@ assert_code() {
     fi
 }
 
+assert_not_codes() {
+    local name="$1"
+    local actual="$2"
+    shift 2
+    local blocked=("$@")
+
+    for disallowed in "${blocked[@]}"; do
+        if [[ "$actual" == "$disallowed" ]]; then
+            fail "$name" "unexpected HTTP $actual"
+            return
+        fi
+    done
+
+    if [[ "$actual" =~ ^5 ]]; then
+        fail "$name" "unexpected server error $actual"
+    else
+        pass "$name"
+    fi
+}
+
 ui_banner "Phase 11 Test Suite" "Realtime WebSocket Communication"
 ui_kv "Gateway URL" "$BASE_URL"
 ui_kv "Realtime endpoint" "$BASE_URL/realtime/v1"
@@ -59,12 +79,8 @@ WS_UPGRADE_CODE=$(curl -sS -o "$TMPDIR/ws-upgrade.txt" -w '%{http_code}' \
     -H "Upgrade: websocket" \
     -H "Connection: Upgrade" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
-# Expect 400 or 101 (websocket), not 404
-if [[ "$WS_UPGRADE_CODE" != "404" ]]; then
-    pass "WebSocket endpoint exists"
-else
-    fail "WebSocket endpoint exists" "got 404 (not found)"
-fi
+# Endpoint should not be missing/auth-failed/connection-failed.
+assert_not_codes "WebSocket endpoint exists" "$WS_UPGRADE_CODE" "000" "401" "404"
 
 ui_step "Test 2: WebSocket rejects missing API key"
 MISSING_KEY_CODE=$(curl -sS -o "$TMPDIR/ws-nokey.txt" -w '%{http_code}' \
@@ -80,12 +96,8 @@ VALID_KEY_CODE=$(curl -sS -o "$TMPDIR/ws-validkey.txt" -w '%{http_code}' \
     -H "Upgrade: websocket" \
     -H "Connection: Upgrade" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
-# Should not be 401
-if [[ "$VALID_KEY_CODE" != "401" ]]; then
-    pass "Valid API key accepted"
-else
-    fail "Valid API key accepted" "got 401"
-fi
+# Valid key should not be rejected or route-missing.
+assert_not_codes "Valid API key accepted" "$VALID_KEY_CODE" "000" "401" "404"
 
 ui_step "Test 4: WebSocket with JWT token as query parameter"
 # First get a JWT token
@@ -132,22 +144,14 @@ else
 fi
 
 ui_step "Test 5: Realtime rate limiting applied"
-# Make multiple rapid requests to check rate limiting
-RATE_LIMIT_TEST=0
-for i in {1..5}; do
-    RATE_CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
-        -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY" \
-        --max-time 3 2>/dev/null || echo "000")
-    if [[ "$RATE_CODE" == "429" ]]; then
-        RATE_LIMIT_TEST=1
-        break
-    fi
-done
+# Validate that realtime responses expose rate-limit headers from Kong.
+RATE_HEADERS=$(curl -sS -i -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY" \
+    --max-time 3 2>/dev/null | head -30)
 
-if [[ $RATE_LIMIT_TEST -eq 1 ]] || [[ $RATE_LIMIT_TEST -eq 0 ]]; then
-    pass "Rate limiting configured for realtime"
+if echo "$RATE_HEADERS" | grep -qi "RateLimit-Limit\|X-RateLimit-Limit"; then
+    pass "Rate limiting headers present on realtime route"
 else
-    fail "Rate limiting configured for realtime" "no 429 status detected"
+    fail "Rate limiting headers present on realtime route" "missing RateLimit-Limit headers"
 fi
 
 ui_step "Test 6: Realtime with multiple query params"
@@ -157,11 +161,7 @@ MULTIQUERY_CODE=$(curl -sS -o "$TMPDIR/ws-multiquery.txt" -w '%{http_code}' \
     -H "Connection: Upgrade" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
-if [[ "$MULTIQUERY_CODE" != "404" ]]; then
-    pass "WebSocket accepts multiple query parameters"
-else
-    fail "WebSocket accepts multiple query parameters" "got 404"
-fi
+assert_not_codes "WebSocket accepts multiple query parameters" "$MULTIQUERY_CODE" "000" "401" "404"
 
 ui_hr
 ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 11 realtime tests passed!" "Phase 11 realtime tests failed"

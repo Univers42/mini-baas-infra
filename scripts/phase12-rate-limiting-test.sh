@@ -86,8 +86,7 @@ HEADERS=$(curl -sS -i -X GET "$BASE_URL/rest/v1/users?limit=1" \
 if echo "$HEADERS" | grep -qi "RateLimit-Limit\|X-RateLimit-Limit"; then
     pass "Rate limit headers present in response"
 else
-    echo -e "${YELLOW}  (Note: Rate limit headers not detected - may be optional)${NC}"
-    ((TESTS_PASSED++))
+    fail "Rate limit headers present in response" "missing RateLimit-Limit headers"
 fi
 
 ui_step "Test 3: Storage route rate limit applied to uploads"
@@ -102,7 +101,11 @@ for i in {1..3}; do
 done
 
 # Should not all be 429 immediately, but system should handle them
-if [[ "${STORAGE_CODES[0]}" != "429" ]]; then
+if [[ "${STORAGE_CODES[0]}" == "000" ]]; then
+    fail "Storage route accepts initial requests" "request timed out or connection failed"
+elif [[ "${STORAGE_CODES[0]}" =~ ^5 ]]; then
+    fail "Storage route accepts initial requests" "unexpected server error ${STORAGE_CODES[0]}"
+elif [[ "${STORAGE_CODES[0]}" != "429" ]]; then
     pass "Storage route accepts initial requests"
 else
     fail "Storage route accepts initial requests" "got 429 immediately"
@@ -118,16 +121,18 @@ CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
 assert_code_one_of "Invalid API key request rejected" "$CODE" "401" "403"
 
 ui_step "Test 5: Realtime route rate limiting configured"
-# HTTP GET to realtime (WebSocket preflight)
+# Realtime requests should return valid non-error HTTP statuses.
 for i in {1..3}; do
     CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
         -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY" \
         --max-time 3 2>/dev/null || echo "000")
-    
-    if [[ "$CODE" != "429" ]] && [[ "$CODE" != "000" ]]; then
-        pass "Realtime request $i not rate limited (yet)"
+
+    if [[ "$CODE" == "000" ]]; then
+        fail "Realtime request $i processed" "request timed out or connection failed"
+    elif [[ "$CODE" =~ ^5 ]]; then
+        fail "Realtime request $i processed" "unexpected server error $CODE"
     else
-        pass "Realtime request $i processed"
+        pass "Realtime request $i processed (HTTP $CODE)"
     fi
 done
 
@@ -155,10 +160,22 @@ else
 fi
 
 ui_step "Test 7: Different routes have different limits"
-# REST route limit is higher than AUTH route
-# REST: 180/min, AUTH: 60/min
-echo -e "${YELLOW}  (Note: Verifying configuration - limits are REST:180/min, AUTH:60/min)${NC}"
-pass "Route-specific limits configured in Kong"
+AUTH_HEADERS=$(curl -sS -i -X POST "$BASE_URL/auth/v1/signup" \
+    -H 'Content-Type: application/json' \
+    -H "apikey: $APIKEY" \
+    -d '{"email":"routecheck.ratelimit@example.com","password":"TestPass123!"}' \
+    --max-time "$TIMEOUT" 2>/dev/null | head -30)
+
+REST_HEADERS=$(curl -sS -i -X GET "$BASE_URL/rest/v1/users?limit=1" \
+    -H "apikey: $APIKEY" \
+    --max-time "$TIMEOUT" 2>/dev/null | head -30)
+
+if echo "$AUTH_HEADERS" | grep -qi "RateLimit-Limit\|X-RateLimit-Limit" && \
+   echo "$REST_HEADERS" | grep -qi "RateLimit-Limit\|X-RateLimit-Limit"; then
+    pass "Route-specific rate limiting headers present on auth and rest routes"
+else
+    fail "Route-specific rate limiting headers present on auth and rest routes" "missing rate limit headers on one or more routes"
+fi
 
 ui_step "Test 8: Rate limit applies per IP"
 # All requests from localhost should be counted together
@@ -168,7 +185,13 @@ CODE2=$(curl -sS -o /dev/null -w '%{http_code}' -X GET "$BASE_URL/rest/v1/users?
     -H "apikey: $APIKEY" --max-time 3 2>/dev/null || echo "000")
 
 if [[ "$CODE1" != "429" && "$CODE2" != "429" ]]; then
-    pass "Requests from same IP are rate limited together"
+    if [[ "$CODE1" == "000" || "$CODE2" == "000" ]]; then
+        fail "Requests from same IP rate limiting" "request timed out or connection failed"
+    elif [[ "$CODE1" =~ ^5 || "$CODE2" =~ ^5 ]]; then
+        fail "Requests from same IP rate limiting" "unexpected server error ($CODE1, $CODE2)"
+    else
+        pass "Requests from same IP are rate limited together"
+    fi
 else
     fail "Requests from same IP rate limiting" "unexpected 429 on early requests"
 fi
