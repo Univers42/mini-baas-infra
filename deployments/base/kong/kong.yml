@@ -115,10 +115,10 @@ _transform: true
 consumers:
   - username: anon
     keyauth_credentials:
-      - key: public-anon-key
+      - key: __KONG_PUBLIC_API_KEY__
   - username: service_role
     keyauth_credentials:
-      - key: service-role-key
+      - key: __KONG_SERVICE_API_KEY__
 
 services:
   - name: auth
@@ -232,7 +232,10 @@ services:
 plugins:
   - name: cors
     config:
-      origins: ["*"]
+      origins:
+        - __KONG_CORS_ORIGIN_APP__
+        - __KONG_CORS_ORIGIN_PLAYGROUND__
+        - __KONG_CORS_ORIGIN_STUDIO__
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, apikey, x-client-info]
       credentials: true

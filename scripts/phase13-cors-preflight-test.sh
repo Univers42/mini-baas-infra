@@ -6,6 +6,7 @@
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 TIMEOUT="${TIMEOUT:-10}"
 APIKEY="${APIKEY:-public-anon-key}"
+TEST_ORIGIN="${TEST_ORIGIN:-http://localhost:3000}"
 TMPDIR="${TMPDIR:-$(mktemp -d /tmp/phase13_cors.XXXXXX)}"
 
 mkdir -p "$TMPDIR"
@@ -51,11 +52,12 @@ check_header() {
 ui_banner "Phase 13 Test Suite" "CORS Preflight and Cross-Origin Requests"
 ui_kv "Gateway URL" "$BASE_URL"
 ui_kv "Test focus" "CORS headers and preflight handling"
+ui_kv "Allowed origin under test" "$TEST_ORIGIN"
 ui_hr
 
 ui_step "Test 1: Preflight OPTIONS request to /auth/v1"
 PREFLIGHT_RESPONSE=$(curl -sS -i -X OPTIONS "$BASE_URL/auth/v1/" \
-    -H "Origin: http://example.com" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Access-Control-Request-Method: POST" \
     -H "Access-Control-Request-Headers: Content-Type" \
     --max-time "$TIMEOUT" 2>/dev/null)
@@ -73,7 +75,7 @@ echo "$PREFLIGHT_RESPONSE" | grep -iq "Access-Control-Allow-Origin" && echo -e "
 
 ui_step "Test 2: CORS Allow-Origin header present"
 CORS_RESPONSE=$(curl -sS -i -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "Origin: http://localhost:3000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
@@ -85,7 +87,7 @@ fi
 
 ui_step "Test 3: CORS Allow-Methods header includes expected methods"
 CORS_METHODS=$(curl -sS -i -X OPTIONS "$BASE_URL/rest/v1/" \
-    -H "Origin: http://localhost:3000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Access-Control-Request-Method: PATCH" \
     --max-time "$TIMEOUT" 2>/dev/null | grep -i "Access-Control-Allow-Methods" | head -1)
 
@@ -98,7 +100,7 @@ fi
 
 ui_step "Test 4: CORS credentials allowed"
 CORS_CREDS=$(curl -sS -i -X OPTIONS "$BASE_URL/auth/v1/" \
-    -H "Origin: http://localhost:3000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Access-Control-Request-Method: POST" \
     --max-time "$TIMEOUT" 2>/dev/null | grep -i "Access-Control-Allow-Credentials")
 
@@ -110,7 +112,7 @@ fi
 
 ui_step "Test 5: CORS headers on actual requests (not just preflight)"
 ACTUAL_REQUEST=$(curl -sS -i -X POST "$BASE_URL/auth/v1/signup" \
-    -H "Origin: http://example.com" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Content-Type: application/json" \
     -H "apikey: $APIKEY" \
     -d '{"email":"corstest@example.com","password":"TestPass123!"}' \
@@ -124,7 +126,7 @@ fi
 
 ui_step "Test 6: CORS allow-headers includes apikey"
 CORS_HEADERS=$(curl -sS -i -X OPTIONS "$BASE_URL/storage/v1/" \
-    -H "Origin: http://localhost:3000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Access-Control-Request-Method: GET" \
     -H "Access-Control-Request-Headers: apikey" \
     -H "apikey: $APIKEY" \
@@ -138,7 +140,7 @@ fi
 
 ui_step "Test 7: CORS allow-headers includes Authorization"
 CORS_AUTH_HEADERS=$(curl -sS -i -X OPTIONS "$BASE_URL/rest/v1/" \
-    -H "Origin: http://localhost:3000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Access-Control-Request-Method: GET" \
     -H "Access-Control-Request-Headers: Authorization" \
     -H "apikey: $APIKEY" \
@@ -153,8 +155,9 @@ fi
 ui_step "Test 8: Preflight to different routes"
 for route in "/auth/v1" "/rest/v1" "/realtime/v1" "/storage/v1"; do
     CODE=$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS "$BASE_URL$route" \
-        -H "Origin: http://localhost:3000" \
+        -H "Origin: $TEST_ORIGIN" \
         -H "Access-Control-Request-Method: POST" \
+        -H "apikey: $APIKEY" \
         --max-time 3 2>/dev/null || echo "000")
     
     if [[ "$CODE" == "200" ]] || [[ "$CODE" == "204" ]]; then
@@ -166,7 +169,7 @@ done
 
 ui_step "Test 9: CORS max-age header for caching"
 MAX_AGE=$(curl -sS -i -X OPTIONS "$BASE_URL/auth/v1/" \
-    -H "Origin: http://localhost:3000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "Access-Control-Request-Method: POST" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | grep -i "Access-Control-Max-Age")
@@ -180,7 +183,7 @@ fi
 
 ui_step "Test 10: Simple GET request includes CORS headers"
 GET_RESPONSE=$(curl -sS -i -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "Origin: http://localhost:4000" \
+    -H "Origin: $TEST_ORIGIN" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
@@ -196,7 +199,7 @@ fi
 ui_hr
 ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "Phase 13 CORS tests passed!" "Phase 13 CORS tests failed"
 echo -e "${YELLOW}CORS configuration allows:"
-echo -e "  • Requests from any origin (*)"
+echo -e "  • Requests from explicit allowed origins only"
 echo -e "  • Standard HTTP methods (GET, POST, PUT, PATCH, DELETE, OPTIONS)"
 echo -e "  • Custom headers (Authorization, Content-Type, apikey, x-client-info)"
 echo -e "  • Credentials in cross-origin requests${NC}"

@@ -9,6 +9,7 @@ PUBLIC_APIKEY="${PUBLIC_APIKEY:-public-anon-key}"
 INVALID_APIKEY="${INVALID_APIKEY:-invalid-key}"
 RUN_RATE_LIMIT_TEST="${RUN_RATE_LIMIT_TEST:-false}"
 RATE_LIMIT_BURST="${RATE_LIMIT_BURST:-70}"
+TEST_ORIGIN="${TEST_ORIGIN:-http://localhost:3000}"
 TMPDIR="/tmp/phase2_smoke"
 
 mkdir -p "$TMPDIR"
@@ -69,6 +70,7 @@ ui_banner "Phase 2 Smoke Test Suite" "Kong gateway security controls"
 ui_kv "Base URL" "$BASE_URL"
 ui_kv "Public API key" "$PUBLIC_APIKEY"
 ui_kv "Rate limit stress test" "$RUN_RATE_LIMIT_TEST"
+ui_kv "CORS test origin" "$TEST_ORIGIN"
 ui_hr
 
 ui_step "Test 1: key-auth on /auth/v1"
@@ -148,7 +150,7 @@ fi
 ui_step "Test 4: CORS preflight headers"
 CORS_HEADERS=$(curl -sS -D - -o /dev/null \
   -X OPTIONS "$BASE_URL/rest/v1/" \
-  -H 'Origin: http://example.local' \
+    -H "Origin: $TEST_ORIGIN" \
   -H 'Access-Control-Request-Method: GET' \
   -H "apikey: $PUBLIC_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || true)

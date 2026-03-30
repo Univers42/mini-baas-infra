@@ -74,6 +74,13 @@ POSTGRES_DB=${POSTGRES_DB}
 DATABASE_URL=${DATABASE_URL}
 PGRST_DB_URI=${PGRST_DB_URI}
 
+# Kong key-auth and CORS policy
+KONG_PUBLIC_API_KEY=public-anon-key
+KONG_SERVICE_API_KEY=service-role-key
+KONG_CORS_ORIGIN_APP=http://localhost:3000
+KONG_CORS_ORIGIN_PLAYGROUND=http://localhost:3100
+KONG_CORS_ORIGIN_STUDIO=http://localhost:3001
+
 # GoTrue
 API_EXTERNAL_URL=http://localhost:8000/auth/v1
 GOTRUE_SITE_URL=http://localhost:3001

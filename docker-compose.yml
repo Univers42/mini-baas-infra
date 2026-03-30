@@ -21,14 +21,30 @@ services:
       - "8001:8001"
     environment:
       KONG_DATABASE: off
-      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PUBLIC_API_KEY: ${KONG_PUBLIC_API_KEY:-public-anon-key}
+      KONG_SERVICE_API_KEY: ${KONG_SERVICE_API_KEY:-service-role-key}
+      KONG_CORS_ORIGIN_APP: ${KONG_CORS_ORIGIN_APP:-http://localhost:3000}
+      KONG_CORS_ORIGIN_PLAYGROUND: ${KONG_CORS_ORIGIN_PLAYGROUND:-http://localhost:3100}
+      KONG_CORS_ORIGIN_STUDIO: ${KONG_CORS_ORIGIN_STUDIO:-http://localhost:3001}
     volumes:
-      - ./deployments/base/kong/kong.yml:/etc/kong/kong.yml:ro
+      - ./deployments/base/kong/kong.yml:/etc/kong/kong.yml.tmpl:ro
+    command: >
+      sh -ec '
+        sed \
+          -e "s|__KONG_PUBLIC_API_KEY__|$${KONG_PUBLIC_API_KEY}|g" \
+          -e "s|__KONG_SERVICE_API_KEY__|$${KONG_SERVICE_API_KEY}|g" \
+          -e "s|__KONG_CORS_ORIGIN_APP__|$${KONG_CORS_ORIGIN_APP}|g" \
+          -e "s|__KONG_CORS_ORIGIN_PLAYGROUND__|$${KONG_CORS_ORIGIN_PLAYGROUND}|g" \
+          -e "s|__KONG_CORS_ORIGIN_STUDIO__|$${KONG_CORS_ORIGIN_STUDIO}|g" \
+          /etc/kong/kong.yml.tmpl > /tmp/kong.yml;
+        exec /docker-entrypoint.sh kong docker-start
+      '
     depends_on:
       gotrue:
         condition: service_started
