@@ -21,12 +21,12 @@
       <nav class="panel routes-nav" aria-label="Available routes">
         <h2>Available Routes</h2>
         <div class="routes-nav__list">
-          <span class="route-chip">GET /auth/health</span>
-          <span class="route-chip">GET /sql/v1/info</span>
-          <span class="route-chip">GET /rest/v1/</span>
-          <span class="route-chip">POST /auth/v1/signup</span>
-          <span class="route-chip">GET /realtime/v1/</span>
-          <span class="route-chip">GET /storage/v1/</span>
+          <button type="button" class="route-btn" data-route="/auth/health">GET /auth/health (legacy)</button>
+          <button type="button" class="route-btn" data-route="/auth/v1/health" data-needs-key="true">GET /auth/v1/health (active)</button>
+          <button type="button" class="route-btn" data-route="/sql/v1/info">GET /sql/v1/info (legacy)</button>
+          <button type="button" class="route-btn" data-route="/rest/v1/" data-needs-key="true">GET /rest/v1/ (schema fallback)</button>
+          <button type="button" class="route-btn" data-route="/realtime/v1/" data-needs-key="true">GET /realtime/v1/</button>
+          <button type="button" class="route-btn" data-route="/storage/v1/" data-needs-key="true">GET /storage/v1/</button>
         </div>
       </nav>
 
@@ -35,7 +35,7 @@
         <div class="grid-two">
           <label>
             Gateway URL
-            <input id="gatewayUrl" type="url" value="http://localhost:8000" />
+            <input id="gatewayUrl" type="text" value="/api" />
           </label>
           <label>
             Public API Key
@@ -46,12 +46,12 @@
 
       <section class="status-grid">
         <article class="panel status-card">
-          <h3>/auth/health</h3>
+          <h3>/auth/health (fallback /auth/v1/health)</h3>
           <p id="authHealthStatus" class="status status--idle">Idle</p>
           <button id="checkAuthHealth" class="button-like">Check</button>
         </article>
         <article class="panel status-card">
-          <h3>/sql/v1/info</h3>
+          <h3>/sql/v1/info (fallback /rest/v1/)</h3>
           <p id="sqlInfoStatus" class="status status--idle">Idle</p>
           <button id="checkSqlInfo" class="button-like">Check</button>
         </article>

@@ -85,7 +85,7 @@ body {
   gap: 0.55rem;
 }
 
-.route-chip {
+.route-btn {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
@@ -96,6 +96,13 @@ body {
   font-weight: 600;
   padding: 0.35rem 0.7rem;
   max-width: 100%;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease;
+}
+
+.route-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(18, 199, 193, 0.2);
 }
 
 .panel {

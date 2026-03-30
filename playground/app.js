@@ -11,9 +11,15 @@ const checkSqlInfoBtn = document.getElementById('checkSqlInfo');
 const checkRestBtn = document.getElementById('checkRest');
 const clearConsoleBtn = document.getElementById('clearConsole');
 const signupForm = document.getElementById('signupForm');
+const routeButtons = document.querySelectorAll('.route-btn');
 
 function getGateway() {
-  return gatewayInput.value.replace(/\/$/, '');
+  const raw = gatewayInput.value.trim();
+  if (!raw) {
+    return '/api';
+  }
+
+  return raw.replace(/\/$/, '');
 }
 
 function writeOutput(label, payload) {
@@ -22,17 +28,34 @@ function writeOutput(label, payload) {
   output.textContent = `${next}${output.textContent}`.trim();
 }
 
+function buildRouteUrl(path, needsKey = false) {
+  const gateway = getGateway();
+  const apiKey = apiKeyInput.value.trim();
+  const url = new URL(`${gateway}${path}`, window.location.origin);
+
+  if (needsKey && apiKey) {
+    url.searchParams.set('apikey', apiKey);
+  }
+
+  return url.toString();
+}
+
 function setStatus(el, ok, text) {
   el.classList.remove('status--idle', 'status--ok', 'status--error');
   el.classList.add(ok ? 'status--ok' : 'status--error');
   el.textContent = text;
 }
 
+function isNoRouteMatch(result) {
+  return result?.status === 404 && typeof result?.body?.message === 'string' && result.body.message.includes('no Route matched');
+}
+
 async function probe(path, needsApiKey = false) {
   const headers = { Accept: 'application/json' };
+  const apiKey = apiKeyInput.value.trim();
 
-  if (needsApiKey && apiKeyInput.value.trim()) {
-    headers.apikey = apiKeyInput.value.trim();
+  if (needsApiKey && apiKey) {
+    headers.apikey = apiKey;
   }
 
   const url = `${getGateway()}${path}`;
@@ -57,9 +80,17 @@ async function probe(path, needsApiKey = false) {
 checkAuthHealthBtn.addEventListener('click', async () => {
   try {
     authHealthStatus.textContent = 'Checking...';
-    const result = await probe('/auth/health');
+
+    let result = await probe('/auth/health');
+    let routeLabel = 'GET /auth/health';
+
+    if (isNoRouteMatch(result)) {
+      result = await probe('/auth/v1/health', true);
+      routeLabel = 'GET /auth/v1/health (fallback)';
+    }
+
     setStatus(authHealthStatus, result.ok, `${result.status} ${result.ok ? 'healthy' : 'error'}`);
-    writeOutput('GET /auth/health', result);
+    writeOutput(routeLabel, result);
   } catch (error) {
     setStatus(authHealthStatus, false, 'request failed');
     writeOutput('GET /auth/health', { error: error.message });
@@ -69,9 +100,17 @@ checkAuthHealthBtn.addEventListener('click', async () => {
 checkSqlInfoBtn.addEventListener('click', async () => {
   try {
     sqlInfoStatus.textContent = 'Checking...';
-    const result = await probe('/sql/v1/info');
+
+    let result = await probe('/sql/v1/info');
+    let routeLabel = 'GET /sql/v1/info';
+
+    if (isNoRouteMatch(result)) {
+      result = await probe('/rest/v1/', true);
+      routeLabel = 'GET /rest/v1/ (fallback: schema info)';
+    }
+
     setStatus(sqlInfoStatus, result.ok, `${result.status} ${result.ok ? 'ok' : 'error'}`);
-    writeOutput('GET /sql/v1/info', result);
+    writeOutput(routeLabel, result);
   } catch (error) {
     setStatus(sqlInfoStatus, false, 'request failed');
     writeOutput('GET /sql/v1/info', { error: error.message });
@@ -124,4 +163,18 @@ signupForm.addEventListener('submit', async (event) => {
 
 clearConsoleBtn.addEventListener('click', () => {
   output.textContent = 'No requests yet.';
+});
+
+routeButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const path = button.dataset.route;
+    const needsKey = button.dataset.needsKey === 'true';
+
+    if (!path) {
+      return;
+    }
+
+    const url = buildRouteUrl(path, needsKey);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  });
 });
