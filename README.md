@@ -94,6 +94,10 @@ make playground-logs
 make playground-down
 ```
 
+Partner-facing demo guide:
+
+- `docs/Partner-Demo-Runbook.md` (dynamic CRUD across five schema models on PostgreSQL + MongoDB)
+
 ## Gateway Security (Phase 2)
 
 Kong now enforces API key auth on core BaaS routes:
