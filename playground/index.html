@@ -112,6 +112,32 @@
           </div>
         </div>
 
+        <div style="border-top: 2px solid #2a3f5f; padding-top: 15px; margin-top: 15px;">
+          <h3>Dynamic 5-Schema CRUD (Demo)</h3>
+          <p class="hint">Select any schema model below. The form fields are generated dynamically and routed to PostgreSQL or MongoDB automatically.</p>
+          <div class="grid-two" style="align-items: end; gap: 10px;">
+            <label>
+              Schema Model
+              <select id="genericSchemaSelect"></select>
+            </label>
+            <label>
+              Record ID (for Update/Delete)
+              <input id="genericRecordId" type="text" placeholder="Auto-filled after create/list" />
+            </label>
+          </div>
+          <div id="genericFieldsContainer" class="grid-two" style="margin-top: 10px;"></div>
+          <div class="grid-two" style="margin-top: 10px; gap: 8px;">
+            <button id="genericAuthSession" type="button" class="button-like">Authenticate Session</button>
+            <button id="genericCreate" type="button" class="button-like button-like--accent">Create</button>
+            <button id="genericList" type="button" class="button-like">List</button>
+            <button id="genericListAllSchemas" type="button" class="button-like">List All 5 Schemas</button>
+            <button id="genericUpdate" type="button" class="button-like">Update</button>
+            <button id="genericDelete" type="button" class="button-like button-like--ghost">Delete</button>
+            <button id="genericReset" type="button" class="button-like button-like--ghost">Reset Fields</button>
+          </div>
+          <pre id="genericCrudOutput" style="background: #1a1f2e; color: #e9f0ff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 280px; overflow-y: auto; margin-top: 10px; border: 1px solid #3f6aa1; font-family: 'Monaco', 'Menlo', monospace;">Select a schema model to generate its CRUD form...</pre>
+        </div>
+
         <div style="border-top: 2px solid #ccc; padding-top: 15px; margin-top: 15px;">
           <h3>Quick Demo Flow</h3>
           <button id="dualPlanesDemo" type="button" class="button-like button-like--accent">▶ Run Full Demo (Auth + Both Planes)</button>

@@ -23,6 +23,7 @@ const outputRefs = {
   pgDual: document.getElementById('pgOutput'),
   mongoDual: document.getElementById('mongoOutput'),
   dualPlanesMain: document.getElementById('dualPlanesOutput'),
+  genericCrud: document.getElementById('genericCrudOutput'),
 };
 
 let realtimeSocket = null;
@@ -876,12 +877,456 @@ function setupDualPlanesView() {
   let dualUserToken = null;
   let dualUserId = null;
 
+  const dynamicSchemaModels = [
+    {
+      key: 'pg_mock_orders',
+      label: 'PostgreSQL - mock_orders',
+      plane: 'postgres',
+      resource: 'mock_orders',
+      ownerField: 'owner_id',
+      fields: [
+        { name: 'order_number', label: 'Order Number', type: 'text', required: true },
+        { name: 'currency', label: 'Currency', type: 'select', options: ['USD', 'EUR', 'BRL'], required: true },
+        { name: 'total_cents', label: 'Total Cents', type: 'number', required: true },
+        { name: 'status', label: 'Status', type: 'select', options: ['pending', 'paid', 'cancelled'], required: true },
+      ],
+    },
+    {
+      key: 'pg_projects',
+      label: 'PostgreSQL - projects',
+      plane: 'postgres',
+      resource: 'projects',
+      ownerField: 'owner_id',
+      fields: [
+        { name: 'name', label: 'Project Name', type: 'text', required: true },
+        { name: 'status', label: 'Status', type: 'select', options: ['active', 'paused', 'archived'], required: true },
+        { name: 'description', label: 'Description', type: 'text', required: false },
+      ],
+    },
+    {
+      key: 'mongo_inventory_item',
+      label: 'MongoDB - inventory_item',
+      plane: 'mongo',
+      resource: 'inventory_item',
+      fields: [
+        { name: 'sku', label: 'SKU', type: 'text', required: true },
+        { name: 'name', label: 'Name', type: 'text', required: true },
+        { name: 'category', label: 'Category', type: 'select', options: ['Electronics', 'Tools', 'Accessories'], required: true },
+        { name: 'price_cents', label: 'Price Cents', type: 'number', required: true },
+        { name: 'in_stock', label: 'In Stock', type: 'boolean', required: false },
+        { name: 'tags', label: 'Tags (comma separated)', type: 'list', required: false },
+      ],
+    },
+    {
+      key: 'mongo_sensor_telemetry',
+      label: 'MongoDB - sensor_telemetry',
+      plane: 'mongo',
+      resource: 'sensor_telemetry',
+      fields: [
+        { name: 'device_id', label: 'Device ID', type: 'text', required: true },
+        { name: 'metric', label: 'Metric', type: 'select', options: ['temperature', 'humidity', 'pressure'], required: true },
+        { name: 'value', label: 'Value', type: 'number', required: true },
+        { name: 'unit', label: 'Unit', type: 'text', required: true },
+      ],
+    },
+    {
+      key: 'mongo_customer_events',
+      label: 'MongoDB - customer_events',
+      plane: 'mongo',
+      resource: 'customer_events',
+      fields: [
+        { name: 'customer_ref', label: 'Customer Ref', type: 'text', required: true },
+        { name: 'event_type', label: 'Event Type', type: 'select', options: ['signup', 'purchase', 'support'], required: true },
+        { name: 'amount_cents', label: 'Amount Cents', type: 'number', required: false },
+        { name: 'notes', label: 'Notes', type: 'text', required: false },
+      ],
+    },
+  ];
+
   const appendDualPlanesLog = (section, label, data) => {
     const output = outputRefs.dualPlanesMain;
     const timestamp = new Date().toLocaleTimeString();
     const message = `[${timestamp}] ${section}: ${label}\n${JSON.stringify(data, null, 2)}\n`;
     output.textContent = message + output.textContent;
   };
+
+  const dynamicSelect = document.getElementById('genericSchemaSelect');
+  const dynamicFieldsContainer = document.getElementById('genericFieldsContainer');
+  const dynamicRecordIdInput = document.getElementById('genericRecordId');
+
+  const getSelectedDynamicModel = () => {
+    if (!dynamicSelect) {
+      return null;
+    }
+    return dynamicSchemaModels.find((model) => model.key === dynamicSelect.value) || dynamicSchemaModels[0];
+  };
+
+  const renderDynamicSchemaOptions = () => {
+    if (!dynamicSelect) {
+      return;
+    }
+
+    dynamicSelect.innerHTML = '';
+    dynamicSchemaModels.forEach((model) => {
+      const option = document.createElement('option');
+      option.value = model.key;
+      option.textContent = model.label;
+      dynamicSelect.appendChild(option);
+    });
+  };
+
+  const renderDynamicFields = () => {
+    if (!dynamicFieldsContainer) {
+      return;
+    }
+
+    const model = getSelectedDynamicModel();
+    dynamicFieldsContainer.innerHTML = '';
+    if (!model) {
+      return;
+    }
+
+    model.fields.forEach((field) => {
+      const wrapper = document.createElement('label');
+      wrapper.textContent = field.label;
+
+      let inputEl;
+      if (field.type === 'select') {
+        inputEl = document.createElement('select');
+        (field.options || []).forEach((value) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          inputEl.appendChild(option);
+        });
+      } else if (field.type === 'boolean') {
+        inputEl = document.createElement('input');
+        inputEl.type = 'checkbox';
+      } else {
+        inputEl = document.createElement('input');
+        inputEl.type = field.type === 'number' ? 'number' : 'text';
+      }
+
+      inputEl.id = `genericField_${field.name}`;
+      if (field.required && field.type !== 'boolean') {
+        inputEl.required = true;
+      }
+      wrapper.appendChild(inputEl);
+      dynamicFieldsContainer.appendChild(wrapper);
+    });
+  };
+
+  const readDynamicPayload = () => {
+    const model = getSelectedDynamicModel();
+    const payload = {};
+    if (!model) {
+      return payload;
+    }
+
+    model.fields.forEach((field) => {
+      const el = document.getElementById(`genericField_${field.name}`);
+      if (!el) {
+        return;
+      }
+
+      if (field.type === 'boolean') {
+        payload[field.name] = Boolean(el.checked);
+        return;
+      }
+
+      const raw = (el.value || '').trim();
+      if (!raw) {
+        return;
+      }
+
+      if (field.type === 'number') {
+        payload[field.name] = Number(raw);
+      } else if (field.type === 'list') {
+        payload[field.name] = raw.split(',').map((part) => part.trim()).filter(Boolean);
+      } else {
+        payload[field.name] = raw;
+      }
+    });
+
+    return payload;
+  };
+
+  const ensureDynamicSession = async () => {
+    if (dualUserToken && dualUserId) {
+      return true;
+    }
+
+    const email = randomEmail();
+    const password = randomPassword();
+
+    const signupResult = await probe('/auth/v1/signup', true, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!signupResult.ok) {
+      writeTo(outputRefs.genericCrud, 'AUTH ERROR', signupResult);
+      return false;
+    }
+
+    const signupData = typeof signupResult.body === 'string' ? JSON.parse(signupResult.body) : signupResult.body;
+    dualUserId = signupData.user?.id || signupData.user?.sub;
+
+    const loginResult = await probe('/auth/v1/token?grant_type=password', true, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!loginResult.ok) {
+      writeTo(outputRefs.genericCrud, 'AUTH ERROR', loginResult);
+      return false;
+    }
+
+    const loginData = typeof loginResult.body === 'string' ? JSON.parse(loginResult.body) : loginResult.body;
+    dualUserToken = loginData.access_token;
+    writeTo(outputRefs.genericCrud, 'AUTH READY', { email, userId: dualUserId });
+    return true;
+  };
+
+  const setRecordId = (idValue) => {
+    if (dynamicRecordIdInput && idValue) {
+      dynamicRecordIdInput.value = idValue;
+    }
+  };
+
+  const parseResponseBody = (body) => {
+    if (typeof body !== 'string') {
+      return body;
+    }
+
+    const trimmed = body.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return body;
+    }
+  };
+
+  bindClick('genericAuthSession', async () => {
+    try {
+      await ensureDynamicSession();
+    } catch (error) {
+      writeTo(outputRefs.genericCrud, 'AUTH ERROR', { error: error.message });
+    }
+  });
+
+  bindClick('genericCreate', async () => {
+    const model = getSelectedDynamicModel();
+    if (!model) {
+      writeTo(outputRefs.genericCrud, 'ERROR', 'No schema model selected.');
+      return;
+    }
+    if (!(await ensureDynamicSession())) {
+      return;
+    }
+
+    const payload = readDynamicPayload();
+    if (model.ownerField && !payload[model.ownerField]) {
+      payload[model.ownerField] = dualUserId;
+    }
+
+    try {
+      let result;
+      if (model.plane === 'postgres') {
+        result = await probe(`/rest/v1/${model.resource}`, true, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        result = await probe(`/mongo/v1/collections/${model.resource}/documents`, true, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
+          body: JSON.stringify({ document: payload }),
+        });
+      }
+
+      const responseBody = parseResponseBody(result.body);
+      const created = Array.isArray(responseBody) ? responseBody[0] : responseBody?.data || responseBody;
+      setRecordId(created?.id);
+      writeTo(outputRefs.genericCrud, `CREATE ${model.label}`, { ok: result.ok, status: result.status, body: responseBody });
+    } catch (error) {
+      writeTo(outputRefs.genericCrud, `CREATE ${model.label}`, { error: error.message });
+    }
+  });
+
+  bindClick('genericList', async () => {
+    const model = getSelectedDynamicModel();
+    if (!model) {
+      writeTo(outputRefs.genericCrud, 'ERROR', 'No schema model selected.');
+      return;
+    }
+    if (!(await ensureDynamicSession())) {
+      return;
+    }
+
+    try {
+      const path = model.plane === 'postgres'
+        ? `/rest/v1/${model.resource}?select=*&limit=10`
+        : `/mongo/v1/collections/${model.resource}/documents?limit=10`;
+      const result = await probe(path, true, {
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+      });
+      const responseBody = parseResponseBody(result.body);
+      const firstItem = Array.isArray(responseBody) ? responseBody[0] : responseBody?.data?.[0];
+      setRecordId(firstItem?.id);
+      writeTo(outputRefs.genericCrud, `LIST ${model.label}`, { ok: result.ok, status: result.status, body: responseBody });
+    } catch (error) {
+      writeTo(outputRefs.genericCrud, `LIST ${model.label}`, { error: error.message });
+    }
+  });
+
+  bindClick('genericListAllSchemas', async () => {
+    if (!(await ensureDynamicSession())) {
+      return;
+    }
+
+    const summary = {
+      userId: dualUserId,
+      checkedAt: new Date().toISOString(),
+      schemas: [],
+    };
+
+    for (const model of dynamicSchemaModels) {
+      try {
+        const path = model.plane === 'postgres'
+          ? `/rest/v1/${model.resource}?select=*&limit=5`
+          : `/mongo/v1/collections/${model.resource}/documents?limit=5`;
+
+        const result = await probe(path, true, {
+          headers: { Authorization: `Bearer ${dualUserToken}` },
+        });
+
+        const responseBody = parseResponseBody(result.body);
+        const items = Array.isArray(responseBody) ? responseBody : (responseBody?.data || []);
+
+        summary.schemas.push({
+          key: model.key,
+          label: model.label,
+          plane: model.plane,
+          resource: model.resource,
+          ok: result.ok,
+          status: result.status,
+          count: Array.isArray(items) ? items.length : 0,
+          sampleIds: (Array.isArray(items) ? items : []).map((item) => item?.id).filter(Boolean).slice(0, 3),
+        });
+      } catch (error) {
+        summary.schemas.push({
+          key: model.key,
+          label: model.label,
+          plane: model.plane,
+          resource: model.resource,
+          ok: false,
+          status: 'error',
+          count: 0,
+          sampleIds: [],
+          error: error.message,
+        });
+      }
+    }
+
+    writeTo(outputRefs.genericCrud, 'LIST ALL SCHEMAS PROOF', summary);
+  });
+
+  bindClick('genericUpdate', async () => {
+    const model = getSelectedDynamicModel();
+    const recordId = dynamicRecordIdInput?.value?.trim() || '';
+    if (!model) {
+      writeTo(outputRefs.genericCrud, 'ERROR', 'No schema model selected.');
+      return;
+    }
+    if (!recordId) {
+      writeTo(outputRefs.genericCrud, 'ERROR', 'Record ID is required for update.');
+      return;
+    }
+    if (!(await ensureDynamicSession())) {
+      return;
+    }
+
+    const payload = readDynamicPayload();
+    if (model.ownerField && !payload[model.ownerField]) {
+      payload[model.ownerField] = dualUserId;
+    }
+
+    try {
+      const result = model.plane === 'postgres'
+        ? await probe(`/rest/v1/${model.resource}?id=eq.${encodeURIComponent(recordId)}`, true, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}`, Prefer: 'return=representation' },
+            body: JSON.stringify(payload),
+          })
+        : await probe(`/mongo/v1/collections/${model.resource}/documents/${recordId}`, true, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
+            body: JSON.stringify({ patch: payload }),
+          });
+
+      const responseBody = parseResponseBody(result.body);
+      writeTo(outputRefs.genericCrud, `UPDATE ${model.label}`, { ok: result.ok, status: result.status, body: responseBody });
+    } catch (error) {
+      writeTo(outputRefs.genericCrud, `UPDATE ${model.label}`, { error: error.message });
+    }
+  });
+
+  bindClick('genericDelete', async () => {
+    const model = getSelectedDynamicModel();
+    const recordId = dynamicRecordIdInput?.value?.trim() || '';
+    if (!model) {
+      writeTo(outputRefs.genericCrud, 'ERROR', 'No schema model selected.');
+      return;
+    }
+    if (!recordId) {
+      writeTo(outputRefs.genericCrud, 'ERROR', 'Record ID is required for delete.');
+      return;
+    }
+    if (!(await ensureDynamicSession())) {
+      return;
+    }
+
+    try {
+      const result = model.plane === 'postgres'
+        ? await probe(`/rest/v1/${model.resource}?id=eq.${encodeURIComponent(recordId)}`, true, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${dualUserToken}` },
+          })
+        : await probe(`/mongo/v1/collections/${model.resource}/documents/${recordId}`, true, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${dualUserToken}` },
+          });
+
+      const responseBody = parseResponseBody(result.body);
+      writeTo(outputRefs.genericCrud, `DELETE ${model.label}`, { ok: result.ok, status: result.status, body: responseBody });
+    } catch (error) {
+      writeTo(outputRefs.genericCrud, `DELETE ${model.label}`, { error: error.message });
+    }
+  });
+
+  bindClick('genericReset', () => {
+    if (dynamicRecordIdInput) {
+      dynamicRecordIdInput.value = '';
+    }
+    renderDynamicFields();
+    clearOutput(outputRefs.genericCrud, 'Select a schema model to generate its CRUD form...');
+  });
+
+  if (dynamicSelect) {
+    dynamicSelect.addEventListener('change', () => {
+      renderDynamicFields();
+      clearOutput(outputRefs.genericCrud, `Form generated for ${getSelectedDynamicModel()?.label || 'schema model'}.`);
+    });
+  }
+
+  renderDynamicSchemaOptions();
+  renderDynamicFields();
 
   bindClick('pgCreateOrder', async () => {
     if (!dualUserToken) {
@@ -1079,18 +1524,20 @@ function setupDualPlanesView() {
     // Step 3: Create MongoDB document
     appendDualPlanesLog('System', 'Step 3: Create MongoDB document data', { step: 'Insert into mock_catalog collection' });
     try {
+      const demoMongoDocument = {
+        sku: `DEMO-SKU-${randomInt(1000, 9999)}`,
+        name: randomFrom(['Demo Product - Premium Edition', 'Demo Product - Pro Bundle', 'Demo Product - Starter Kit']),
+        category: randomFrom(['Electronics', 'Tools', 'Accessories']),
+        price_cents: randomInt(1000, 75000),
+        tags: [randomFrom(['new', 'featured', 'launch']), randomFrom(['sale', 'popular', 'limited'])],
+        in_stock: randomFrom([true, false]),
+      };
+
       const mongoResult = await probe('/mongo/v1/collections/mock_catalog/documents', true, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
         body: JSON.stringify({
-          document: {
-            sku: 'DEMO-SKU-001',
-            name: 'Demo Product - Premium Edition',
-            category: 'Electronics',
-            price_cents: 34999,
-            tags: ['new', 'featured'],
-            in_stock: true,
-          },
+          document: demoMongoDocument,
         }),
       });
       const mongoData = typeof mongoResult.body === 'string' ? JSON.parse(mongoResult.body) : mongoResult.body;
