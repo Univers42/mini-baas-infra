@@ -98,10 +98,32 @@ CREATE TABLE IF NOT EXISTS public.projects (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- Mock relational schema for MVP dual-data-plane demo
+CREATE TABLE IF NOT EXISTS public.mock_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id TEXT NOT NULL,
+  order_number TEXT NOT NULL UNIQUE,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mock_orders ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS projects_owner_crud ON public.projects;
 CREATE POLICY projects_owner_crud ON public.projects
+  FOR ALL USING (
+    auth.uid()::text = owner_id
+  )
+  WITH CHECK (
+    auth.uid()::text = owner_id
+  );
+
+DROP POLICY IF EXISTS mock_orders_owner_crud ON public.mock_orders;
+CREATE POLICY mock_orders_owner_crud ON public.mock_orders
   FOR ALL USING (
     auth.uid()::text = owner_id
   )
@@ -133,6 +155,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.users TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_profiles TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.posts TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.projects TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.mock_orders TO authenticated;
 
 -- Grant SELECT on users to anon role (for public info)
 GRANT SELECT ON public.users TO anon;

@@ -8,12 +8,35 @@ const PORT = Number(process.env.PORT || 3010);
 const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017";
 const MONGO_DB_NAME = process.env.MONGO_DB_NAME || "mini_baas";
 const JWT_SECRET = process.env.JWT_SECRET || "";
+const MONGO_MOCK_COLLECTION = process.env.MONGO_MOCK_COLLECTION || "mock_catalog";
 
 const COLLECTION_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 app.use(express.json({ limit: "256kb" }));
 
 let db;
+
+const MOCK_COLLECTION_VALIDATOR = {
+  $jsonSchema: {
+    bsonType: "object",
+    required: ["owner_id", "sku", "name", "price_cents", "category", "created_at", "updated_at"],
+    additionalProperties: true,
+    properties: {
+      owner_id: { bsonType: "string", minLength: 1 },
+      sku: { bsonType: "string", minLength: 2, maxLength: 64 },
+      name: { bsonType: "string", minLength: 2, maxLength: 120 },
+      category: { bsonType: "string", minLength: 2, maxLength: 64 },
+      price_cents: { bsonType: "int", minimum: 0 },
+      tags: {
+        bsonType: "array",
+        items: { bsonType: "string" },
+      },
+      in_stock: { bsonType: "bool" },
+      created_at: { bsonType: "date" },
+      updated_at: { bsonType: "date" },
+    },
+  },
+};
 
 const ok = (res, status, data, meta) => {
   const payload = { success: true, data };
@@ -261,10 +284,33 @@ app.use((err, req, res, next) => {
   return fail(res, 500, "internal_error", "Unexpected server error");
 });
 
+const ensureMongoMockSchema = async () => {
+  const existing = await db.listCollections({ name: MONGO_MOCK_COLLECTION }).toArray();
+
+  if (existing.length === 0) {
+    await db.createCollection(MONGO_MOCK_COLLECTION, {
+      validator: MOCK_COLLECTION_VALIDATOR,
+      validationLevel: "strict",
+      validationAction: "error",
+    });
+  } else {
+    await db.command({
+      collMod: MONGO_MOCK_COLLECTION,
+      validator: MOCK_COLLECTION_VALIDATOR,
+      validationLevel: "strict",
+      validationAction: "error",
+    });
+  }
+
+  await db.collection(MONGO_MOCK_COLLECTION).createIndex({ owner_id: 1, created_at: -1 });
+  console.log(`mongo-api mock schema ready on collection: ${MONGO_MOCK_COLLECTION}`);
+};
+
 const start = async () => {
   const client = new MongoClient(MONGO_URI);
   await client.connect();
   db = client.db(MONGO_DB_NAME);
+  await ensureMongoMockSchema();
 
   app.listen(PORT, () => {
     console.log(`mongo-api listening on ${PORT}`);

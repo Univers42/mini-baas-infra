@@ -51,6 +51,24 @@ Friday acceptance checklist:
 4. One automated Mongo smoke phase passes locally with the existing suite.
 5. Playground/demo shows one successful end-to-end call for each engine.
 
+MVP dual-schema requirement (mock schemas for both data planes):
+1. PostgreSQL relational mock schema:
+- table: public.mock_orders
+- fields: id (uuid), owner_id (text), order_number (text unique), currency (text), total_cents (int), status (enum-like check), created_at, updated_at
+- policy: strict owner-based RLS (auth.uid()::text = owner_id)
+
+2. MongoDB document mock schema:
+- collection: mock_catalog
+- validator: JSON Schema enforced via Mongo validator/collMod
+- required fields: owner_id, sku, name, price_cents, category, created_at, updated_at
+- optional fields: tags[], in_stock
+- index: owner_id + created_at for owner-scoped access
+
+Definition of done for dual schemas:
+1. Both mock schemas are provisioned automatically on startup/bootstrap.
+2. PostgreSQL and Mongo data planes each expose CRUD behavior with their own schema style.
+3. Demo can show relational table constraints and document-schema validation coexisting in one BaaS gateway.
+
 Here is a concrete spec you can execute today, with test cases your team can start implementing immediately.
 
 **MVP Endpoint Spec (v1)**

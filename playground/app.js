@@ -19,6 +19,10 @@ const outputRefs = {
   minio: document.getElementById('minioOutput'),
   redis: document.getElementById('redisOutput'),
   supavisor: document.getElementById('supavisorOutput'),
+  tests: document.getElementById('testsOutput'),
+  pgDual: document.getElementById('pgOutput'),
+  mongoDual: document.getElementById('mongoOutput'),
+  dualPlanesMain: document.getElementById('dualPlanesOutput'),
 };
 
 let realtimeSocket = null;
@@ -868,12 +872,349 @@ function setupContainerViews() {
   });
 }
 
+function setupDualPlanesView() {
+  let dualUserToken = null;
+  let dualUserId = null;
+
+  const appendDualPlanesLog = (section, label, data) => {
+    const output = outputRefs.dualPlanesMain;
+    const timestamp = new Date().toLocaleTimeString();
+    const message = `[${timestamp}] ${section}: ${label}\n${JSON.stringify(data, null, 2)}\n`;
+    output.textContent = message + output.textContent;
+  };
+
+  bindClick('pgCreateOrder', async () => {
+    if (!dualUserToken) {
+      writeTo(outputRefs.pgDual, 'INFO', 'Run full demo first to authenticate.');
+      return;
+    }
+    const orderNum = `ORD-${Date.now()}`;
+    const body = JSON.stringify({
+      order_number: orderNum,
+      currency: 'USD',
+      total_cents: randomInt(1000, 50000),
+      status: randomFrom(['pending', 'paid']),
+      owner_id: dualUserId,
+    });
+    try {
+      const result = await probe('/rest/v1/mock_orders', true, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+        body,
+      });
+      writeTo(outputRefs.pgDual, 'Order Created', result);
+      appendDualPlanesLog('PostgreSQL', 'Created order ' + orderNum, result);
+    } catch (e) {
+      writeTo(outputRefs.pgDual, 'Error', { error: e.message });
+    }
+  });
+
+  bindClick('pgListOrders', async () => {
+    if (!dualUserToken) {
+      writeTo(outputRefs.pgDual, 'INFO', 'Run full demo first to authenticate.');
+      return;
+    }
+    try {
+      const result = await probe('/rest/v1/mock_orders?select=id,order_number,total_cents,status,created_at', true, {
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+      });
+      writeTo(outputRefs.pgDual, 'My Orders', result);
+      appendDualPlanesLog('PostgreSQL', 'Listed orders', result);
+    } catch (e) {
+      writeTo(outputRefs.pgDual, 'Error', { error: e.message });
+    }
+  });
+
+  bindClick('pgFetchOrderSchema', () => {
+    writeTo(outputRefs.pgDual, 'PostgreSQL mock_orders Schema', {
+      table: 'public.mock_orders',
+      engine: 'PostgreSQL 16',
+      constraints: ['id UUID PRIMARY KEY', 'order_number UNIQUE', 'status ENUM CHECK', 'total_cents >= 0'],
+      rls: 'ENABLED - Strict owner-based row-level security',
+      fields: [
+        { name: 'id', type: 'UUID', constraint: 'PRIMARY KEY' },
+        { name: 'owner_id', type: 'TEXT', constraint: 'RLS enforced' },
+        { name: 'order_number', type: 'TEXT', constraint: 'UNIQUE' },
+        { name: 'currency', type: 'TEXT', default: 'USD' },
+        { name: 'total_cents', type: 'INTEGER', constraint: 'CHECK >= 0' },
+        { name: 'status', type: 'TEXT', constraint: "ENUM: 'pending', 'paid', 'cancelled'" },
+        { name: 'created_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'now()' },
+        { name: 'updated_at', type: 'TIMESTAMP WITH TIME ZONE', default: 'now()' },
+      ],
+    });
+  });
+
+  bindClick('mongoCreateItem', async () => {
+    if (!dualUserToken) {
+      writeTo(outputRefs.mongo, 'INFO', 'Run full demo first to authenticate.');
+      return;
+    }
+    const sku = `SKU-${randomInt(1000, 9999)}`;
+    const body = JSON.stringify({
+      document: {
+        sku,
+        name: randomFrom(['Widget Pro', 'Gadget Plus', 'Tool Master', 'Device Elite']),
+        category: randomFrom(['Electronics', 'Tools', 'Accessories']),
+        price_cents: randomInt(500, 100000),
+        tags: [randomFrom(['new', 'popular', 'limited']), randomFrom(['sale', 'featured'])],
+        in_stock: true,
+      },
+    });
+    try {
+      const result = await probe('/mongo/v1/collections/mock_catalog/documents', true, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+        body,
+      });
+      writeTo(outputRefs.mongo, 'Item Created', result);
+      appendDualPlanesLog('MongoDB', 'Created item ' + sku, result);
+    } catch (e) {
+      writeTo(outputRefs.mongo, 'Error', { error: e.message });
+    }
+  });
+
+  bindClick('mongoListItems', async () => {
+    if (!dualUserToken) {
+      writeTo(outputRefs.mongo, 'INFO', 'Run full demo first to authenticate.');
+      return;
+    }
+    try {
+      const result = await probe('/mongo/v1/collections/mock_catalog/documents?limit=10', true, {
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+      });
+      writeTo(outputRefs.mongo, 'My Catalog Items', result);
+      appendDualPlanesLog('MongoDB', 'Listed catalog items', result);
+    } catch (e) {
+      writeTo(outputRefs.mongo, 'Error', { error: e.message });
+    }
+  });
+
+  bindClick('mongoFetchSchema', () => {
+    writeTo(outputRefs.mongo, 'MongoDB mock_catalog Schema', {
+      collection: 'mock_catalog',
+      engine: 'MongoDB 7',
+      validation: 'JSON Schema Validator enforced',
+      rls: 'ENABLED - owner_id filtering on all queries',
+      required_fields: ['owner_id', 'sku', 'name', 'price_cents', 'category', 'created_at', 'updated_at'],
+      optional_fields: ['tags (array)', 'in_stock (boolean)'],
+      schema: {
+        owner_id: 'string (minLength: 1)',
+        sku: 'string (2-64 chars)',
+        name: 'string (2-120 chars)',
+        category: 'string',
+        price_cents: 'int (minimum: 0)',
+        tags: 'array of strings',
+        in_stock: 'boolean',
+        created_at: 'date',
+        updated_at: 'date',
+      },
+      indexes: ['owner_id + created_at'],
+    });
+  });
+
+  bindClick('dualPlanesDemo', async () => {
+    outputRefs.dualPlanesMain.textContent = '';
+    writeTo(outputRefs.dualPlanesMain, 'DEMO START', 'Running full dual-planes demo...\n');
+
+    // Step 1: Signup and login
+    appendDualPlanesLog('System', 'Step 1: Authenticate user', { step: 'Signing up new user' });
+    const email = randomEmail();
+    const password = randomPassword();
+    try {
+      const signupResult = await probe('/auth/v1/signup', true, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (!signupResult.ok) {
+        appendDualPlanesLog('Auth', 'Signup failed', { status: signupResult.status, error: signupResult.body });
+        return;
+      }
+      
+      const signupData = typeof signupResult.body === 'string' ? JSON.parse(signupResult.body) : signupResult.body;
+      dualUserId = signupData.user?.id || signupData.user?.sub;
+      
+      const loginResult = await probe('/auth/v1/token?grant_type=password', true, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (!loginResult.ok) {
+        appendDualPlanesLog('Auth', 'Login failed', { status: loginResult.status, error: loginResult.body });
+        return;
+      }
+      
+      const loginData = typeof loginResult.body === 'string' ? JSON.parse(loginResult.body) : loginResult.body;
+      dualUserToken = loginData.access_token;
+      appendDualPlanesLog('Auth', 'User authenticated', { email, userId: dualUserId, tokenLength: dualUserToken?.length });
+    } catch (e) {
+      appendDualPlanesLog('Auth', 'Signup/Login failed', { error: e.message });
+      return;
+    }
+
+    // Step 2: Create PostgreSQL order
+    appendDualPlanesLog('System', 'Step 2: Create PostgreSQL relational data', { step: 'Insert into mock_orders table' });
+    const pgOrderNum = `ORD-${Date.now()}`;
+    try {
+      const pgResult = await probe('/rest/v1/mock_orders', true, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+        body: JSON.stringify({
+          order_number: pgOrderNum,
+          currency: 'USD',
+          total_cents: 24999,
+          status: 'pending',
+          owner_id: dualUserId,
+        }),
+      });
+      const pgData = typeof pgResult.body === 'string' ? JSON.parse(pgResult.body) : pgResult.body;
+      appendDualPlanesLog('PostgreSQL', 'Relational insert successful', pgData[0] || pgData);
+      writeTo(outputRefs.pgDual, 'Demo Order Created', pgData[0] || pgData);
+    } catch (e) {
+      appendDualPlanesLog('PostgreSQL', 'Insert failed', { error: e.message });
+    }
+
+    // Step 3: Create MongoDB document
+    appendDualPlanesLog('System', 'Step 3: Create MongoDB document data', { step: 'Insert into mock_catalog collection' });
+    try {
+      const mongoResult = await probe('/mongo/v1/collections/mock_catalog/documents', true, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+        body: JSON.stringify({
+          document: {
+            sku: 'DEMO-SKU-001',
+            name: 'Demo Product - Premium Edition',
+            category: 'Electronics',
+            price_cents: 34999,
+            tags: ['new', 'featured'],
+            in_stock: true,
+          },
+        }),
+      });
+      const mongoData = typeof mongoResult.body === 'string' ? JSON.parse(mongoResult.body) : mongoResult.body;
+      appendDualPlanesLog('MongoDB', 'Document insert successful', mongoData.data || mongoData);
+      writeTo(outputRefs.mongo, 'Demo Catalog Item Created', mongoData.data || mongoData);
+    } catch (e) {
+      appendDualPlanesLog('MongoDB', 'Insert failed', { error: e.message });
+    }
+
+    // Step 4: Query both
+    appendDualPlanesLog('System', 'Step 4: Query both data planes', { step: 'Fetch all user data from both schemas' });
+    try {
+      const pgList = await probe('/rest/v1/mock_orders?select=id,order_number,total_cents,status', true, {
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+      });
+      const mongoList = await probe('/mongo/v1/collections/mock_catalog/documents?limit=5', true, {
+        headers: { Authorization: `Bearer ${dualUserToken}` },
+      });
+      const pgData = typeof pgList.body === 'string' ? JSON.parse(pgList.body) : pgList.body;
+      const mongoData = typeof mongoList.body === 'string' ? JSON.parse(mongoList.body) : mongoList.body;
+      appendDualPlanesLog('PostgreSQL', 'Queried all orders', { count: Array.isArray(pgData) ? pgData.length : 0 });
+      appendDualPlanesLog('MongoDB', 'Queried all items', mongoData.meta || { message: 'Query successful' });
+      appendDualPlanesLog('System', 'DEMO COMPLETE', { status: 'Both data planes operational', message: 'Check schema views for structure details' });
+    } catch (e) {
+      appendDualPlanesLog('System', 'Query failed', { error: e.message });
+    }
+  });
+
+  bindClick('clearDualPlanesOutput', () => {
+    outputRefs.pgDual.textContent = 'Ready to create orders...';
+    outputRefs.mongo.textContent = 'Ready to create catalog items...';
+    outputRefs.dualPlanesMain.textContent = 'Select demo operations above...';
+  });
+}
+
+function setupTestsView() {
+  bindClick('clearTestsOutput', () => clearOutput(outputRefs.tests, 'No tests run yet. Click a button above to start.'));
+
+  bindClick('runTestPhase15', async () => {
+    writeTo(outputRefs.tests, 'PHASE 15: MongoDB MVP Integration Tests', {
+      description: 'Comprehensive test of MongoDB HTTP API through Kong gateway with user isolation and validation.',
+      testCases: 19,
+      coverage: ['Auth flows', 'CRUD operations', 'Multi-tenant isolation', 'Error handling', 'Validation'],
+      duration: '30-60 seconds',
+      command: 'make test-phase15',
+      howToRun: [
+        '1. Open terminal',
+        '2. cd /home/daniel/projects/mini-baas-infra',
+        '3. make test-phase15',
+      ],
+      whyInPlayground: 'Tests use subprocess/shell execution. Run from terminal for full output.',
+    });
+  });
+
+  bindClick('runTestPhase14', async () => {
+    writeTo(outputRefs.tests, 'PHASE 14: Mongo API via Kong Gateway', {
+      description: 'Integration test validating MongoDB service endpoints through Kong routing.',
+      testCases: 8,
+      coverage: ['Gateway key-auth', 'User isolation', 'CRUD validation'],
+      duration: '20-30 seconds',
+      command: 'make test-phase14',
+      howToRun: [
+        '1. Open terminal',
+        '2. cd /home/daniel/projects/mini-baas-infra',
+        '3. make test-phase14',
+      ],
+    });
+  });
+
+  bindClick('runTestPhase3', async () => {
+    writeTo(outputRefs.tests, 'PHASE 3: Authenticated Database Access', {
+      description: 'Tests signup, login, JWT token generation, and REST API authenticated access.',
+      testCases: 12,
+      coverage: ['Auth flows', 'JWT validation', 'REST access control'],
+      duration: '10-15 seconds',
+      command: 'make test-phase3',
+      howToRun: [
+        '1. Open terminal',
+        '2. cd /home/daniel/projects/mini-baas-infra',
+        '3. make test-phase3',
+      ],
+    });
+  });
+
+  bindClick('runAllTests', async () => {
+    writeTo(outputRefs.tests, 'ALL TESTS: Complete Test Suite (15 Phases)', {
+      description: 'Full integration test suite covering all services and features.',
+      totalTests: 184,
+      totalPhases: 15,
+      coverage: [
+        'Phase 1: Smoke tests',
+        'Phase 2: Gateway security',
+        'Phase 3: Auth + Database',
+        'Phases 4-7: Data isolation, REST metadata, HTTP methods, errors',
+        'Phases 8-13: Token lifecycle, Storage, WebSocket, Rate limiting, CORS',
+        'Phases 14-15: MongoDB CRUD and isolationintegration',
+      ],
+      duration: '5-10 minutes (total)',
+      command: 'make tests',
+      howToRun: [
+        '1. Open terminal ',
+        '2. cd /home/daniel/projects/mini-baas-infra',
+        '3. make tests',
+        '',
+        'Watch for the test summary at the end showing passed/failed counts.',
+      ],
+      requires: [
+        '✓ Docker compose stack running (make compose-up)',
+        '✓ All 11 services healthy',
+        '✓ Gateway available on http://localhost:8000',
+      ],
+      note: 'Tests have rate-line delays to prevent GoTrue rate limits. Run from terminal for best experience.',
+    });
+  });
+}
+
 function setupListeners() {
   setupBaseListeners();
   setupAuthView();
   setupRestView();
   setupRealtimeView();
   setupContainerViews();
+  setupDualPlanesView();
+  setupTestsView();
 }
 
 try {

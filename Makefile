@@ -257,9 +257,9 @@ tests: ## Run all smoke tests
 		./scripts/phase12-rate-limiting-test.sh \
 		./scripts/phase13-cors-preflight-test.sh \
 		./scripts/phase14-mongo-mvp-test.sh \
-		./scripts/phase15-mongo-mvp-test.sh; do \
+		./scripts/phase15-mongo-mvp-test.py; do \
 		tmp_file="$$(mktemp)"; \
-		if [ "$$script" = "./scripts/phase15-mongo-mvp-test.sh" ]; then \
+		if [ "$$script" = "./scripts/phase15-mongo-mvp-test.py" ]; then \
 			FORCE_COLORS=1 python3 "$$script" | tee "$$tmp_file"; \
 		else \
 			FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
@@ -331,7 +331,7 @@ test-phase14: ## Run Phase 14 Mongo MVP gateway + isolation test
 	@FORCE_COLORS=1 bash ./scripts/phase14-mongo-mvp-test.sh
 
 test-phase15: ## Run Phase 15 Mongo MVP comprehensive test
-	@FORCE_COLORS=1 python3 ./scripts/phase15-mongo-mvp-test.sh
+	@FORCE_COLORS=1 python3 ./scripts/phase15-mongo-mvp-test.py
 
 flow-postgres-mvp: ## Run PostgreSQL MVP happy-path + isolation flow script
 	@FORCE_COLORS=1 bash ./scripts/postgres-mvp-flow.sh
