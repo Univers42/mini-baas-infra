@@ -899,7 +899,7 @@ function setupDualPlanesView() {
     try {
       const result = await probe('/rest/v1/mock_orders', true, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${dualUserToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
         body,
       });
       writeTo(outputRefs.pgDual, 'Order Created', result);
@@ -963,7 +963,7 @@ function setupDualPlanesView() {
     try {
       const result = await probe('/mongo/v1/collections/mock_catalog/documents', true, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${dualUserToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
         body,
       });
       writeTo(outputRefs.mongo, 'Item Created', result);
@@ -1060,7 +1060,7 @@ function setupDualPlanesView() {
     try {
       const pgResult = await probe('/rest/v1/mock_orders', true, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${dualUserToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
         body: JSON.stringify({
           order_number: pgOrderNum,
           currency: 'USD',
@@ -1081,7 +1081,7 @@ function setupDualPlanesView() {
     try {
       const mongoResult = await probe('/mongo/v1/collections/mock_catalog/documents', true, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${dualUserToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dualUserToken}` },
         body: JSON.stringify({
           document: {
             sku: 'DEMO-SKU-001',
