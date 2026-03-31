@@ -87,16 +87,39 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 
+-- **MVP: projects table for demo**
+CREATE TABLE IF NOT EXISTS public.projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'paused', 'archived')),
+  owner_id TEXT NOT NULL,  -- JWT subject, enforced by RLS
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS projects_owner_crud ON public.projects;
+CREATE POLICY projects_owner_crud ON public.projects
+  FOR ALL USING (
+    auth.uid()::text = owner_id
+  )
+  WITH CHECK (
+    auth.uid()::text = owner_id
+  );
+
+-- **RLS policies: strict ownership enforcement (no OR true)**
 DROP POLICY IF EXISTS users_select_own ON public.users;
 CREATE POLICY users_select_own ON public.users
   FOR SELECT USING (
-    auth.uid()::text = id::text OR true  -- Allow SELECT, will be validated via JWT
+    auth.uid()::text = id::text
   );
 
 DROP POLICY IF EXISTS user_profiles_select_own ON public.user_profiles;
 CREATE POLICY user_profiles_select_own ON public.user_profiles
   FOR SELECT USING (
-    auth.uid()::text = user_id::text OR true
+    auth.uid()::text = user_id::text
   );
 
 DROP POLICY IF EXISTS posts_select ON public.posts;
@@ -109,6 +132,7 @@ CREATE POLICY posts_select ON public.posts
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.users TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_profiles TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.posts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.projects TO authenticated;
 
 -- Grant SELECT on users to anon role (for public info)
 GRANT SELECT ON public.users TO anon;

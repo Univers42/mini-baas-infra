@@ -256,9 +256,14 @@ tests: ## Run all smoke tests
 		./scripts/phase11-realtime-websocket-test.sh \
 		./scripts/phase12-rate-limiting-test.sh \
 		./scripts/phase13-cors-preflight-test.sh \
-		./scripts/phase14-mongo-mvp-test.sh; do \
+		./scripts/phase14-mongo-mvp-test.sh \
+		./scripts/phase15-mongo-mvp-test.sh; do \
 		tmp_file="$$(mktemp)"; \
-		FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
+		if [ "$$script" = "./scripts/phase15-mongo-mvp-test.sh" ]; then \
+			FORCE_COLORS=1 python3 "$$script" | tee "$$tmp_file"; \
+		else \
+			FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
+		fi; \
 		status=$${PIPESTATUS[0]}; \
 		clean_log="$$(sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' "$$tmp_file")"; \
 		passed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Passed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
@@ -267,6 +272,7 @@ tests: ## Run all smoke tests
 		total_failed=$$((total_failed + failed)); \
 		rm -f "$$tmp_file"; \
 		if [ "$$status" -ne 0 ]; then overall_status=1; fi; \
+		sleep 2; \
 	done; \
 	echo ""; \
 	echo -e "$(CYAN)$(BOLD)╔════════════════════════════════════════════════════════════╗$(NC)"; \
@@ -323,6 +329,9 @@ test-phase13: ## Run Phase 13 CORS preflight and cross-origin test
 
 test-phase14: ## Run Phase 14 Mongo MVP gateway + isolation test
 	@FORCE_COLORS=1 bash ./scripts/phase14-mongo-mvp-test.sh
+
+test-phase15: ## Run Phase 15 Mongo MVP comprehensive test
+	@FORCE_COLORS=1 python3 ./scripts/phase15-mongo-mvp-test.sh
 
 flow-postgres-mvp: ## Run PostgreSQL MVP happy-path + isolation flow script
 	@FORCE_COLORS=1 bash ./scripts/postgres-mvp-flow.sh

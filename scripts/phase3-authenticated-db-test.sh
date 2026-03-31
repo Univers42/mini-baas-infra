@@ -85,6 +85,8 @@ if [[ "$SIGNUP_HTTP" == "200" ]]; then
     fi
 fi
 
+sleep 0.5  # Rate limit spacing between signup and login
+
 ui_step "Step 2: Login and obtain JWT token"
 
 # 2. Login

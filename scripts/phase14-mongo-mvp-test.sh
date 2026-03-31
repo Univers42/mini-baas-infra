@@ -76,6 +76,8 @@ signup_and_login() {
         return
     fi
 
+    sleep 0.5  # Rate limit spacing
+
     local login_http
     login_http=$(curl -sS -o "$login_file" -w '%{http_code}' \
         -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
@@ -121,6 +123,7 @@ assert_code "Valid apikey accepted on /mongo/v1/health" "200" "$MONGO_HEALTH_OK"
 ui_step "Test 2: create two users and JWT tokens"
 
 TOKEN_A="$(signup_and_login usera)"
+sleep 1  # Wait between user signups to avoid rate limiting
 TOKEN_B="$(signup_and_login userb)"
 
 if [[ -n "$TOKEN_A" ]]; then

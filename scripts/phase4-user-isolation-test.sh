@@ -106,6 +106,8 @@ else
     ((TESTS_FAILED++))
 fi
 
+sleep 1  # Rate limit spacing between user creations
+
 USER2_ID=$(create_test_user "$EMAIL2" "$PASS" "$TMPDIR/user2_signup.json")
 if [[ -n "$USER2_ID" ]]; then
     echo -e "${GREEN}✓${NC} User 2 created: $USER2_ID"
