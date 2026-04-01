@@ -1,0 +1,5 @@
+mini-baas-infra (ToDo list):
+	- Verify any DB engine
+	- Learn kong api routing
+QA:
+	- MonkeyBot to automate tests, cybersecurity
