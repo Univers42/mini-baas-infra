@@ -362,10 +362,10 @@ fclean: ## Full cleanup (containers, volumes, and local images)
 
 help: ## Show this help message
 	@echo ""
-	@echo "mini-baas-infrastructure - Available Commands"
+	@echo -e "$(BOLD)$(CYAN)mini-baas-infrastructure - Available Commands$(NC)"
 	@echo ""
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | sort | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-24s %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "; cmd = sprintf("%c[1;32m", 27); desc = sprintf("%c[2;37m", 27); reset = sprintf("%c[0m", 27)} {printf "  %s%-24s%s %s%s%s\n", cmd, $$1, reset, desc, $$2, reset}'
 	@echo ""
 	$(call print-next,Start with make compose-up.)
 
