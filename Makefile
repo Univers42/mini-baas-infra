@@ -372,5 +372,5 @@ help: ## ❓ Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 tes 🧪t-phase2 tes 🧪t-phase3 tes 🧪t-phase4 tes 🧪t-phase5 tes 🧪t-phase6 tes 🧪t-phase7 tes 🧪t-phase8 tes 🧪t-phase9 tes 🧪t-phase10 tes 🧪t-phase11 tes 🧪t-phase12 tes 🧪t-phase13 tes 🧪t-phase14 flo 🧪w-postgres-mvp \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 test-phase14 test-phase15 flow-postgres-mvp \
 	dev-up dev-down dev-re build-and-push fclean help
