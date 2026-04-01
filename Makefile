@@ -36,17 +36,17 @@ define print-next
 fi
 endef
 
-check-docker: ## Check if docker is installed
+check-docker: ## 🐳 Check if docker is installed
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker Engine/Desktop first."; exit 1; }
 
-check-compose: ## Check if docker compose is installed
+check-compose: ## 🔄 Check if docker compose is installed
 	@docker compose version >/dev/null 2>&1 || { echo >&2 "Docker Compose plugin is not available. Install Docker Compose v2."; exit 1; }
 
 # ============================================================================
 # Docker Image Management
 # ============================================================================
 
-docker-build: ## Pull and tag all prebuilt images locally
+docker-build: ## 📦 Pull and tag all prebuilt images locally
 	@$(MAKE) $(NO_PRINT) check-docker
 	@echo -e "$(BLUE)Pulling and tagging prebuilt Docker images...$(NC)"
 	@docker pull $(KONG_IMAGE)
@@ -72,7 +72,7 @@ docker-build: ## Pull and tag all prebuilt images locally
 	@echo -e "$(GREEN)✓ Prebuilt images ready$(NC)"
 	$(call print-next,Run make compose-up to start the stack.)
 
-docker-build-%: ## Pull/tag one prebuilt image (e.g., make docker-build-kong)
+docker-build-%: ## 📦 Pull/tag one prebuilt image (e.g., make docker-build-kong)
 	@$(MAKE) $(NO_PRINT) check-docker
 	@echo -e "$(BLUE)Preparing prebuilt image for $*...$(NC)"
 	@case "$*" in \
@@ -92,7 +92,7 @@ docker-build-%: ## Pull/tag one prebuilt image (e.g., make docker-build-kong)
 	docker tag "$$src" mini-baas/$*:$(IMAGE_TAG)
 	$(call print-next,Run make compose-up to start the stack.)
 
-docker-tag: ## Tag local mini-baas images for a registry
+docker-tag: ## 🏷️  Tag local mini-baas images for a registry
 	@$(MAKE) $(NO_PRINT) check-docker
 	@echo -e "$(BLUE)Tagging mini-baas images for registry: $(REGISTRY)$(NC)"
 	@docker tag mini-baas/kong:$(IMAGE_TAG) $(REGISTRY)/kong:$(IMAGE_TAG)
@@ -108,7 +108,7 @@ docker-tag: ## Tag local mini-baas images for a registry
 	@echo -e "$(GREEN)✓ Images tagged$(NC)"
 	$(call print-next,Run make docker-push REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
 
-docker-push: ## Push all tagged images to a registry
+docker-push: ## 📤 Push all tagged images to a registry
 	@$(MAKE) $(NO_PRINT) docker-tag
 	@echo -e "$(BLUE)Pushing Docker images to $(REGISTRY)...$(NC)"
 	@docker push $(REGISTRY)/kong:$(IMAGE_TAG)
@@ -123,19 +123,19 @@ docker-push: ## Push all tagged images to a registry
 	@docker push $(REGISTRY)/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ All images pushed$(NC)"
 
-docker-images: ## Show local mini-baas images
+docker-images: ## 🖼️  Show local mini-baas images
 	@$(MAKE) $(NO_PRINT) check-docker
 	@echo -e "$(BLUE)Mini-BaaS Docker images:$(NC)"
 	@docker images | grep mini-baas || echo "No images found. Run 'make docker-build' first."
 
-docker-clean: ## Remove local mini-baas images
+docker-clean: ## 🗑️  Remove local mini-baas images
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) compose-down
 	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
 	@docker rmi -f $$(docker images --filter=reference='mini-baas/*' -q) >/dev/null 2>&1 || true
 	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
 
-docker-fclean: ## Remove local mini-baas images and stop stack
+docker-fclean: ## 🗑️  Remove local mini-baas images and stop stack
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) compose-down
 	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
@@ -146,7 +146,7 @@ docker-fclean: ## Remove local mini-baas images and stop stack
 # Docker Compose Workflow
 # ============================================================================
 
-compose-rm-stale: ## Remove stale mini-baas containers (created/exited) to avoid name conflicts
+compose-rm-stale: ## 🗑️  Remove stale mini-baas containers (created/exited) to avoid name conflicts
 	@$(MAKE) $(NO_PRINT) check-docker
 	@stale_ids="$$(docker ps -a --format '{{.ID}} {{.Names}} {{.Status}}' | awk '/ mini-baas-/ && ($$3 == "Created" || $$3 == "Exited") {print $$1}')"; \
 	if [ -n "$$stale_ids" ]; then \
@@ -155,7 +155,7 @@ compose-rm-stale: ## Remove stale mini-baas containers (created/exited) to avoid
 		echo -e "$(GREEN)✓ Stale containers removed$(NC)"; \
 	fi
 
-compose-up: ## Start stack in detached mode
+compose-up: ## 🚀 Start stack in detached mode
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@$(MAKE) $(NO_PRINT) compose-rm-stale
@@ -164,32 +164,32 @@ compose-up: ## Start stack in detached mode
 	@echo -e "$(GREEN)✓ Stack started$(NC)"
 	$(call print-next,Run make compose-ps or make compose-health.)
 
-compose-down: ## Stop and remove stack resources
+compose-down: ## 🛑 Stop and remove stack resources
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@echo -e "$(YELLOW)Stopping stack...$(NC)"
 	@docker compose -f $(COMPOSE_FILE) down
 	@echo -e "$(GREEN)✓ Stack stopped$(NC)"
 
-compose-down-volumes: ## Stop stack and remove named volumes
+compose-down-volumes: ## 🗑️  Stop stack and remove named volumes
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@echo -e "$(YELLOW)Stopping stack and removing volumes...$(NC)"
 	@docker compose -f $(COMPOSE_FILE) down -v
 	@echo -e "$(GREEN)✓ Stack and volumes removed$(NC)"
 
-compose-restart: ## Restart all stack services
+compose-restart: ## 🔄 Restart all stack services
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@docker compose -f $(COMPOSE_FILE) restart
 	@echo -e "$(GREEN)✓ Stack restarted$(NC)"
 
-compose-ps: ## Show stack service status
+compose-ps: ## 📊 Show stack service status
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@docker compose -f $(COMPOSE_FILE) ps
 
-compose-logs: ## Stream logs (SERVICE=<name> optional)
+compose-logs: ## 📜 Stream logs (SERVICE=<name> optional)
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@if [ -n "$(SERVICE)" ]; then \
@@ -198,26 +198,26 @@ compose-logs: ## Stream logs (SERVICE=<name> optional)
 		docker compose -f $(COMPOSE_FILE) logs -f --tail=100; \
 	fi
 
-compose-pull: ## Pull latest images for all services
+compose-pull: ## 🔄 Pull latest images for all services
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@docker compose -f $(COMPOSE_FILE) pull
 	@echo -e "$(GREEN)✓ Images pulled$(NC)"
 
-compose-health: ## Quick health checks for key routes
+compose-health: ## 🩺 Quick health checks for key routes
 	@echo -e "$(BLUE)Checking local endpoints...$(NC)"
 	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null && echo "  ✓ Kong -> /auth/v1/health" || echo "  ✗ Kong -> /auth/v1/health"
 	@curl -fsS http://localhost:8000/rest/v1/ >/dev/null && echo "  ✓ Kong -> /rest/v1/" || echo "  ✗ Kong -> /rest/v1/"
 	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
-playground-css: ## Build libcss CSS assets used by the frontend playground
+playground-css: ## 🎨 Build libcss CSS assets used by the frontend playground
 	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required to build libcss assets."; exit 1; }
 	@echo -e "$(BLUE)Building libcss CSS assets for playground...$(NC)"
 	@npm --prefix ./vendor/libcss install --legacy-peer-deps
 	@npm --prefix ./vendor/libcss run build:min
 	@echo -e "$(GREEN)✓ libcss CSS ready at vendor/libcss/dist/css/libcss.min.css$(NC)"
 
-playground-up: ## Build CSS and start playground frontend container
+playground-up: ## 🚀 Build CSS and start playground frontend container
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@$(MAKE) $(NO_PRINT) playground-css
@@ -226,19 +226,19 @@ playground-up: ## Build CSS and start playground frontend container
 	@echo -e "$(GREEN)✓ Playground available at http://localhost:3100$(NC)"
 	$(call print-next,Open http://localhost:3100 and run visual checks.)
 
-playground-down: ## Stop playground frontend container
+playground-down: ## 🛑 Stop playground frontend container
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@docker compose -f $(COMPOSE_FILE) stop playground >/dev/null 2>&1 || true
 	@docker compose -f $(COMPOSE_FILE) rm -f playground >/dev/null 2>&1 || true
 	@echo -e "$(GREEN)✓ Playground stopped$(NC)"
 
-playground-logs: ## Show playground frontend logs
+playground-logs: ## 📜 Show playground frontend logs
 	@$(MAKE) $(NO_PRINT) check-docker
 	@$(MAKE) $(NO_PRINT) check-compose
 	@docker compose -f $(COMPOSE_FILE) logs -f --tail=100 playground
 
-tests: ## Run all smoke tests
+tests: ## 🧪 Run all smoke tests
 	@total_passed=0; \
 	total_failed=0; \
 	overall_status=0; \
@@ -288,79 +288,79 @@ tests: ## Run all smoke tests
 		exit 1; \
 	fi
 
-test-phase1: ## Run Phase 1 auth/rest smoke test through Kong
+test-phase1: ## 🧪 Run Phase 1 auth/rest smoke test through Kong
 	@FORCE_COLORS=1 bash ./scripts/phase1-smoke-test.sh
 
-test-phase2: ## Run Phase 2 gateway security smoke test
+test-phase2: ## 🧪 Run Phase 2 gateway security smoke test
 	@FORCE_COLORS=1 bash ./scripts/phase2-smoke-test.sh
 
-test-phase3: ## Run Phase 3 authenticated database access test
+test-phase3: ## 🧪 Run Phase 3 authenticated database access test
 	@FORCE_COLORS=1 bash ./scripts/phase3-authenticated-db-test.sh
 
-test-phase4: ## Run Phase 4 user data isolation test
+test-phase4: ## 🧪 Run Phase 4 user data isolation test
 	@FORCE_COLORS=1 bash ./scripts/phase4-user-isolation-test.sh
 
-test-phase5: ## Run Phase 5 REST metadata retrieval test
+test-phase5: ## 🧪 Run Phase 5 REST metadata retrieval test
 	@FORCE_COLORS=1 bash ./scripts/phase5-db-info-test.sh
 
-test-phase6: ## Run Phase 6 HTTP methods & data mutations test
+test-phase6: ## 🧪 Run Phase 6 HTTP methods & data mutations test
 	@FORCE_COLORS=1 bash ./scripts/phase6-http-methods-test.sh
 
-test-phase7: ## Run Phase 7 error handling & edge cases test
+test-phase7: ## 🧪 Run Phase 7 error handling & edge cases test
 	@FORCE_COLORS=1 bash ./scripts/phase7-error-handling-test.sh
 
-test-phase8: ## Run Phase 8 token lifecycle & refresh test
+test-phase8: ## 🧪 Run Phase 8 token lifecycle & refresh test
 	@FORCE_COLORS=1 bash ./scripts/phase8-token-lifecycle-test.sh
 
-test-phase9: ## Run Phase 9 storage service operations test
+test-phase9: ## 🧪 Run Phase 9 storage service operations test
 	@FORCE_COLORS=1 bash ./scripts/phase9-storage-operations-test.sh
 
-test-phase10: ## Run Phase 10 data mutation and complex query test
+test-phase10: ## 🧪 Run Phase 10 data mutation and complex query test
 	@FORCE_COLORS=1 bash ./scripts/phase10-data-mutation-complex-queries-test.sh
 
-test-phase11: ## Run Phase 11 realtime WebSocket communication test
+test-phase11: ## 🧪 Run Phase 11 realtime WebSocket communication test
 	@FORCE_COLORS=1 bash ./scripts/phase11-realtime-websocket-test.sh
 
-test-phase12: ## Run Phase 12 rate limiting policy enforcement test
+test-phase12: ## 🧪 Run Phase 12 rate limiting policy enforcement test
 	@FORCE_COLORS=1 bash ./scripts/phase12-rate-limiting-test.sh
 
-test-phase13: ## Run Phase 13 CORS preflight and cross-origin test
+test-phase13: ## 🧪 Run Phase 13 CORS preflight and cross-origin test
 	@FORCE_COLORS=1 bash ./scripts/phase13-cors-preflight-test.sh
 
-test-phase14: ## Run Phase 14 Mongo MVP gateway + isolation test
+test-phase14: ## 🧪 Run Phase 14 Mongo MVP gateway + isolation test
 	@FORCE_COLORS=1 bash ./scripts/phase14-mongo-mvp-test.sh
 
-test-phase15: ## Run Phase 15 Mongo MVP comprehensive test
+test-phase15: ## 🧪 Run Phase 15 Mongo MVP comprehensive test
 	@FORCE_COLORS=1 python3 ./scripts/phase15-mongo-mvp-test.py
 
-flow-postgres-mvp: ## Run PostgreSQL MVP happy-path + isolation flow script
+flow-postgres-mvp: ## 🧪 Run PostgreSQL MVP happy-path + isolation flow script
 	@FORCE_COLORS=1 bash ./scripts/postgres-mvp-flow.sh
 
 # Convenience aliases
 
-dev-up: ## Start local stack with docker compose
+dev-up: ## 🚀 Start local stack with docker compose
 	@$(MAKE) $(NO_PRINT) compose-up
 
-dev-down: ## Stop local stack
+dev-down: ## 🛑 Stop local stack
 	@$(MAKE) $(NO_PRINT) compose-down
 
-dev-re: ## Restart local stack
+dev-re: ## 🔄 Restart local stack
 	@$(MAKE) $(NO_PRINT) compose-down
 	@$(MAKE) $(NO_PRINT) docker-clean
 	@$(MAKE) $(NO_PRINT) docker-fclean
 	@$(MAKE) $(NO_PRINT) compose-up
 
-build-and-push: ## Build/pull, tag and push images
+build-and-push: ## 📦 Build/pull, tag and push images
 	@$(MAKE) $(NO_PRINT) docker-build
 	@$(MAKE) $(NO_PRINT) docker-push
 	@echo -e "$(GREEN)✓ All images built and pushed$(NC)"
 
-fclean: ## Full cleanup (containers, volumes, and local images)
+fclean: ## 🗑️  Full cleanup (containers, volumes, and local images)
 	@$(MAKE) $(NO_PRINT) compose-down-volumes
 	@$(MAKE) $(NO_PRINT) docker-clean
 	@echo -e "$(GREEN)✓ Full clean complete$(NC)"
 
-help: ## Show this help message
+help: ## ❓ Show this help message
 	@echo ""
 	@echo -e "$(BOLD)$(CYAN)mini-baas-infrastructure - Available Commands$(NC)"
 	@echo ""
@@ -372,5 +372,5 @@ help: ## Show this help message
 .PHONY: \
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 test-phase14 flow-postgres-mvp \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 tes 🧪t-phase2 tes 🧪t-phase3 tes 🧪t-phase4 tes 🧪t-phase5 tes 🧪t-phase6 tes 🧪t-phase7 tes 🧪t-phase8 tes 🧪t-phase9 tes 🧪t-phase10 tes 🧪t-phase11 tes 🧪t-phase12 tes 🧪t-phase13 tes 🧪t-phase14 flo 🧪w-postgres-mvp \
 	dev-up dev-down dev-re build-and-push fclean help
