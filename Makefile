@@ -11,6 +11,8 @@ BOLD    := \033[1m
 DIM     := \033[2m
 NC      := \033[0m
 
+HOOKS_DIR := vendor/scripts/hooks
+
 # Configuration
 NO_PRINT = --no-print-directory
 IMAGE_TAG ?= latest
@@ -360,7 +362,30 @@ fclean: ## 🗑️  Full cleanup (containers, volumes, and local images)
 	@$(MAKE) $(NO_PRINT) docker-clean
 	@echo -e "$(GREEN)✓ Full clean complete$(NC)"
 
+configure-hooks: ## 🪝  Activate git hooks (auto-runs on make / make dev)
+	@if [ ! -d .git ]; then \
+		echo -e "  $(YELLOW)⚠$(NC)  Not a git repo — skipping hook setup"; \
+	else \
+		CURRENT=$$(git config --local core.hooksPath 2>/dev/null || echo ""); \
+		if [ "$$CURRENT" = "$(HOOKS_DIR)" ]; then \
+			echo -e "  $(GREEN)✓$(NC)  Git hooks active (core.hooksPath → $(HOOKS_DIR))"; \
+		else \
+			git config --local core.hooksPath $(HOOKS_DIR); \
+			chmod +x $(HOOKS_DIR)/*; \
+			echo -e "  $(GREEN)✓$(NC)  Git hooks activated (core.hooksPath → $(HOOKS_DIR))"; \
+		fi; \
+		for old in commit-msg pre-commit pre-push post-checkout pre-merge-commit log_hook log_hook.sh; do \
+			if [ -L ".git/hooks/$$old" ]; then rm -f ".git/hooks/$$old"; fi; \
+		done; \
+	fi
+
+update: ## 🔄 Updates git submodules
+	@echo -e "$(BLUE)Updating git submodules...$(RESET)"
+	@git submodule update --remote --merge
+	@echo -e "$(GREEN)Submodules have been updated to their latest commits!$(RESET)"
+
 help: ## ❓ Show this help message
+	@$(MAKE) configure-hooks > /dev/null
 	@echo ""
 	@echo -e "$(BOLD)$(CYAN)mini-baas-infrastructure - Available Commands$(NC)"
 	@echo ""
