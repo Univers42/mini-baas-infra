@@ -4,3 +4,6 @@
 [submodule "vendor/scripts"]
 	path = vendor/scripts
 	url = https://github.com/Univers42/scripts.git
+[submodule "vendor/qa"]
+	path = vendor/qa
+	url = https://github.com/Univers42/QA.git

@@ -384,6 +384,40 @@ update: ## 🔄 Updates git submodules
 	@git submodule update --remote --merge
 	@echo -e "$(GREEN)Submodules have been updated to their latest commits!$(RESET)"
 
+# ============================================================================
+# QA Test Registry (Prismatica QA integration)
+# ============================================================================
+
+QA_DIR    := vendor/qa
+PQA       := $(QA_DIR)/.venv/bin/pqa
+QA_REPO   := mini-baas-infra
+
+qa-setup: ## 🧪 Install QA submodule dependencies (auto-updates to latest)
+	@cd $(QA_DIR) && git pull origin main --quiet 2>/dev/null || true
+	@if [ ! -d "$(QA_DIR)/.venv" ]; then \
+		echo -e "$(BLUE)Setting up QA submodule...$(NC)"; \
+		cd $(QA_DIR) && make install SHOW_NEXT_STEPS=0; \
+	else \
+		echo -e "$(GREEN)✓ QA submodule ready$(NC)"; \
+		cd $(QA_DIR) && .venv/bin/pip install -e . -q 2>/dev/null; \
+	fi
+
+qa-register: qa-setup ## 🧪 Register test scripts in Atlas
+	@$(PQA) test register --repo $(QA_REPO) --scan scripts/
+
+qa-list: qa-setup ## 📋 List registered tests for this repo
+	@$(PQA) test list --repo $(QA_REPO) $(if $(DOMAIN),--domain $(DOMAIN)) $(if $(LAYER),--layer $(LAYER)) $(if $(STATUS),--status $(STATUS))
+
+qa-test: qa-setup ## 🧪 Run tests via QA registry (DOMAIN= PRIORITY= LAYER= ID=)
+	@$(PQA) test run --repo $(QA_REPO) --repo-root . \
+		$(if $(DOMAIN),--domain $(DOMAIN)) \
+		$(if $(PRIORITY),--priority $(PRIORITY)) \
+		$(if $(LAYER),--layer $(LAYER)) \
+		$(if $(ID),--id $(ID))
+
+qa-my: qa-setup ## 👤 List my tests only (uses PQA_USER)
+	@$(PQA) test list --repo $(QA_REPO) --mine
+
 help: ## ❓ Show this help message
 	@$(MAKE) configure-hooks > /dev/null
 	@echo ""
@@ -398,4 +432,5 @@ help: ## ❓ Show this help message
 	check-docker check-compose \
 	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
 	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 test-phase14 test-phase15 flow-postgres-mvp \
-	dev-up dev-down dev-re build-and-push fclean help
+	dev-up dev-down dev-re build-and-push fclean help \
+	qa-setup qa-register qa-list qa-test qa-my
