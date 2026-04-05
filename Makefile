@@ -1,401 +1,413 @@
-SHELL := /bin/bash
-.SHELLFLAGS := -ec
+SHELL          := /bin/bash
+.SHELLFLAGS    := -ec
+.DEFAULT_GOAL  := help
+
+# --------------------------------------------------------------------------- #
+#  Variables                                                                   #
+# --------------------------------------------------------------------------- #
+
+PROJECT        := mini-baas
 
 # Colors
-BLUE    := \033[0;34m
-GREEN   := \033[0;32m
-YELLOW  := \033[1;33m
-RED     := \033[0;31m
-CYAN    := \033[0;36m
-BOLD    := \033[1m
-DIM     := \033[2m
-NC      := \033[0m
+_B := \033[0;34m
+_G := \033[0;32m
+_Y := \033[1;33m
+_R := \033[0;31m
+_C := \033[0;36m
+_W := \033[1m
+_D := \033[2m
+_0 := \033[0m
 
-HOOKS_DIR := vendor/scripts/hooks
+# Tunables  (override via CLI: make up COMPOSE_FILE=docker-compose.prod.yml)
+IMAGE_TAG      ?= latest
+REGISTRY       ?= localhost:5000
+COMPOSE_FILE   ?= docker-compose.yml
+SERVICE        ?=
+STEPS          ?= 1
+HOOKS_DIR      := vendor/scripts/hooks
 
-# Configuration
-NO_PRINT = --no-print-directory
-IMAGE_TAG ?= latest
-REGISTRY ?= localhost:5000
-COMPOSE_FILE ?= docker-compose.yml
-SHOW_NEXT_STEPS ?= 1
+# Image map — local_name=upstream_ref  (single source of truth, pinned versions)
+IMAGES_CORE := \
+	kong=kong:3.8 \
+	trino=trinodb/trino:467 \
+	gotrue=supabase/gotrue:v2.188.1 \
+	postgrest=postgrest/postgrest:v12.2.3 \
+	postgres=postgres:16-alpine \
+	realtime=supabase/realtime:v2.33.70 \
+	redis=redis:7-alpine \
+	mongo=mongo:7 \
+	pg-meta=supabase/postgres-meta:v0.91.0
 
-# Prebuilt infrastructure images
-KONG_IMAGE ?= kong:3.8
-TRINO_IMAGE ?= trinodb/trino
-GOTRUE_IMAGE ?= supabase/gotrue:v2.188.1
-POSTGREST_IMAGE ?= postgrest/postgrest:latest
-POSTGRES_IMAGE ?= postgres:16-alpine
-REALTIME_IMAGE ?= supabase/realtime
-MINIO_IMAGE ?= minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
-REDIS_IMAGE ?= redis:7-alpine
-SUPAVISOR_IMAGE ?= supabase/supavisor:2.7.4
-STUDIO_IMAGE ?= supabase/studio
+IMAGES_EXTRAS := \
+	minio=minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1 \
+	supavisor=supabase/supavisor:2.7.4 \
+	studio=supabase/studio:2026.03.30-sha-12a43e5
 
-define print-next
-@if [ "$(SHOW_NEXT_STEPS)" = "1" ]; then \
-	echo -e "$(DIM)Next: $(1)$(NC)"; \
-fi
-endef
+# Set PROFILES=extras to include minio, supavisor, studio
+PROFILES       ?=
+ifneq ($(PROFILES),)
+  IMAGES := $(IMAGES_CORE) $(IMAGES_EXTRAS)
+  DC     := docker compose -f $(COMPOSE_FILE) --profile $(PROFILES)
+else
+  IMAGES := $(IMAGES_CORE)
+  DC     := docker compose -f $(COMPOSE_FILE)
+endif
 
-check-docker: ## 🐳 Check if docker is installed
-	@command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker Engine/Desktop first."; exit 1; }
+# --------------------------------------------------------------------------- #
+#  Internal prerequisites (no ## = hidden from help)                           #
+# --------------------------------------------------------------------------- #
 
-check-compose: ## 🔄 Check if docker compose is installed
-	@docker compose version >/dev/null 2>&1 || { echo >&2 "Docker Compose plugin is not available. Install Docker Compose v2."; exit 1; }
+_require-docker:
+	@command -v docker >/dev/null 2>&1 \
+		|| { echo >&2 "Docker is not installed. Install Docker Engine/Desktop first."; exit 1; }
 
-# ============================================================================
-# Docker Image Management
-# ============================================================================
+_require-compose: _require-docker
+	@docker compose version >/dev/null 2>&1 \
+		|| { echo >&2 "Docker Compose v2 plugin is required."; exit 1; }
 
-docker-build: ## 📦 Pull and tag all prebuilt images locally
-	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Pulling and tagging prebuilt Docker images...$(NC)"
-	@docker pull $(KONG_IMAGE)
-	@docker pull $(TRINO_IMAGE)
-	@docker pull $(GOTRUE_IMAGE)
-	@docker pull $(POSTGREST_IMAGE)
-	@docker pull $(POSTGRES_IMAGE)
-	@docker pull $(REALTIME_IMAGE)
-	@docker pull $(MINIO_IMAGE)
-	@docker pull $(REDIS_IMAGE)
-	@docker pull $(SUPAVISOR_IMAGE)
-	@docker pull $(STUDIO_IMAGE)
-	@docker tag $(KONG_IMAGE) mini-baas/kong:$(IMAGE_TAG)
-	@docker tag $(TRINO_IMAGE) mini-baas/trino:$(IMAGE_TAG)
-	@docker tag $(GOTRUE_IMAGE) mini-baas/gotrue:$(IMAGE_TAG)
-	@docker tag $(POSTGREST_IMAGE) mini-baas/postgrest:$(IMAGE_TAG)
-	@docker tag $(POSTGRES_IMAGE) mini-baas/postgres:$(IMAGE_TAG)
-	@docker tag $(REALTIME_IMAGE) mini-baas/realtime:$(IMAGE_TAG)
-	@docker tag $(MINIO_IMAGE) mini-baas/minio:$(IMAGE_TAG)
-	@docker tag $(REDIS_IMAGE) mini-baas/redis:$(IMAGE_TAG)
-	@docker tag $(SUPAVISOR_IMAGE) mini-baas/supavisor:$(IMAGE_TAG)
-	@docker tag $(STUDIO_IMAGE) mini-baas/studio:$(IMAGE_TAG)
-	@echo -e "$(GREEN)✓ Prebuilt images ready$(NC)"
-	$(call print-next,Run make compose-up to start the stack.)
+_rm-stale:
+	@ids=$$(docker ps -a --format '{{.ID}} {{.Names}} {{.Status}}' \
+		| awk '/ mini-baas-/ && ($$3=="Created"||$$3=="Exited") {print $$1}'); \
+	[ -z "$$ids" ] || { echo -e "$(_Y)Removing stale containers…$(_0)"; docker rm -f $$ids >/dev/null; }
 
-docker-build-%: ## 📦 Pull/tag one prebuilt image (e.g., make docker-build-kong)
-	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Preparing prebuilt image for $*...$(NC)"
-	@case "$*" in \
-		kong) src="$(KONG_IMAGE)" ;; \
-		trino) src="$(TRINO_IMAGE)" ;; \
-		gotrue) src="$(GOTRUE_IMAGE)" ;; \
-		postgrest) src="$(POSTGREST_IMAGE)" ;; \
-		postgres) src="$(POSTGRES_IMAGE)" ;; \
-		realtime) src="$(REALTIME_IMAGE)" ;; \
-		minio) src="$(MINIO_IMAGE)" ;; \
-		redis) src="$(REDIS_IMAGE)" ;; \
-		supavisor) src="$(SUPAVISOR_IMAGE)" ;; \
-		studio) src="$(STUDIO_IMAGE)" ;; \
-		*) echo -e "$(RED)Unknown prebuilt image: $*$(NC)"; exit 1 ;; \
-	esac; \
+# ========================================================================== #
+##@ 42 Classics
+# ========================================================================== #
+
+all: ## Build/pull core images & start stack (PROFILES=extras for full)
+	@$(MAKE) --no-print-directory build
+	@$(MAKE) --no-print-directory up
+
+all-full: ## Build/pull ALL images & start full stack
+	@$(MAKE) --no-print-directory PROFILES=extras all
+
+clean: down ## Stop the stack (alias for down)
+
+fclean: _require-compose ## Full cleanup — containers, volumes and images
+	@$(DC) down -v 2>/dev/null || true
+	@docker rmi -f $$(docker images --filter=reference='$(PROJECT)/*' -q) 2>/dev/null || true
+	@echo -e "$(_G)✓ Full clean complete$(_0)"
+
+re: ## fclean + all
+	@$(MAKE) --no-print-directory fclean
+	@$(MAKE) --no-print-directory all
+
+# ========================================================================== #
+##@ Stack
+# ========================================================================== #
+
+up: _require-compose _rm-stale ## Start stack in detached mode
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	echo -e "$(_B)Starting stack from $(COMPOSE_FILE)…$(_0)"; \
+	$(DC) up -d; \
+	echo -e "$(_G)✓ Stack started$(_0)"
+
+down: _require-compose ## Stop and remove stack resources
+	@echo -e "$(_Y)Stopping stack…$(_0)"
+	@$(DC) down
+	@echo -e "$(_G)✓ Stack stopped$(_0)"
+
+restart: _require-compose ## Restart all services
+	@$(DC) restart
+	@echo -e "$(_G)✓ Restarted$(_0)"
+
+ps: _require-compose ## Show service status
+	@$(DC) ps
+
+logs: _require-compose ## Stream logs (SERVICE=<name> to filter)
+	@$(DC) logs -f --tail=100 $(SERVICE)
+
+pull: _require-compose ## Pull latest images for all services
+	@$(DC) pull
+	@echo -e "$(_G)✓ Pulled$(_0)"
+
+health: ## Quick health-check on gateway routes
+	@echo -e "$(_B)Checking endpoints…$(_0)"
+	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null \
+		&& echo "  ✓ /auth/v1/health" || echo "  ✗ /auth/v1/health"
+	@curl -fsS http://localhost:8000/rest/v1/ >/dev/null \
+		&& echo "  ✓ /rest/v1/"       || echo "  ✗ /rest/v1/"
+	@curl -fsS http://localhost:5432 >/dev/null 2>&1 \
+		&& echo "  ✓ postgres:5432"   || echo "  • postgres TCP skipped"
+
+# ========================================================================== #
+##@ Docker Images
+# ========================================================================== #
+
+build: _require-docker ## Pull & tag all prebuilt images
+	@echo -e "$(_B)Pulling and tagging prebuilt images…$(_0)"
+	@pids=""; for pair in $(IMAGES); do \
+		( \
+			name=$${pair%%=*}; src=$${pair#*=}; \
+			tag=$(PROJECT)/$$name:$(IMAGE_TAG); \
+			if docker image inspect "$$tag" >/dev/null 2>&1; then \
+				echo -e "  $(_G)●$(_0) $$name  (cached)"; \
+			else \
+				echo -e "  $(_Y)↓$(_0) $$name  ($${src})"; \
+				t0=$$(date +%s); \
+				if docker pull -q "$$src" >/dev/null; then \
+					docker tag "$$src" "$$tag"; \
+					t1=$$(date +%s); \
+					echo -e "  $(_G)✓$(_0) $$name  [$$(( t1 - t0 ))s]"; \
+				else \
+					echo -e "  $(_R)✗$(_0) $$name  FAILED"; \
+					exit 1; \
+				fi; \
+			fi \
+		) & pids="$$pids $$!"; \
+	done; \
+	fail=0; for p in $$pids; do wait "$$p" || fail=1; done; \
+	[ "$$fail" -eq 0 ] || { echo -e "$(_R)✗ Some pulls failed — check output above$(_0)"; exit 1; }
+	@echo -e "$(_G)✓ All images ready$(_0)"
+
+build-%: _require-docker ## Pull/tag one image (e.g. make build-kong)
+	@src=""; for pair in $(IMAGES); do \
+		n=$${pair%%=*}; [ "$$n" = "$*" ] && src=$${pair#*=} && break; \
+	done; \
+	[ -n "$$src" ] || { echo -e "$(_R)Unknown image: $*$(_0)"; exit 1; }; \
+	echo -e "$(_B)Pulling $*…$(_0)"; \
 	docker pull "$$src"; \
-	docker tag "$$src" mini-baas/$*:$(IMAGE_TAG)
-	$(call print-next,Run make compose-up to start the stack.)
+	docker tag "$$src" $(PROJECT)/$*:$(IMAGE_TAG); \
+	echo -e "$(_G)✓ $* ready$(_0)"
 
-docker-tag: ## 🏷️  Tag local mini-baas images for a registry
-	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Tagging mini-baas images for registry: $(REGISTRY)$(NC)"
-	@docker tag mini-baas/kong:$(IMAGE_TAG) $(REGISTRY)/kong:$(IMAGE_TAG)
-	@docker tag mini-baas/trino:$(IMAGE_TAG) $(REGISTRY)/trino:$(IMAGE_TAG)
-	@docker tag mini-baas/gotrue:$(IMAGE_TAG) $(REGISTRY)/gotrue:$(IMAGE_TAG)
-	@docker tag mini-baas/postgrest:$(IMAGE_TAG) $(REGISTRY)/postgrest:$(IMAGE_TAG)
-	@docker tag mini-baas/postgres:$(IMAGE_TAG) $(REGISTRY)/postgres:$(IMAGE_TAG)
-	@docker tag mini-baas/realtime:$(IMAGE_TAG) $(REGISTRY)/realtime:$(IMAGE_TAG)
-	@docker tag mini-baas/minio:$(IMAGE_TAG) $(REGISTRY)/minio:$(IMAGE_TAG)
-	@docker tag mini-baas/redis:$(IMAGE_TAG) $(REGISTRY)/redis:$(IMAGE_TAG)
-	@docker tag mini-baas/supavisor:$(IMAGE_TAG) $(REGISTRY)/supavisor:$(IMAGE_TAG)
-	@docker tag mini-baas/studio:$(IMAGE_TAG) $(REGISTRY)/studio:$(IMAGE_TAG)
-	@echo -e "$(GREEN)✓ Images tagged$(NC)"
-	$(call print-next,Run make docker-push REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
+build-optimized: _require-docker ## BuildKit parallel build with inline cache
+	@DOCKER_BUILDKIT=1 $(DC) build --build-arg BUILDKIT_INLINE_CACHE=1 --parallel
+	@echo -e "$(_G)✓ Optimized build complete$(_0)"
 
-docker-push: ## 📤 Push all tagged images to a registry
-	@$(MAKE) $(NO_PRINT) docker-tag
-	@echo -e "$(BLUE)Pushing Docker images to $(REGISTRY)...$(NC)"
-	@docker push $(REGISTRY)/kong:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/trino:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/gotrue:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/postgrest:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/postgres:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/realtime:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/minio:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/redis:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/supavisor:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/studio:$(IMAGE_TAG)
-	@echo -e "$(GREEN)✓ All images pushed$(NC)"
+tag: _require-docker ## Tag images for REGISTRY
+	@echo -e "$(_B)Tagging for $(REGISTRY)…$(_0)"
+	@for pair in $(IMAGES); do \
+		name=$${pair%%=*}; \
+		docker tag $(PROJECT)/$$name:$(IMAGE_TAG) $(REGISTRY)/$$name:$(IMAGE_TAG); \
+	done
+	@echo -e "$(_G)✓ Tagged$(_0)"
 
-docker-images: ## 🖼️  Show local mini-baas images
-	@$(MAKE) $(NO_PRINT) check-docker
-	@echo -e "$(BLUE)Mini-BaaS Docker images:$(NC)"
-	@docker images | grep mini-baas || echo "No images found. Run 'make docker-build' first."
+push: tag ## Tag & push all images to REGISTRY
+	@echo -e "$(_B)Pushing to $(REGISTRY)…$(_0)"
+	@for pair in $(IMAGES); do \
+		name=$${pair%%=*}; \
+		docker push $(REGISTRY)/$$name:$(IMAGE_TAG); \
+	done
+	@echo -e "$(_G)✓ Pushed$(_0)"
 
-docker-clean: ## 🗑️  Remove local mini-baas images
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) compose-down
-	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
-	@docker rmi -f $$(docker images --filter=reference='mini-baas/*' -q) >/dev/null 2>&1 || true
-	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
+push-bake: ## Build & push via docker buildx bake
+	@docker buildx bake --file docker-bake.hcl --push \
+		--set "*.cache-to=type=registry,ref=$(REGISTRY)/cache,mode=max"
+	@echo -e "$(_G)✓ Bake push to $(REGISTRY) complete$(_0)"
 
-docker-fclean: ## 🗑️  Remove local mini-baas images and stop stack
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) compose-down
-	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
-	@docker rmi $$(docker images -q) --force
-	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
+images: _require-docker ## List local $(PROJECT) images
+	@docker images | grep $(PROJECT) || echo "No images found. Run 'make build'."
 
-# ============================================================================
-# Docker Compose Workflow
-# ============================================================================
+image-sizes: ## Show image sizes for the stack
+	@echo -e "$(_B)Image sizes:$(_0)"
+	@$(DC) images --format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}' 2>/dev/null \
+		|| docker images --filter=reference='$(PROJECT)*' \
+			--format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'
 
-compose-rm-stale: ## 🗑️  Remove stale mini-baas containers (created/exited) to avoid name conflicts
-	@$(MAKE) $(NO_PRINT) check-docker
-	@stale_ids="$$(docker ps -a --format '{{.ID}} {{.Names}} {{.Status}}' | awk '/ mini-baas-/ && ($$3 == "Created" || $$3 == "Exited") {print $$1}')"; \
-	if [ -n "$$stale_ids" ]; then \
-		echo -e "$(YELLOW)Removing stale mini-baas containers to avoid name conflicts...$(NC)"; \
-		docker rm -f $$stale_ids >/dev/null; \
-		echo -e "$(GREEN)✓ Stale containers removed$(NC)"; \
-	fi
+# ========================================================================== #
+##@ Testing
+# ========================================================================== #
 
-compose-up: ## 🚀 Start stack in detached mode
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@$(MAKE) $(NO_PRINT) compose-rm-stale
-	@echo -e "$(BLUE)Starting stack from $(COMPOSE_FILE)...$(NC)"
-	@docker compose -f $(COMPOSE_FILE) up -d
-	@echo -e "$(GREEN)✓ Stack started$(NC)"
-	$(call print-next,Run make compose-ps or make compose-health.)
-
-compose-down: ## 🛑 Stop and remove stack resources
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@echo -e "$(YELLOW)Stopping stack...$(NC)"
-	@docker compose -f $(COMPOSE_FILE) down
-	@echo -e "$(GREEN)✓ Stack stopped$(NC)"
-
-compose-down-volumes: ## 🗑️  Stop stack and remove named volumes
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@echo -e "$(YELLOW)Stopping stack and removing volumes...$(NC)"
-	@docker compose -f $(COMPOSE_FILE) down -v
-	@echo -e "$(GREEN)✓ Stack and volumes removed$(NC)"
-
-compose-restart: ## 🔄 Restart all stack services
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@docker compose -f $(COMPOSE_FILE) restart
-	@echo -e "$(GREEN)✓ Stack restarted$(NC)"
-
-compose-ps: ## 📊 Show stack service status
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@docker compose -f $(COMPOSE_FILE) ps
-
-compose-logs: ## 📜 Stream logs (SERVICE=<name> optional)
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@if [ -n "$(SERVICE)" ]; then \
-		docker compose -f $(COMPOSE_FILE) logs -f --tail=100 $(SERVICE); \
-	else \
-		docker compose -f $(COMPOSE_FILE) logs -f --tail=100; \
-	fi
-
-compose-pull: ## 🔄 Pull latest images for all services
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@docker compose -f $(COMPOSE_FILE) pull
-	@echo -e "$(GREEN)✓ Images pulled$(NC)"
-
-compose-health: ## 🩺 Quick health checks for key routes
-	@echo -e "$(BLUE)Checking local endpoints...$(NC)"
-	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null && echo "  ✓ Kong -> /auth/v1/health" || echo "  ✗ Kong -> /auth/v1/health"
-	@curl -fsS http://localhost:8000/rest/v1/ >/dev/null && echo "  ✓ Kong -> /rest/v1/" || echo "  ✗ Kong -> /rest/v1/"
-	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
-
-playground-css: ## 🎨 Build libcss CSS assets used by the frontend playground
-	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required to build libcss assets."; exit 1; }
-	@echo -e "$(BLUE)Building libcss CSS assets for playground...$(NC)"
-	@npm --prefix ./vendor/libcss install --legacy-peer-deps
-	@npm --prefix ./vendor/libcss run build:min
-	@echo -e "$(GREEN)✓ libcss CSS ready at vendor/libcss/dist/css/libcss.min.css$(NC)"
-
-playground-up: ## 🚀 Build CSS and start playground frontend container
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@$(MAKE) $(NO_PRINT) playground-css
-	@echo -e "$(BLUE)Starting playground frontend...$(NC)"
-	@docker compose -f $(COMPOSE_FILE) up -d playground
-	@echo -e "$(GREEN)✓ Playground available at http://localhost:3100$(NC)"
-	$(call print-next,Open http://localhost:3100 and run visual checks.)
-
-playground-down: ## 🛑 Stop playground frontend container
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@docker compose -f $(COMPOSE_FILE) stop playground >/dev/null 2>&1 || true
-	@docker compose -f $(COMPOSE_FILE) rm -f playground >/dev/null 2>&1 || true
-	@echo -e "$(GREEN)✓ Playground stopped$(NC)"
-
-playground-logs: ## 📜 Show playground frontend logs
-	@$(MAKE) $(NO_PRINT) check-docker
-	@$(MAKE) $(NO_PRINT) check-compose
-	@docker compose -f $(COMPOSE_FILE) logs -f --tail=100 playground
-
-tests: ## 🧪 Run all smoke tests
-	@total_passed=0; \
-	total_failed=0; \
-	overall_status=0; \
-	for script in \
-		./scripts/phase1-smoke-test.sh \
-		./scripts/phase2-smoke-test.sh \
-		./scripts/phase3-authenticated-db-test.sh \
-		./scripts/phase4-user-isolation-test.sh \
-		./scripts/phase5-db-info-test.sh \
-		./scripts/phase6-http-methods-test.sh \
-		./scripts/phase7-error-handling-test.sh \
-		./scripts/phase8-token-lifecycle-test.sh \
-		./scripts/phase9-storage-operations-test.sh \
-		./scripts/phase10-data-mutation-complex-queries-test.sh \
-		./scripts/phase11-realtime-websocket-test.sh \
-		./scripts/phase12-rate-limiting-test.sh \
-		./scripts/phase13-cors-preflight-test.sh \
-		./scripts/phase14-mongo-mvp-test.sh \
-		./scripts/phase15-mongo-mvp-test.py; do \
-		tmp_file="$$(mktemp)"; \
-		if [ "$$script" = "./scripts/phase15-mongo-mvp-test.py" ]; then \
-			FORCE_COLORS=1 python3 "$$script" | tee "$$tmp_file"; \
-		else \
-			FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
-		fi; \
-		status=$${PIPESTATUS[0]}; \
-		clean_log="$$(sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' "$$tmp_file")"; \
-		passed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Passed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
-		failed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Failed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
-		total_passed=$$((total_passed + passed)); \
-		total_failed=$$((total_failed + failed)); \
-		rm -f "$$tmp_file"; \
-		if [ "$$status" -ne 0 ]; then overall_status=1; fi; \
+tests: ## Run all smoke tests (phase 1→15)
+	@total_p=0; total_f=0; rc_all=0; \
+	for script in $$(ls -1 ./scripts/phase*-*.sh ./scripts/phase*-*.py 2>/dev/null | sort -t/ -k3 -V); do \
+		[ -f "$$script" ] || continue; \
+		tmp=$$(mktemp); \
+		case "$$script" in \
+			*.py) FORCE_COLORS=1 python3 "$$script" | tee "$$tmp" ;; \
+			*)    FORCE_COLORS=1 bash    "$$script" | tee "$$tmp" ;; \
+		esac; \
+		rc=$${PIPESTATUS[0]}; \
+		clean=$$(sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' "$$tmp"); \
+		p=$$(printf '%s\n' "$$clean" | awk -F: '/Passed:/{gsub(/[^0-9]/,"",$$2);v=$$2}END{print v+0}'); \
+		f=$$(printf '%s\n' "$$clean" | awk -F: '/Failed:/{gsub(/[^0-9]/,"",$$2);v=$$2}END{print v+0}'); \
+		total_p=$$((total_p + p)); total_f=$$((total_f + f)); \
+		rm -f "$$tmp"; \
+		[ "$$rc" -eq 0 ] || rc_all=1; \
 		sleep 2; \
 	done; \
 	echo ""; \
-	echo -e "$(CYAN)$(BOLD)╔════════════════════════════════════════════════════════════╗$(NC)"; \
-	echo -e "$(CYAN)$(BOLD)║$(NC) $(BOLD)Overall Tests Summary$(NC)"; \
-	echo -e "$(CYAN)$(BOLD)╠════════════════════════════════════════════════════════════╣$(NC)"; \
-	echo -e "$(CYAN)$(BOLD)║$(NC) $(GREEN)$(BOLD)✔ Passed:$(NC) $(GREEN)$(BOLD)$$total_passed$(NC)"; \
-	echo -e "$(CYAN)$(BOLD)║$(NC) $(RED)$(BOLD)✖ Failed:$(NC) $(RED)$(BOLD)$$total_failed$(NC)"; \
-	echo -e "$(CYAN)$(BOLD)╚════════════════════════════════════════════════════════════╝$(NC)"; \
-	if [ "$$overall_status" -eq 0 ]; then \
-		echo -e "$(GREEN)$(BOLD)✔ All test phases passed$(NC)"; \
+	echo -e "$(_C)$(_W)╔════════════════════════════════════════════════╗$(_0)"; \
+	echo -e "$(_C)$(_W)║$(_0) $(_W)Tests Summary$(_0)"; \
+	echo -e "$(_C)$(_W)╠════════════════════════════════════════════════╣$(_0)"; \
+	echo -e "$(_C)$(_W)║$(_0) $(_G)$(_W)✔ Passed:$(_0) $(_G)$$total_p$(_0)"; \
+	echo -e "$(_C)$(_W)║$(_0) $(_R)$(_W)✖ Failed:$(_0) $(_R)$$total_f$(_0)"; \
+	echo -e "$(_C)$(_W)╚════════════════════════════════════════════════╝$(_0)"; \
+	[ "$$rc_all" -eq 0 ] \
+		&& echo -e "$(_G)$(_W)✔ All phases passed$(_0)" \
+		|| { echo -e "$(_R)$(_W)✖ Some phases failed$(_0)"; exit 1; }
+
+test-phase%: ## Run one phase (e.g. make test-phase3)
+	@script=$$(ls scripts/phase$*-*.sh 2>/dev/null | head -1); \
+	if [ -n "$$script" ]; then FORCE_COLORS=1 bash "$$script"; \
 	else \
-		echo -e "$(RED)$(BOLD)✖ One or more test phases failed$(NC)"; \
-		exit 1; \
+		script=$$(ls scripts/phase$*-*.py 2>/dev/null | head -1); \
+		[ -n "$$script" ] && FORCE_COLORS=1 python3 "$$script" \
+			|| { echo -e "$(_R)No test for phase $*$(_0)"; exit 1; }; \
 	fi
 
-test-phase1: ## 🧪 Run Phase 1 auth/rest smoke test through Kong
-	@FORCE_COLORS=1 bash ./scripts/phase1-smoke-test.sh
-
-test-phase2: ## 🧪 Run Phase 2 gateway security smoke test
-	@FORCE_COLORS=1 bash ./scripts/phase2-smoke-test.sh
-
-test-phase3: ## 🧪 Run Phase 3 authenticated database access test
-	@FORCE_COLORS=1 bash ./scripts/phase3-authenticated-db-test.sh
-
-test-phase4: ## 🧪 Run Phase 4 user data isolation test
-	@FORCE_COLORS=1 bash ./scripts/phase4-user-isolation-test.sh
-
-test-phase5: ## 🧪 Run Phase 5 REST metadata retrieval test
-	@FORCE_COLORS=1 bash ./scripts/phase5-db-info-test.sh
-
-test-phase6: ## 🧪 Run Phase 6 HTTP methods & data mutations test
-	@FORCE_COLORS=1 bash ./scripts/phase6-http-methods-test.sh
-
-test-phase7: ## 🧪 Run Phase 7 error handling & edge cases test
-	@FORCE_COLORS=1 bash ./scripts/phase7-error-handling-test.sh
-
-test-phase8: ## 🧪 Run Phase 8 token lifecycle & refresh test
-	@FORCE_COLORS=1 bash ./scripts/phase8-token-lifecycle-test.sh
-
-test-phase9: ## 🧪 Run Phase 9 storage service operations test
-	@FORCE_COLORS=1 bash ./scripts/phase9-storage-operations-test.sh
-
-test-phase10: ## 🧪 Run Phase 10 data mutation and complex query test
-	@FORCE_COLORS=1 bash ./scripts/phase10-data-mutation-complex-queries-test.sh
-
-test-phase11: ## 🧪 Run Phase 11 realtime WebSocket communication test
-	@FORCE_COLORS=1 bash ./scripts/phase11-realtime-websocket-test.sh
-
-test-phase12: ## 🧪 Run Phase 12 rate limiting policy enforcement test
-	@FORCE_COLORS=1 bash ./scripts/phase12-rate-limiting-test.sh
-
-test-phase13: ## 🧪 Run Phase 13 CORS preflight and cross-origin test
-	@FORCE_COLORS=1 bash ./scripts/phase13-cors-preflight-test.sh
-
-test-phase14: ## 🧪 Run Phase 14 Mongo MVP gateway + isolation test
-	@FORCE_COLORS=1 bash ./scripts/phase14-mongo-mvp-test.sh
-
-test-phase15: ## 🧪 Run Phase 15 Mongo MVP comprehensive test
-	@FORCE_COLORS=1 python3 ./scripts/phase15-mongo-mvp-test.py
-
-flow-postgres-mvp: ## 🧪 Run PostgreSQL MVP happy-path + isolation flow script
+test-postgres: ## Run PostgreSQL MVP happy-path flow
 	@FORCE_COLORS=1 bash ./scripts/postgres-mvp-flow.sh
 
-# Convenience aliases
+# ========================================================================== #
+##@ Migrations
+# ========================================================================== #
 
-dev-up: ## 🚀 Start local stack with docker compose
-	@$(MAKE) $(NO_PRINT) compose-up
+migrate: ## Run all pending PostgreSQL migrations
+	@echo -e "$(_B)Running PostgreSQL migrations…$(_0)"
+	@for f in $$(ls -1 scripts/migrations/postgresql/*.sql 2>/dev/null | sort); do \
+		echo "  Applying: $$f"; \
+		docker compose exec -T postgres psql -U postgres -d postgres -f /dev/stdin < "$$f"; \
+	done
+	@echo -e "$(_G)✓ PostgreSQL migrations applied$(_0)"
 
-dev-down: ## 🛑 Stop local stack
-	@$(MAKE) $(NO_PRINT) compose-down
+migrate-mongo: ## Run all MongoDB migrations
+	@echo -e "$(_B)Running MongoDB migrations…$(_0)"
+	@for f in $$(ls -1 scripts/migrations/mongodb/*.js 2>/dev/null | sort); do \
+		echo "  Applying: $$f"; \
+		docker compose exec -T mongo mongosh mini_baas < "$$f"; \
+	done
+	@echo -e "$(_G)✓ MongoDB migrations applied$(_0)"
 
-dev-re: ## 🔄 Restart local stack
-	@$(MAKE) $(NO_PRINT) compose-down
-	@$(MAKE) $(NO_PRINT) docker-clean
-	@$(MAKE) $(NO_PRINT) docker-fclean
-	@$(MAKE) $(NO_PRINT) compose-up
+migrate-down: ## Show rollback hints (STEPS=1)
+	@echo -e "$(_Y)Manual rollback required.$(_0)"
+	@echo "Check DOWN comments in the last $(STEPS) migration(s):"
+	@ls -1r scripts/migrations/postgresql/*.sql | head -n $(STEPS)
 
-build-and-push: ## 📦 Build/pull, tag and push images
-	@$(MAKE) $(NO_PRINT) docker-build
-	@$(MAKE) $(NO_PRINT) docker-push
-	@echo -e "$(GREEN)✓ All images built and pushed$(NC)"
+migrate-status: ## Show applied migration versions
+	@docker compose exec -T postgres psql -U postgres -d postgres \
+		-c "SELECT version, name, applied_at FROM schema_migrations ORDER BY version;" \
+		2>/dev/null || echo "  No migrations table — run make migrate first."
 
-fclean: ## 🗑️  Full cleanup (containers, volumes, and local images)
-	@$(MAKE) $(NO_PRINT) compose-down-volumes
-	@$(MAKE) $(NO_PRINT) docker-clean
-	@echo -e "$(GREEN)✓ Full clean complete$(NC)"
+# ========================================================================== #
+##@ Secrets
+# ========================================================================== #
 
-configure-hooks: ## 🪝  Activate git hooks (auto-runs on make / make dev)
-	@if [ ! -d .git ]; then \
-		echo -e "  $(YELLOW)⚠$(NC)  Not a git repo — skipping hook setup"; \
+secrets: ## Generate all secrets → .env
+	@bash scripts/secrets/generate-secrets.sh
+
+secrets-validate: ## Validate required secrets exist
+	@bash scripts/secrets/validate-secrets.sh
+
+secrets-rotate: ## Rotate JWT secret (zero-downtime)
+	@bash scripts/secrets/rotate-jwt.sh
+
+check-secrets: ## Scan source code for hardcoded secrets
+	@bash scripts/check-secrets.sh
+
+# ========================================================================== #
+##@ Observability
+# ========================================================================== #
+
+observe: _require-compose ## Start Prometheus + Grafana + Loki
+	@$(DC) --profile observability up -d
+	@echo -e "$(_G)✓ Observability started$(_0)"
+	@echo -e "  Grafana:    http://localhost:3030"
+	@echo -e "  Prometheus: http://localhost:9090"
+
+observe-down: ## Stop observability stack
+	@$(DC) --profile observability stop prometheus grafana loki promtail 2>/dev/null || true
+	@echo -e "$(_G)✓ Observability stopped$(_0)"
+
+grafana: ## Open Grafana in browser
+	@xdg-open http://localhost:3030 2>/dev/null \
+		|| open http://localhost:3030 2>/dev/null \
+		|| echo "http://localhost:3030"
+
+prometheus: ## Open Prometheus in browser
+	@xdg-open http://localhost:9090 2>/dev/null \
+		|| open http://localhost:9090 2>/dev/null \
+		|| echo "http://localhost:9090"
+
+# ========================================================================== #
+##@ Adapter Registry
+# ========================================================================== #
+
+adapter-add: ## Register a database  (ENGINE= NAME= DSN=)
+	@curl -sS -X POST http://localhost:8000/admin/v1/databases \
+		-H "apikey: $$(grep KONG_SERVICE_API_KEY .env | cut -d= -f2)" \
+		-H "Content-Type: application/json" \
+		-d '{"engine":"$(ENGINE)","name":"$(NAME)","connection_string":"$(DSN)"}'
+	@echo ""
+
+adapter-ls: ## List registered databases
+	@curl -sS http://localhost:8000/admin/v1/databases \
+		-H "apikey: $$(grep KONG_SERVICE_API_KEY .env | cut -d= -f2)" | jq .
+
+# ========================================================================== #
+##@ Playground
+# ========================================================================== #
+
+play-css: ## Build libcss CSS assets
+	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required to build CSS."; exit 1; }
+	@npm --prefix ./vendor/libcss install --legacy-peer-deps
+	@npm --prefix ./vendor/libcss run build:min
+	@echo -e "$(_G)✓ CSS ready$(_0)"
+
+play: _require-compose play-css ## Build CSS & start playground
+	@$(DC) up -d playground
+	@echo -e "$(_G)✓ Playground → http://localhost:3100$(_0)"
+
+play-down: _require-compose ## Stop playground
+	@$(DC) stop playground 2>/dev/null || true
+	@$(DC) rm -f playground  2>/dev/null || true
+	@echo -e "$(_G)✓ Playground stopped$(_0)"
+
+play-logs: _require-compose ## Stream playground logs
+	@$(DC) logs -f --tail=100 playground
+
+# ========================================================================== #
+##@ Utilities
+# ========================================================================== #
+
+env: ## Generate .env from template
+	@bash scripts/generate-env.sh
+
+preflight: ## Run all pre-deployment checks
+	@bash scripts/preflight-check.sh
+
+hooks: ## Activate git hooks
+	@if [ ! -d .git ]; then echo -e "  $(_Y)⚠$(_0) Not a git repo — skipping"; \
 	else \
-		CURRENT=$$(git config --local core.hooksPath 2>/dev/null || echo ""); \
-		if [ "$$CURRENT" = "$(HOOKS_DIR)" ]; then \
-			echo -e "  $(GREEN)✓$(NC)  Git hooks active (core.hooksPath → $(HOOKS_DIR))"; \
+		cur=$$(git config --local core.hooksPath 2>/dev/null || echo ""); \
+		if [ "$$cur" = "$(HOOKS_DIR)" ]; then \
+			echo -e "  $(_G)✓$(_0) Git hooks active → $(HOOKS_DIR)"; \
 		else \
 			git config --local core.hooksPath $(HOOKS_DIR); \
 			chmod +x $(HOOKS_DIR)/*; \
-			echo -e "  $(GREEN)✓$(NC)  Git hooks activated (core.hooksPath → $(HOOKS_DIR))"; \
+			echo -e "  $(_G)✓$(_0) Git hooks activated → $(HOOKS_DIR)"; \
 		fi; \
 		for old in commit-msg pre-commit pre-push post-checkout pre-merge-commit log_hook log_hook.sh; do \
-			if [ -L ".git/hooks/$$old" ]; then rm -f ".git/hooks/$$old"; fi; \
+			[ -L ".git/hooks/$$old" ] && rm -f ".git/hooks/$$old"; \
 		done; \
 	fi
 
-update: ## 🔄 Updates git submodules
-	@echo -e "$(BLUE)Updating git submodules...$(RESET)"
+update: ## Update git submodules
 	@git submodule update --remote --merge
-	@echo -e "$(GREEN)Submodules have been updated to their latest commits!$(RESET)"
+	@echo -e "$(_G)✓ Submodules updated$(_0)"
 
-help: ## ❓ Show this help message
-	@$(MAKE) configure-hooks > /dev/null
-	@echo ""
-	@echo -e "$(BOLD)$(CYAN)mini-baas-infrastructure - Available Commands$(NC)"
-	@echo ""
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | sort | \
-		awk 'BEGIN {FS = ":.*?## "; cmd = sprintf("%c[1;32m", 27); desc = sprintf("%c[2;37m", 27); reset = sprintf("%c[0m", 27)} {printf "  %s%-24s%s %s%s%s\n", cmd, $$1, reset, desc, $$2, reset}'
-	@echo ""
-	$(call print-next,Start with make compose-up.)
+# ========================================================================== #
+##@ Help
+# ========================================================================== #
 
-.PHONY: \
-	check-docker check-compose \
-	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
-	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 test-phase14 test-phase15 flow-postgres-mvp \
-	dev-up dev-down dev-re build-and-push fclean help
+help: ## Show this help
+	@echo ""
+	@echo -e "$(_W)$(_C)$(PROJECT) — Available Commands$(_0)"
+	@awk 'BEGIN {FS=":.*##"; printf ""} \
+		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0,5) } \
+		/^[a-zA-Z0-9_%.-]+:.*##/ { printf "  \033[1;32m%-20s\033[0m \033[2;37m%s\033[0m\n", $$1, $$2 }' \
+		$(MAKEFILE_LIST)
+	@echo ""
+
+# --------------------------------------------------------------------------- #
+.PHONY: all clean fclean re \
+	up down restart ps logs pull health \
+	build build-% build-optimized tag push push-bake images image-sizes \
+	tests test-phase% test-postgres \
+	migrate migrate-mongo migrate-down migrate-status \
+	secrets secrets-validate secrets-rotate check-secrets \
+	observe observe-down grafana prometheus \
+	adapter-add adapter-ls \
+	play play-css play-down play-logs \
+	env preflight hooks update help \
+	_require-docker _require-compose _rm-stale
