@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 # File: docker/services/realtime/tools/test-ws.sh
-# Description: Basic WebSocket connectivity test against the Realtime service
+# Description: WebSocket connectivity & health test for realtime-agnostic
 # Usage: ./test-ws.sh
 set -euo pipefail
 
-WS_URL="${WS_URL:-ws://localhost:4000/socket/websocket}"
+HEALTH_URL="${HEALTH_URL:-http://localhost:4000/v1/health}"
+WS_URL="${WS_URL:-ws://localhost:4000/v1/ws}"
 
-echo "Testing WebSocket connection to ${WS_URL} …"
+echo "==> Health check: ${HEALTH_URL}"
+curl -sf "${HEALTH_URL}" | python3 -m json.tool 2>/dev/null || curl -sf "${HEALTH_URL}"
+echo
 
+echo "==> WebSocket connection test: ${WS_URL}"
 if command -v wscat &>/dev/null; then
-  echo '{"topic":"phoenix","event":"heartbeat","payload":{},"ref":"1"}' \
+  echo '{"action":"subscribe","channel":"test"}' \
     | wscat -c "${WS_URL}" --wait 3
 elif command -v curl &>/dev/null; then
   curl -i -N \
@@ -26,4 +30,4 @@ else
   exit 1
 fi
 
-echo "WebSocket test complete."
+echo "WebSocket test complet
