@@ -227,36 +227,30 @@ services:
 
   # ─── Realtime / WebSocket ────────────────────────────────────────
   realtime:
-    image: supabase/realtime:v2.33.70
+    image: dlesieur/realtime-agnostic:latest
     container_name: mini-baas-realtime
     ports:
       - "${REALTIME_PORT:-4000}:4000"
     environment:
-      DB_HOST: ${REALTIME_DB_HOST:-postgres}
-      DB_PORT: ${REALTIME_DB_PORT:-5432}
-      DB_USER: ${REALTIME_DB_USER:-postgres}
-      DB_PASSWORD: ${REALTIME_DB_PASSWORD:-postgres}
-      DB_NAME: realtime
-      PORT: 4000
-      APP_NAME: ${REALTIME_APP_NAME:-realtime-dev}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-super-secret-key-base}
-      METRICS_JWT_SECRET: ${METRICS_JWT_SECRET:-super-secret-jwt-token-with-at-least-32-chars}
-      API_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-chars}
-      DASHBOARD_USER: ${REALTIME_DASHBOARD_USER:-supabase}
-      DASHBOARD_PASSWORD: ${REALTIME_DASHBOARD_PASSWORD:-this_is_insecure_change_me}
-      ERL_AFLAGS: "-proto_dist inet_tcp"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      REALTIME_HOST: 0.0.0.0
+      REALTIME_PORT: 4000
+      REALTIME_JWT_SECRET: ${JWT_SECRET}
+      REALTIME_PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
+      REALTIME_MONGO_URL: mongodb://mongo:27017
+      RUST_LOG: ${RUST_LOG:-info}
     depends_on:
-      db-bootstrap:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-sS", "-o", "/dev/null", "http://localhost:4000/" ]
-      timeout: 5s
-      interval: 5s
+      test: ["CMD-SHELL", "curl -sf http://localhost:4000/v1/health > /dev/null || exit 1"]
+      timeout: 3s
+      interval: 10s
+      start_period: 5s
       retries: 3
 
   # ─── Object Storage ──────────────────────────────────────────────
