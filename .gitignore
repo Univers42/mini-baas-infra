@@ -354,3 +354,7 @@ pyrightconfig.json
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/python,go,visualstudiocode,dotenv,node
+
+# Allow service source lib/ directories (overrides Python lib/ rule above)
+!docker/services/*/src/lib/
+!docker/services/*/src/lib/**
