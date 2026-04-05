@@ -22,8 +22,10 @@ plugins:
         - __KONG_CORS_ORIGIN_PLAYGROUND__
         - __KONG_CORS_ORIGIN_STUDIO__
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
-      headers: [Authorization, Content-Type, apikey, x-client-info, X-Request-ID]
-      exposed_headers: [X-Kong-Upstream-Latency, X-Kong-Proxy-Latency, X-Request-ID]
+      headers:
+        [Authorization, Content-Type, apikey, x-client-info, X-Request-ID]
+      exposed_headers:
+        [X-Kong-Upstream-Latency, X-Kong-Proxy-Latency, X-Request-ID]
       credentials: true
       max_age: 3600
 
@@ -81,7 +83,7 @@ services:
               hour: 5000
 
   - name: realtime
-    url: http://realtime:4000
+    url: http://realtime:4000/v1
     routes:
       - name: realtime-routes
         paths: [/realtime/v1]
