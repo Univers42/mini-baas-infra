@@ -1,127 +1,99 @@
-# Quick Reference: Docker Build Commands
+# Quick Reference: Docker Commands (Current)
 
-## Building Images
+This reference matches the current Compose-first workflow in this repository.
 
-### Build a single service
+## Preferred Make Targets
+
+### Stack lifecycle
 ```bash
-docker compose build api-gateway
+make compose-up
+make compose-ps
+make compose-logs
+make compose-down
+make compose-down-volumes
+make compose-restart
 ```
 
-### Build all services (from docker-compose.build.yml)
+### Image lifecycle
 ```bash
-docker compose -f docker-compose.build.yml build
+make docker-build
+make docker-build-kong
+make docker-images
+make docker-clean
 ```
 
-### Build without using cache (clean build)
+### Registry workflows
 ```bash
-docker compose build --no-cache api-gateway
+make docker-tag REGISTRY=localhost:5000 IMAGE_TAG=latest
+make docker-push REGISTRY=localhost:5000 IMAGE_TAG=latest
+make build-and-push REGISTRY=localhost:5000 IMAGE_TAG=latest
 ```
 
-### Build with build arguments
+### Health and tests
 ```bash
-docker build --build-arg NODE_VERSION=22-alpine -t api-gateway:latest deployments/base/api-gateway/
+make compose-health
+make tests
+make test-phase1
+make test-phase13
 ```
 
-## Inspecting Images
+## Direct Docker Compose Commands
 
-### View image size and layers
+Use direct commands when debugging outside Make targets.
+
+### Start and stop
 ```bash
-docker history api-gateway:latest
-docker images api-gateway
-docker inspect api-gateway:latest
+docker compose -f docker-compose.yml up -d
+docker compose -f docker-compose.yml down
+docker compose -f docker-compose.yml down -v
 ```
 
-### Test image locally
+### Logs and status
 ```bash
-docker run -it api-gateway:latest
-docker run -p 3000:3000 api-gateway:latest
+docker compose -f docker-compose.yml ps
+docker compose -f docker-compose.yml logs -f --tail=100
+docker compose -f docker-compose.yml logs -f --tail=100 kong
 ```
 
-## Optimization Commands
-
-### View Docker disk usage
+### Pull upstream images
 ```bash
-docker system df      # See disk usage by images, containers, volumes
-docker image prune    # Remove unused images
-docker system prune   # Remove all unused data
+docker compose -f docker-compose.yml pull
 ```
 
-### Build for multiple platforms
+## Build and Tag Examples
+
+The repository primarily uses infrastructure images and Make automation. For manual image work:
+
 ```bash
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t api-gateway:latest \
-  deployments/base/api-gateway/
+docker pull kong:3.8
+docker tag kong:3.8 mini-baas/kong:latest
+docker tag mini-baas/kong:latest localhost:5000/kong:latest
+docker push localhost:5000/kong:latest
 ```
 
-## Docker Compose Commands
+## Useful Diagnostics
 
-### Using docker-compose.build.yml for local development
+### Docker resource usage
 ```bash
-# Start services with local builds
-docker compose -f docker-compose.build.yml up -d
-
-# Rebuild on code changes
-docker compose -f docker-compose.build.yml up -d --build
-
-# View logs
-docker compose -f docker-compose.build.yml logs -f api-gateway
-
-# Stop services
-docker compose -f docker-compose.build.yml down
+docker system df
+docker image ls
+docker volume ls
+docker container ls -a
 ```
 
-### Switch between compose files
+### Kong declarative config validation
 ```bash
-# Use prebuilt images (default)
-docker compose up -d
-
-# Use local builds
-docker compose -f docker-compose.build.yml up -d
+docker run --rm -e KONG_DATABASE=off \
+  -e KONG_DECLARATIVE_CONFIG=/tmp/kong.yml \
+  -v "$PWD/deployments/base/kong/kong.yml:/tmp/kong.yml:ro" \
+  kong:3.8 kong config parse /tmp/kong.yml
 ```
 
-## CI/CD Integration
+## Cleanup Commands
 
-### GitHub Actions example
-```yaml
-- name: Build and push Docker images
-  run: |
-    docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} deployments/base/api-gateway/
-    docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-```
-
-### GitLab CI example
-```yaml
-build_api_gateway:
-  stage: build
-  script:
-    - docker build -t $CI_REGISTRY_IMAGE/api-gateway:$CI_COMMIT_SHA deployments/base/api-gateway/
-    - docker push $CI_REGISTRY_IMAGE/api-gateway:$CI_COMMIT_SHA
-```
-
-## Troubleshooting
-
-### See what's in the context
 ```bash
-# Lists all files that would be included in build
-find deployments/base/api-gateway/ -type f
+make fclean
+make docker-clean
 ```
 
-### Debug builds
-```bash
-# See each layer being built
-docker build --progress=plain deployments/base/api-gateway/
-
-# Keep build container for inspection
-docker build --keep-state deployments/base/api-gateway/
-```
-
-### Check .dockerignore is working
-```bash
-docker buildx build \
-  --progress=plain \
-  --no-cache \
-  deployments/base/api-gateway/
-```
-
-Look for "Sending build context" message - should be much smaller with .dockerignore
+For destructive cleanup, prefer the Make targets so stack shutdown and cleanup happen in a safe order.

@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell-checks:
+    name: Shell Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Validate shell syntax
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            bash -n "$file"
+          done < <(find scripts -type f -name '*.sh' -print0)
+
+      - name: Run shellcheck
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            shellcheck -S error -e SC1091 "$file"
+          done < <(find scripts -type f -name '*.sh' -print0)
+
+  integration-tests:
+    name: Compose Integration Tests
+    runs-on: ubuntu-latest
+    needs: shell-checks
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate CI environment
+        run: bash ./scripts/generate-env.sh .env
+
+      - name: Start stack
+        run: make compose-up
+
+      - name: Wait for gateway health
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8000/auth/v1/health -H 'apikey: public-anon-key' || true)
+            if [ "$code" = "200" ]; then
+              echo "Gateway health check passed"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Gateway health check did not pass in time"
+          exit 1
+
+      - name: Run phase test suite
+        env:
+          FORCE_COLORS: "0"
+        run: make tests
+
+      - name: Capture compose logs
+        if: always()
+        run: |
+          mkdir -p artifacts
+          docker compose ps > artifacts/compose-ps.txt
+          docker compose logs --no-color > artifacts/compose-logs.txt
+
+      - name: Upload compose artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-debug-artifacts
+          path: artifacts
+
+      - name: Teardown stack
+        if: always()
+        run: make compose-down-volumes

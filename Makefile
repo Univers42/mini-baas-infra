@@ -7,202 +7,395 @@ GREEN   := \033[0;32m
 YELLOW  := \033[1;33m
 RED     := \033[0;31m
 CYAN    := \033[0;36m
-NC      := \033[0m
 BOLD    := \033[1m
 DIM     := \033[2m
+NC      := \033[0m
 
-COMPOSE_CMD := $(shell if docker compose version >/dev/null 2>&1; then echo "docker compose"; elif command -v docker-compose >/dev/null 2>&1; then echo "docker-compose"; fi)
-COMPOSE_VERSION := $(shell if docker compose version >/dev/null 2>&1; then docker compose version --short; elif command -v docker-compose >/dev/null 2>&1; then docker-compose version --short 2>/dev/null || docker-compose version | head -n 1; else echo "not installed"; fi)
+HOOKS_DIR := vendor/scripts/hooks
 
-# Configuration variables
-REGISTRY ?= localhost:5000
+# Configuration
+NO_PRINT = --no-print-directory
 IMAGE_TAG ?= latest
-ENVIRONMENT ?= local
-NAMESPACE ?= default
-KUSTOMIZE_DIR ?= deployments/overlays/$(ENVIRONMENT)
+REGISTRY ?= localhost:5000
+COMPOSE_FILE ?= docker-compose.yml
+SHOW_NEXT_STEPS ?= 1
 
-check-docker: ## Check if docker is installed
+# Prebuilt infrastructure images
+KONG_IMAGE ?= kong:3.8
+TRINO_IMAGE ?= trinodb/trino
+GOTRUE_IMAGE ?= supabase/gotrue:v2.188.1
+POSTGREST_IMAGE ?= postgrest/postgrest:latest
+POSTGRES_IMAGE ?= postgres:16-alpine
+REALTIME_IMAGE ?= supabase/realtime
+MINIO_IMAGE ?= minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+REDIS_IMAGE ?= redis:7-alpine
+SUPAVISOR_IMAGE ?= supabase/supavisor:2.7.4
+STUDIO_IMAGE ?= supabase/studio
+
+define print-next
+@if [ "$(SHOW_NEXT_STEPS)" = "1" ]; then \
+	echo -e "$(DIM)Next: $(1)$(NC)"; \
+fi
+endef
+
+check-docker: ## 🐳 Check if docker is installed
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Please install Docker Engine/Desktop first."; exit 1; }
 
-check-compose: check-docker ## Check if Docker Compose is available
-	@if [ -z "$(COMPOSE_CMD)" ]; then \
-		echo >&2 "Docker Compose is not available. Use Docker with the compose plugin or install docker-compose."; \
-		exit 1; \
-	fi
+check-compose: ## 🔄 Check if docker compose is installed
+	@docker compose version >/dev/null 2>&1 || { echo >&2 "Docker Compose plugin is not available. Install Docker Compose v2."; exit 1; }
 
 # ============================================================================
 # Docker Image Management
 # ============================================================================
 
-docker-build: check-docker ## Build all service Docker images
-	@echo -e "$(BLUE)Building Docker images...$(NC)"
-	@docker compose -f docker-compose.build.yml build
+docker-build: ## 📦 Pull and tag all prebuilt images locally
+	@$(MAKE) $(NO_PRINT) check-docker
+	@echo -e "$(BLUE)Pulling and tagging prebuilt Docker images...$(NC)"
+	@docker pull $(KONG_IMAGE)
+	@docker pull $(TRINO_IMAGE)
+	@docker pull $(GOTRUE_IMAGE)
+	@docker pull $(POSTGREST_IMAGE)
+	@docker pull $(POSTGRES_IMAGE)
+	@docker pull $(REALTIME_IMAGE)
+	@docker pull $(MINIO_IMAGE)
+	@docker pull $(REDIS_IMAGE)
+	@docker pull $(SUPAVISOR_IMAGE)
+	@docker pull $(STUDIO_IMAGE)
+	@docker tag $(KONG_IMAGE) mini-baas/kong:$(IMAGE_TAG)
+	@docker tag $(TRINO_IMAGE) mini-baas/trino:$(IMAGE_TAG)
+	@docker tag $(GOTRUE_IMAGE) mini-baas/gotrue:$(IMAGE_TAG)
+	@docker tag $(POSTGREST_IMAGE) mini-baas/postgrest:$(IMAGE_TAG)
+	@docker tag $(POSTGRES_IMAGE) mini-baas/postgres:$(IMAGE_TAG)
+	@docker tag $(REALTIME_IMAGE) mini-baas/realtime:$(IMAGE_TAG)
+	@docker tag $(MINIO_IMAGE) mini-baas/minio:$(IMAGE_TAG)
+	@docker tag $(REDIS_IMAGE) mini-baas/redis:$(IMAGE_TAG)
+	@docker tag $(SUPAVISOR_IMAGE) mini-baas/supavisor:$(IMAGE_TAG)
+	@docker tag $(STUDIO_IMAGE) mini-baas/studio:$(IMAGE_TAG)
+	@echo -e "$(GREEN)✓ Prebuilt images ready$(NC)"
+	$(call print-next,Run make compose-up to start the stack.)
 
-docker-build-no-cache: check-docker ## Build all Docker images without cache
-	@echo -e "$(BLUE)Building Docker images (no cache)...$(NC)"
-	@docker compose -f docker-compose.build.yml build --no-cache
+docker-build-%: ## 📦 Pull/tag one prebuilt image (e.g., make docker-build-kong)
+	@$(MAKE) $(NO_PRINT) check-docker
+	@echo -e "$(BLUE)Preparing prebuilt image for $*...$(NC)"
+	@case "$*" in \
+		kong) src="$(KONG_IMAGE)" ;; \
+		trino) src="$(TRINO_IMAGE)" ;; \
+		gotrue) src="$(GOTRUE_IMAGE)" ;; \
+		postgrest) src="$(POSTGREST_IMAGE)" ;; \
+		postgres) src="$(POSTGRES_IMAGE)" ;; \
+		realtime) src="$(REALTIME_IMAGE)" ;; \
+		minio) src="$(MINIO_IMAGE)" ;; \
+		redis) src="$(REDIS_IMAGE)" ;; \
+		supavisor) src="$(SUPAVISOR_IMAGE)" ;; \
+		studio) src="$(STUDIO_IMAGE)" ;; \
+		*) echo -e "$(RED)Unknown prebuilt image: $*$(NC)"; exit 1 ;; \
+	esac; \
+	docker pull "$$src"; \
+	docker tag "$$src" mini-baas/$*:$(IMAGE_TAG)
+	$(call print-next,Run make compose-up to start the stack.)
 
-docker-build-%: check-docker ## Build specific service image (e.g., make docker-build-api-gateway)
-	@echo -e "$(BLUE)Building Docker image for $*...$(NC)"
-	@docker build -t mini-baas/$*:$(IMAGE_TAG) deployments/base/$*/
-
-docker-tag: check-docker ## Tag all images for registry (REGISTRY=myregistry.com make docker-tag)
-	@echo -e "$(BLUE)Tagging Docker images for registry: $(REGISTRY)$(NC)"
-	@docker tag mini-baas/api-gateway:$(IMAGE_TAG) $(REGISTRY)/api-gateway:$(IMAGE_TAG)
-	@docker tag mini-baas/auth-service:$(IMAGE_TAG) $(REGISTRY)/auth-service:$(IMAGE_TAG)
-	@docker tag mini-baas/dynamic-api:$(IMAGE_TAG) $(REGISTRY)/dynamic-api:$(IMAGE_TAG)
-	@docker tag mini-baas/schema-service:$(IMAGE_TAG) $(REGISTRY)/schema-service:$(IMAGE_TAG)
+docker-tag: ## 🏷️  Tag local mini-baas images for a registry
+	@$(MAKE) $(NO_PRINT) check-docker
+	@echo -e "$(BLUE)Tagging mini-baas images for registry: $(REGISTRY)$(NC)"
+	@docker tag mini-baas/kong:$(IMAGE_TAG) $(REGISTRY)/kong:$(IMAGE_TAG)
+	@docker tag mini-baas/trino:$(IMAGE_TAG) $(REGISTRY)/trino:$(IMAGE_TAG)
+	@docker tag mini-baas/gotrue:$(IMAGE_TAG) $(REGISTRY)/gotrue:$(IMAGE_TAG)
+	@docker tag mini-baas/postgrest:$(IMAGE_TAG) $(REGISTRY)/postgrest:$(IMAGE_TAG)
+	@docker tag mini-baas/postgres:$(IMAGE_TAG) $(REGISTRY)/postgres:$(IMAGE_TAG)
+	@docker tag mini-baas/realtime:$(IMAGE_TAG) $(REGISTRY)/realtime:$(IMAGE_TAG)
+	@docker tag mini-baas/minio:$(IMAGE_TAG) $(REGISTRY)/minio:$(IMAGE_TAG)
+	@docker tag mini-baas/redis:$(IMAGE_TAG) $(REGISTRY)/redis:$(IMAGE_TAG)
+	@docker tag mini-baas/supavisor:$(IMAGE_TAG) $(REGISTRY)/supavisor:$(IMAGE_TAG)
+	@docker tag mini-baas/studio:$(IMAGE_TAG) $(REGISTRY)/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ Images tagged$(NC)"
+	$(call print-next,Run make docker-push REGISTRY=$(REGISTRY) IMAGE_TAG=$(IMAGE_TAG).)
 
-docker-push: docker-tag ## Push all tagged images to registry (REGISTRY=myregistry.com make docker-push)
+docker-push: ## 📤 Push all tagged images to a registry
+	@$(MAKE) $(NO_PRINT) docker-tag
 	@echo -e "$(BLUE)Pushing Docker images to $(REGISTRY)...$(NC)"
-	@docker push $(REGISTRY)/api-gateway:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/auth-service:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/dynamic-api:$(IMAGE_TAG)
-	@docker push $(REGISTRY)/schema-service:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/kong:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/trino:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/gotrue:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/postgrest:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/postgres:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/realtime:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/minio:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/redis:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/supavisor:$(IMAGE_TAG)
+	@docker push $(REGISTRY)/studio:$(IMAGE_TAG)
 	@echo -e "$(GREEN)✓ All images pushed$(NC)"
 
-docker-images: check-docker ## Show built Docker images
+docker-images: ## 🖼️  Show local mini-baas images
+	@$(MAKE) $(NO_PRINT) check-docker
 	@echo -e "$(BLUE)Mini-BaaS Docker images:$(NC)"
 	@docker images | grep mini-baas || echo "No images found. Run 'make docker-build' first."
 
-docker-clean: check-docker ## Remove all mini-baas Docker images
-	@echo -e "$(YELLOW)Removing Docker images for mini-baas services...$(NC)"
-	@docker rmi -f $(shell docker images -q mini-baas/* 2>/dev/null) 2>/dev/null || echo "No images to remove"
+docker-clean: ## 🗑️  Remove local mini-baas images
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) compose-down
+	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
+	@docker rmi -f $$(docker images --filter=reference='mini-baas/*' -q) >/dev/null 2>&1 || true
+	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
+
+docker-fclean: ## 🗑️  Remove local mini-baas images and stop stack
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) compose-down
+	@echo -e "$(YELLOW)Removing local mini-baas images...$(NC)"
+	@docker rmi $$(docker images -q) --force
 	@echo -e "$(GREEN)✓ Images cleaned$(NC)"
 
 # ============================================================================
-# Kubernetes Deployment Management
+# Docker Compose Workflow
 # ============================================================================
 
-check-kubectl: ## Check if kubectl is installed
-	@command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl is not installed. Please install it from https://kubernetes.io/docs/tasks/tools/"; exit 1; }
-
-check-minikube: ## Check if minikube is installed
-	@command -v minikube >/dev/null 2>&1 || { echo >&2 "minikube is not installed. Please install it from https://minikube.sigs.k8s.io/docs/start/"; exit 1; }
-
-check-kustomize: ## Check if kustomize is installed
-	@command -v kustomize >/dev/null 2>&1 || { echo >&2 "kustomize is not installed. Install via: brew install kustomize"; exit 1; }
-
-check-k8s-cluster: check-kubectl ## Check if Kubernetes cluster is accessible
-	@kubectl cluster-info >/dev/null 2>&1 || { echo >&2 "$(RED)✗ Kubernetes cluster not accessible$(NC)"; echo >&2 "Make sure your K8s cluster is running:"; echo >&2 "  - minikube start     (for local minikube)"; echo >&2 "  - docker desktop     (enable K8s in Docker Desktop)"; echo >&2 "  - kubectl config     (ensure kubeconfig is valid)"; exit 1; }
-
-k8s-load-local-images: check-minikube check-k8s-cluster ## Load local images into minikube
-	@echo -e "$(BLUE)Loading local Docker images into minikube...$(NC)"
-	@minikube image load mini-baas/api-gateway:$(IMAGE_TAG)
-	@minikube image load mini-baas/auth-service:$(IMAGE_TAG)
-	@minikube image load mini-baas/dynamic-api:$(IMAGE_TAG)
-	@minikube image load mini-baas/schema-service:$(IMAGE_TAG)
-	@echo -e "$(GREEN)✓ Local images loaded into minikube$(NC)"
-
-k8s-deploy: check-kubectl check-kustomize check-k8s-cluster docker-build ## Build images and deploy to Kubernetes (ENVIRONMENT=local)
-	@echo -e "$(BLUE)Deploying to Kubernetes cluster ($(ENVIRONMENT))...$(NC)"
-	@if [ "$(ENVIRONMENT)" = "local" ]; then \
-		$(MAKE) k8s-load-local-images IMAGE_TAG=$(IMAGE_TAG); \
+compose-rm-stale: ## 🗑️  Remove stale mini-baas containers (created/exited) to avoid name conflicts
+	@$(MAKE) $(NO_PRINT) check-docker
+	@stale_ids="$$(docker ps -a --format '{{.ID}} {{.Names}} {{.Status}}' | awk '/ mini-baas-/ && ($$3 == "Created" || $$3 == "Exited") {print $$1}')"; \
+	if [ -n "$$stale_ids" ]; then \
+		echo -e "$(YELLOW)Removing stale mini-baas containers to avoid name conflicts...$(NC)"; \
+		docker rm -f $$stale_ids >/dev/null; \
+		echo -e "$(GREEN)✓ Stale containers removed$(NC)"; \
 	fi
-	@kubectl apply -k $(KUSTOMIZE_DIR) --validate=false || { echo -e "$(RED)✗ Deployment failed$(NC)"; exit 1; }
-	@echo -e "$(GREEN)✓ Deployment complete$(NC)"
 
-k8s-deploy-local: ## Build images, load into minikube, and deploy to Kubernetes (ENVIRONMENT=local)
-	@$(MAKE) docker-clean
-	@$(MAKE) docker-build
-	@$(MAKE) k8s-load-local-images
-	@$(MAKE) k8s-deploy
+compose-up: ## 🚀 Start stack in detached mode
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@$(MAKE) $(NO_PRINT) compose-rm-stale
+	@echo -e "$(BLUE)Starting stack from $(COMPOSE_FILE)...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) up -d
+	@echo -e "$(GREEN)✓ Stack started$(NC)"
+	$(call print-next,Run make compose-ps or make compose-health.)
 
-k8s-preview: check-kustomize ## Preview Kubernetes manifests without deploying (ENVIRONMENT=local)
-	@echo -e "$(BLUE)Kubernetes manifests for $(ENVIRONMENT):$(NC)"
-	@kustomize build $(KUSTOMIZE_DIR)
+compose-down: ## 🛑 Stop and remove stack resources
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@echo -e "$(YELLOW)Stopping stack...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) down
+	@echo -e "$(GREEN)✓ Stack stopped$(NC)"
 
-k8s-apply: check-kubectl check-kustomize check-k8s-cluster ## Apply Kubernetes manifests (ENVIRONMENT=local)
-	@echo -e "$(BLUE)Applying Kubernetes manifests to cluster ($(ENVIRONMENT))...$(NC)"
-	@kubectl apply -k $(KUSTOMIZE_DIR) --validate=false || { echo -e "$(RED)✗ Apply failed$(NC)"; exit 1; }
-	@echo -e "$(GREEN)✓ Applied$(NC)"
+compose-down-volumes: ## 🗑️  Stop stack and remove named volumes
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@echo -e "$(YELLOW)Stopping stack and removing volumes...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) down -v
+	@echo -e "$(GREEN)✓ Stack and volumes removed$(NC)"
 
-k8s-update-images: check-kubectl ## Update image tags in running deployments
-	@echo -e "$(BLUE)Updating image tags ($(IMAGE_TAG)) in Kubernetes cluster...$(NC)"
-	@kubectl set image deployment/api-gateway api-gateway=$(REGISTRY)/api-gateway:$(IMAGE_TAG) -n $(NAMESPACE) || true
-	@kubectl set image deployment/auth-service auth-service=$(REGISTRY)/auth-service:$(IMAGE_TAG) -n $(NAMESPACE) || true
-	@kubectl set image deployment/dynamic-api dynamic-api=$(REGISTRY)/dynamic-api:$(IMAGE_TAG) -n $(NAMESPACE) || true
-	@kubectl set image deployment/schema-service schema-service=$(REGISTRY)/schema-service:$(IMAGE_TAG) -n $(NAMESPACE) || true
-	@echo -e "$(GREEN)✓ Images updated$(NC)"
+compose-restart: ## 🔄 Restart all stack services
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) restart
+	@echo -e "$(GREEN)✓ Stack restarted$(NC)"
 
-k8s-delete: check-kubectl ## Delete all mini-baas deployments from Kubernetes
-	@echo -e "$(YELLOW)Deleting deployments from Kubernetes...$(NC)"
-	@kubectl delete deployment api-gateway auth-service dynamic-api schema-service -n $(NAMESPACE) --ignore-not-found
-	@kubectl delete service api-gateway auth-service dynamic-api schema-service -n $(NAMESPACE) --ignore-not-found
-	@echo -e "$(GREEN)✓ Deployments deleted$(NC)"
+compose-ps: ## 📊 Show stack service status
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) ps
 
-k8s-status: check-kubectl ## Show Kubernetes deployment status
-	@echo -e "$(BLUE)Kubernetes Deployment Status (Namespace: $(NAMESPACE)):$(NC)"
-	@kubectl get deployments -n $(NAMESPACE) -l app.mini-baas/managed-by=kustomize -o wide || echo "No deployments found"
-	@echo ""
-	@echo -e "$(BLUE)Pods:$(NC)"
-	@kubectl get pods -n $(NAMESPACE) -l app.mini-baas/managed-by=kustomize -o wide || echo "No pods found"
-	@echo ""
-	@echo -e "$(BLUE)Services:$(NC)"
-	@kubectl get services -n $(NAMESPACE) -l app.mini-baas/managed-by=kustomize -o wide || echo "No services found"
+compose-logs: ## 📜 Stream logs (SERVICE=<name> optional)
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@if [ -n "$(SERVICE)" ]; then \
+		docker compose -f $(COMPOSE_FILE) logs -f --tail=100 $(SERVICE); \
+	else \
+		docker compose -f $(COMPOSE_FILE) logs -f --tail=100; \
+	fi
 
-k8s-logs: check-kubectl ## Show logs for a service (SERVICE=api-gateway make k8s-logs)
-	@echo -e "$(BLUE)Logs for $(SERVICE) (Namespace: $(NAMESPACE)):$(NC)"
-	@kubectl logs -n $(NAMESPACE) -l app=$(SERVICE) --all-containers=true --tail=100 -f
+compose-pull: ## 🔄 Pull latest images for all services
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) pull
+	@echo -e "$(GREEN)✓ Images pulled$(NC)"
 
-k8s-describe: check-kubectl ## Describe a service deployment (SERVICE=api-gateway make k8s-describe)
-	@echo -e "$(BLUE)Deployment details for $(SERVICE) (Namespace: $(NAMESPACE)):$(NC)"
-	@kubectl describe deployment $(SERVICE) -n $(NAMESPACE) || echo "Deployment not found"
+compose-health: ## 🩺 Quick health checks for key routes
+	@echo -e "$(BLUE)Checking local endpoints...$(NC)"
+	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null && echo "  ✓ Kong -> /auth/v1/health" || echo "  ✗ Kong -> /auth/v1/health"
+	@curl -fsS http://localhost:8000/rest/v1/ >/dev/null && echo "  ✓ Kong -> /rest/v1/" || echo "  ✗ Kong -> /rest/v1/"
+	@curl -fsS http://localhost:5432 >/dev/null 2>&1 && echo "  ✓ Postgres port open" || echo "  • Postgres TCP check skipped/failed"
 
-k8s-port-forward: check-kubectl ## Port forward to a service (SERVICE=api-gateway PORT=3000 make k8s-port-forward)
-	@echo -e "$(BLUE)Port forwarding $(SERVICE) to localhost:$(PORT)$(NC)"
-	@kubectl port-forward -n $(NAMESPACE) svc/$(SERVICE) $(PORT):$(PORT)
+playground-css: ## 🎨 Build libcss CSS assets used by the frontend playground
+	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required to build libcss assets."; exit 1; }
+	@echo -e "$(BLUE)Building libcss CSS assets for playground...$(NC)"
+	@npm --prefix ./vendor/libcss install --legacy-peer-deps
+	@npm --prefix ./vendor/libcss run build:min
+	@echo -e "$(GREEN)✓ libcss CSS ready at vendor/libcss/dist/css/libcss.min.css$(NC)"
 
-k8s-scale: check-kubectl ## Scale a deployment (SERVICE=api-gateway REPLICAS=3 make k8s-scale)
-	@echo -e "$(BLUE)Scaling $(SERVICE) to $(REPLICAS) replicas...$(NC)"
-	@kubectl scale deployment/$(SERVICE) --replicas=$(REPLICAS) -n $(NAMESPACE)
-	@echo -e "$(GREEN)✓ Scaled$(NC)"
+playground-up: ## 🚀 Build CSS and start playground frontend container
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@$(MAKE) $(NO_PRINT) playground-css
+	@echo -e "$(BLUE)Starting playground frontend...$(NC)"
+	@docker compose -f $(COMPOSE_FILE) up -d playground
+	@echo -e "$(GREEN)✓ Playground available at http://localhost:3100$(NC)"
+	$(call print-next,Open http://localhost:3100 and run visual checks.)
 
-k8s-restart: check-kubectl ## Restart a deployment (SERVICE=api-gateway make k8s-restart)
-	@echo -e "$(BLUE)Restarting $(SERVICE)...$(NC)"
-	@kubectl rollout restart deployment/$(SERVICE) -n $(NAMESPACE)
-	@echo -e "$(GREEN)✓ Restarted$(NC)"
+playground-down: ## 🛑 Stop playground frontend container
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) stop playground >/dev/null 2>&1 || true
+	@docker compose -f $(COMPOSE_FILE) rm -f playground >/dev/null 2>&1 || true
+	@echo -e "$(GREEN)✓ Playground stopped$(NC)"
 
-k8s-rollback: check-kubectl ## Rollback last deployment change (SERVICE=api-gateway make k8s-rollback)
-	@echo -e "$(YELLOW)Rolling back $(SERVICE)...$(NC)"
-	@kubectl rollout undo deployment/$(SERVICE) -n $(NAMESPACE)
-	@echo -e "$(GREEN)✓ Rolled back$(NC)"
+playground-logs: ## 📜 Show playground frontend logs
+	@$(MAKE) $(NO_PRINT) check-docker
+	@$(MAKE) $(NO_PRINT) check-compose
+	@docker compose -f $(COMPOSE_FILE) logs -f --tail=100 playground
 
-k8s-events: check-kubectl ## Show recent Kubernetes events
-	@echo -e "$(BLUE)Recent events in $(NAMESPACE):$(NC)"
-	@kubectl get events -n $(NAMESPACE) --sort-by='.lastTimestamp' | tail -20
+tests: ## 🧪 Run all smoke tests
+	@total_passed=0; \
+	total_failed=0; \
+	overall_status=0; \
+	for script in \
+		./scripts/phase1-smoke-test.sh \
+		./scripts/phase2-smoke-test.sh \
+		./scripts/phase3-authenticated-db-test.sh \
+		./scripts/phase4-user-isolation-test.sh \
+		./scripts/phase5-db-info-test.sh \
+		./scripts/phase6-http-methods-test.sh \
+		./scripts/phase7-error-handling-test.sh \
+		./scripts/phase8-token-lifecycle-test.sh \
+		./scripts/phase9-storage-operations-test.sh \
+		./scripts/phase10-data-mutation-complex-queries-test.sh \
+		./scripts/phase11-realtime-websocket-test.sh \
+		./scripts/phase12-rate-limiting-test.sh \
+		./scripts/phase13-cors-preflight-test.sh \
+		./scripts/phase14-mongo-mvp-test.sh \
+		./scripts/phase15-mongo-mvp-test.py; do \
+		tmp_file="$$(mktemp)"; \
+		if [ "$$script" = "./scripts/phase15-mongo-mvp-test.py" ]; then \
+			FORCE_COLORS=1 python3 "$$script" | tee "$$tmp_file"; \
+		else \
+			FORCE_COLORS=1 bash "$$script" | tee "$$tmp_file"; \
+		fi; \
+		status=$${PIPESTATUS[0]}; \
+		clean_log="$$(sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' "$$tmp_file")"; \
+		passed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Passed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
+		failed="$$(printf '%s\n' "$$clean_log" | awk -F: '/Failed:/ {gsub(/^[^:]*:[[:space:]]*|[[:space:]]+$$/, "", $$2); v=$$2} END {print (v==""?0:v)}')"; \
+		total_passed=$$((total_passed + passed)); \
+		total_failed=$$((total_failed + failed)); \
+		rm -f "$$tmp_file"; \
+		if [ "$$status" -ne 0 ]; then overall_status=1; fi; \
+		sleep 2; \
+	done; \
+	echo ""; \
+	echo -e "$(CYAN)$(BOLD)╔════════════════════════════════════════════════════════════╗$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)║$(NC) $(BOLD)Overall Tests Summary$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)╠════════════════════════════════════════════════════════════╣$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)║$(NC) $(GREEN)$(BOLD)✔ Passed:$(NC) $(GREEN)$(BOLD)$$total_passed$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)║$(NC) $(RED)$(BOLD)✖ Failed:$(NC) $(RED)$(BOLD)$$total_failed$(NC)"; \
+	echo -e "$(CYAN)$(BOLD)╚════════════════════════════════════════════════════════════╝$(NC)"; \
+	if [ "$$overall_status" -eq 0 ]; then \
+		echo -e "$(GREEN)$(BOLD)✔ All test phases passed$(NC)"; \
+	else \
+		echo -e "$(RED)$(BOLD)✖ One or more test phases failed$(NC)"; \
+		exit 1; \
+	fi
 
-# ============================================================================
-# CI/CD Integration Targets
-# ============================================================================
+test-phase1: ## 🧪 Run Phase 1 auth/rest smoke test through Kong
+	@FORCE_COLORS=1 bash ./scripts/phase1-smoke-test.sh
 
-build-and-push: docker-build docker-push ## Build all images and push to registry
+test-phase2: ## 🧪 Run Phase 2 gateway security smoke test
+	@FORCE_COLORS=1 bash ./scripts/phase2-smoke-test.sh
+
+test-phase3: ## 🧪 Run Phase 3 authenticated database access test
+	@FORCE_COLORS=1 bash ./scripts/phase3-authenticated-db-test.sh
+
+test-phase4: ## 🧪 Run Phase 4 user data isolation test
+	@FORCE_COLORS=1 bash ./scripts/phase4-user-isolation-test.sh
+
+test-phase5: ## 🧪 Run Phase 5 REST metadata retrieval test
+	@FORCE_COLORS=1 bash ./scripts/phase5-db-info-test.sh
+
+test-phase6: ## 🧪 Run Phase 6 HTTP methods & data mutations test
+	@FORCE_COLORS=1 bash ./scripts/phase6-http-methods-test.sh
+
+test-phase7: ## 🧪 Run Phase 7 error handling & edge cases test
+	@FORCE_COLORS=1 bash ./scripts/phase7-error-handling-test.sh
+
+test-phase8: ## 🧪 Run Phase 8 token lifecycle & refresh test
+	@FORCE_COLORS=1 bash ./scripts/phase8-token-lifecycle-test.sh
+
+test-phase9: ## 🧪 Run Phase 9 storage service operations test
+	@FORCE_COLORS=1 bash ./scripts/phase9-storage-operations-test.sh
+
+test-phase10: ## 🧪 Run Phase 10 data mutation and complex query test
+	@FORCE_COLORS=1 bash ./scripts/phase10-data-mutation-complex-queries-test.sh
+
+test-phase11: ## 🧪 Run Phase 11 realtime WebSocket communication test
+	@FORCE_COLORS=1 bash ./scripts/phase11-realtime-websocket-test.sh
+
+test-phase12: ## 🧪 Run Phase 12 rate limiting policy enforcement test
+	@FORCE_COLORS=1 bash ./scripts/phase12-rate-limiting-test.sh
+
+test-phase13: ## 🧪 Run Phase 13 CORS preflight and cross-origin test
+	@FORCE_COLORS=1 bash ./scripts/phase13-cors-preflight-test.sh
+
+test-phase14: ## 🧪 Run Phase 14 Mongo MVP gateway + isolation test
+	@FORCE_COLORS=1 bash ./scripts/phase14-mongo-mvp-test.sh
+
+test-phase15: ## 🧪 Run Phase 15 Mongo MVP comprehensive test
+	@FORCE_COLORS=1 python3 ./scripts/phase15-mongo-mvp-test.py
+
+flow-postgres-mvp: ## 🧪 Run PostgreSQL MVP happy-path + isolation flow script
+	@FORCE_COLORS=1 bash ./scripts/postgres-mvp-flow.sh
+
+# Convenience aliases
+
+dev-up: ## 🚀 Start local stack with docker compose
+	@$(MAKE) $(NO_PRINT) compose-up
+
+dev-down: ## 🛑 Stop local stack
+	@$(MAKE) $(NO_PRINT) compose-down
+
+dev-re: ## 🔄 Restart local stack
+	@$(MAKE) $(NO_PRINT) compose-down
+	@$(MAKE) $(NO_PRINT) docker-clean
+	@$(MAKE) $(NO_PRINT) docker-fclean
+	@$(MAKE) $(NO_PRINT) compose-up
+
+build-and-push: ## 📦 Build/pull, tag and push images
+	@$(MAKE) $(NO_PRINT) docker-build
+	@$(MAKE) $(NO_PRINT) docker-push
 	@echo -e "$(GREEN)✓ All images built and pushed$(NC)"
 
-deploy-staging: ENVIRONMENT=staging
-deploy-staging: REGISTRY?=registry.example.com
-deploy-staging: IMAGE_TAG?=staging-latest
-deploy-staging: k8s-deploy ## Build and deploy to staging environment
+fclean: ## 🗑️  Full cleanup (containers, volumes, and local images)
+	@$(MAKE) $(NO_PRINT) compose-down-volumes
+	@$(MAKE) $(NO_PRINT) docker-clean
+	@echo -e "$(GREEN)✓ Full clean complete$(NC)"
 
-deploy-production: ENVIRONMENT=production
-deploy-production: REGISTRY?=registry.example.com
-deploy-production: IMAGE_TAG?=v1.0.0
-deploy-production: k8s-deploy ## Build and deploy to production environment
+configure-hooks: ## 🪝  Activate git hooks (auto-runs on make / make dev)
+	@if [ ! -d .git ]; then \
+		echo -e "  $(YELLOW)⚠$(NC)  Not a git repo — skipping hook setup"; \
+	else \
+		CURRENT=$$(git config --local core.hooksPath 2>/dev/null || echo ""); \
+		if [ "$$CURRENT" = "$(HOOKS_DIR)" ]; then \
+			echo -e "  $(GREEN)✓$(NC)  Git hooks active (core.hooksPath → $(HOOKS_DIR))"; \
+		else \
+			git config --local core.hooksPath $(HOOKS_DIR); \
+			chmod +x $(HOOKS_DIR)/*; \
+			echo -e "  $(GREEN)✓$(NC)  Git hooks activated (core.hooksPath → $(HOOKS_DIR))"; \
+		fi; \
+		for old in commit-msg pre-commit pre-push post-checkout pre-merge-commit log_hook log_hook.sh; do \
+			if [ -L ".git/hooks/$$old" ]; then rm -f ".git/hooks/$$old"; fi; \
+		done; \
+	fi
+
+update: ## 🔄 Updates git submodules
+	@echo -e "$(BLUE)Updating git submodules...$(RESET)"
+	@git submodule update --remote --merge
+	@echo -e "$(GREEN)Submodules have been updated to their latest commits!$(RESET)"
 
 help: ## ❓ Show this help message
+	@$(MAKE) configure-hooks > /dev/null
 	@echo ""
-	@echo -e "$(BOLD)mini-baas-infrastructure - Available Commands$(NC)"
-	@echo -e "$(DIM)Compose: $(COMPOSE_CMD) $(COMPOSE_VERSION)$(NC)"
+	@echo -e "$(BOLD)$(CYAN)mini-baas-infrastructure - Available Commands$(NC)"
 	@echo ""
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | sort | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-25s$(NC) %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "; cmd = sprintf("%c[1;32m", 27); desc = sprintf("%c[2;37m", 27); reset = sprintf("%c[0m", 27)} {printf "  %s%-24s%s %s%s%s\n", cmd, $$1, reset, desc, $$2, reset}'
 	@echo ""
+	$(call print-next,Start with make compose-up.)
 
-
-.PHONY: check-docker check-compose check-kubectl check-minikube check-kustomize check-k8s-cluster \
-	docker-build docker-build-no-cache docker-tag docker-push docker-images docker-clean \
-	k8s-load-local-images k8s-deploy k8s-preview k8s-apply k8s-update-images k8s-delete k8s-status k8s-logs k8s-describe k8s-port-forward k8s-scale k8s-restart k8s-rollback k8s-events \
-	build-and-push deploy-staging deploy-production \
-	build-compose-up build-compose-down build-compose-images build-compose-logs build-compose-ps build-compose-clean \
-	help
+.PHONY: \
+	check-docker check-compose \
+	docker-build docker-build-% docker-tag docker-push docker-images docker-clean \
+	compose-rm-stale compose-up compose-down compose-down-volumes compose-restart compose-ps compose-logs compose-pull compose-health playground-css playground-up playground-down playground-logs tests test-phase1 test-phase2 test-phase3 test-phase4 test-phase5 test-phase6 test-phase7 test-phase8 test-phase9 test-phase10 test-phase11 test-phase12 test-phase13 test-phase14 test-phase15 flow-postgres-mvp \
+	dev-up dev-down dev-re build-and-push fclean help

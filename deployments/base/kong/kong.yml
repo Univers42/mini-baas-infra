@@ -1,0 +1,260 @@
+# _format_version: "3.0"
+# _transform: true
+
+# plugins:
+#   - name: cors
+#     config:
+#       origins:
+#         - "*"
+#       methods:
+#         - GET
+#         - POST
+#         - PUT
+#         - PATCH
+#         - DELETE
+#         - OPTIONS
+#       headers:
+#         - Accept
+#         - Accept-Version
+#         - Authorization
+#         - Content-Length
+#         - Content-MD5
+#         - Content-Type
+#         - Date
+#         - X-Auth-Token
+#         - X-Client-Info
+#         - X-Requested-With
+#         - apikey
+#       exposed_headers:
+#         - X-Kong-Upstream-Latency
+#         - X-Kong-Proxy-Latency
+#       credentials: true
+#       max_age: 3600
+
+# services:
+#   - name: gotrue
+#     url: http://gotrue:9999
+#     routes:
+#       - name: gotrue-route
+#         paths:
+#           - /auth/v1
+#           - /auth
+#         strip_path: true
+#         methods:
+#           - GET
+#           - POST
+#           - PUT
+#           - PATCH
+#           - DELETE
+#           - OPTIONS
+
+#   - name: postgrest
+#     url: http://postgrest:3000
+#     routes:
+#       - name: postgrest-route
+#         paths:
+#           - /rest/v1
+#           - /rest
+#         strip_path: true
+#         methods:
+#           - GET
+#           - POST
+#           - PUT
+#           - PATCH
+#           - DELETE
+#           - OPTIONS
+
+#   - name: realtime
+#     url: http://realtime:4000
+#     routes:
+#       - name: realtime-route
+#         paths:
+#           - /realtime/v1
+#           - /realtime
+#         strip_path: true
+#         protocols:
+#           - http
+#           - https
+
+#   - name: trino
+#     url: http://trino:8080
+#     plugins:
+#       - name: request-transformer
+#         config:
+#           remove:
+#             headers:
+#               - x-forwarded-for
+#     routes:
+#       - name: trino-route
+#         paths:
+#           - /sql
+#         strip_path: true
+
+#   - name: pg-meta
+#     url: http://pg-meta:8080
+#     routes:
+#       - name: pg-meta-route
+#         paths:
+#           - /meta/v1
+#           - /meta
+#         strip_path: true
+
+#   - name: studio
+#     url: http://studio:3000
+#     routes:
+#       - name: studio-route
+#         paths:
+#           - /studio
+#         strip_path: true
+
+
+# ! Action plan
+_format_version: "3.0"
+_transform: true
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: __KONG_PUBLIC_API_KEY__
+  - username: service_role
+    keyauth_credentials:
+      - key: __KONG_SERVICE_API_KEY__
+
+services:
+  - name: auth
+    url: http://gotrue:9999
+    routes:
+      - name: auth-routes
+        paths: [/auth/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 2000
+  - name: rest
+    url: http://postgrest:3000
+    routes:
+      - name: rest-routes
+        paths: [/rest/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 180
+              hour: 5000
+
+  - name: realtime
+    url: http://realtime:4000
+    routes:
+      - name: realtime-routes
+        paths: [/realtime/v1]
+        strip_path: true
+        protocols: [http, https]
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: storage
+    url: http://minio:9000
+    routes:
+      - name: storage-routes
+        paths: [/storage/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1500
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 10
+              size_unit: megabytes
+
+  - name: admin-meta
+    url: http://pg-meta:8080
+    routes:
+      - name: meta-routes
+        paths: [/meta/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: mongo-api
+    url: http://mongo-api:3010
+    routes:
+      - name: mongo-api-routes
+        paths: [/mongo/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 180
+              hour: 5000
+
+  - name: admin-studio
+    url: http://studio:3000
+    routes:
+      - name: studio-routes
+        paths: [/studio]
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 300
+              hour: 5000
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - __KONG_CORS_ORIGIN_APP__
+        - __KONG_CORS_ORIGIN_PLAYGROUND__
+        - __KONG_CORS_ORIGIN_STUDIO__
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type, apikey, x-client-info]
+      credentials: true
+      max_age: 3600

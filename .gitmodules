@@ -1,0 +1,6 @@
+[submodule "vendor/libcss"]
+	path = vendor/libcss
+	url = https://github.com/Univers42/libcss.git
+[submodule "vendor/scripts"]
+	path = vendor/scripts
+	url = https://github.com/Univers42/scripts.git

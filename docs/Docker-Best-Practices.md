@@ -1,297 +1,88 @@
-# Docker Image Building Best Practices
+# Docker Best Practices (Current Repository)
 
-This document describes the improvements made to Docker image building in the mini-baas-infra project.
+This document captures practical Docker guidance for the current mini-baas-infra stack.
 
-## Overview of Improvements
+## Operating Model
 
-This project now implements industry best practices for Docker image building:
-- ✅ **Multistage builds** - Separate build and runtime stages
-- ✅ **Alpine Linux images** - Minimal base images for smaller containers
-- ✅ **.dockerignore files** - Exclude unnecessary files from build context
-- ✅ **Security hardening** - Non-root users, minimal attack surface
-- ✅ **Health checks** - Container health verification
-- ✅ **Layer caching** - Optimized build layer ordering
+- Runtime orchestration is Docker Compose (`docker-compose.yml`).
+- Primary operator interface is Make targets in `Makefile`.
+- Most services run from upstream/prebuilt infrastructure images.
+- Kong is configured declaratively from `deployments/base/kong/kong.yml`.
 
-## File Structure
+## Daily Workflow Recommendations
 
-```
-deployments/base/
-├── api-gateway/
-│   ├── .dockerignore      # Excludes unnecessary files
-│   └── Dockerfile         # Multistage Node.js example
-├── auth-service/
-│   ├── .dockerignore      # Excludes unnecessary files
-│   └── Dockerfile         # Multistage Python example
-├── dynamic-api/
-│   ├── .dockerignore      # Excludes unnecessary files
-│   └── Dockerfile         # Multistage Go example
-└── schema-service/
-    ├── .dockerignore      # Excludes unnecessary files
-    └── Dockerfile         # Multistage Node.js/TypeScript example
-```
+1. Use Make targets first (`make compose-up`, `make compose-down`, `make tests`).
+2. Use direct `docker compose` only for debugging or targeted inspection.
+3. Keep `.env` generated and consistent before integration test runs.
+4. Prefer `make compose-down-volumes` before credential resets to avoid stale DB state.
 
-## Key Improvements
+## Image Management Practices
 
-### 1. Multistage Builds
+- Keep explicit image tags via `IMAGE_TAG` when publishing.
+- Avoid mutable production tags in release pipelines.
+- Use `make docker-build` to normalize local image names (`mini-baas/<service>:<tag>`).
+- Use `make docker-tag` and `make docker-push` for registry publish flows.
 
-Multistage builds use multiple `FROM` statements to separate build time from runtime.
+## Kong Configuration Practices
 
-**Benefits:**
-- Final image contains only what's needed to run, not build tools
-- Significant reduction in image size (up to 90% smaller)
-- No build artifacts or compilation cache in production
+- Treat `deployments/base/kong/kong.yml` as the source of truth.
+- Validate declarative config before restart.
+- Keep policy changes incremental: routing first, then auth, then limits.
+- Re-test route behavior after every plugin update.
 
-**Example Pattern:**
-```dockerfile
-# Stage 1: Builder (includes compile tools)
-FROM node:22-alpine AS builder
-RUN npm install  # Installs dev dependencies
-RUN npm run build
-
-# Stage 2: Runtime (minimal - only for execution)
-FROM node:22-alpine
-COPY --from=builder /app/dist /app/dist
-CMD ["node", "dist/index.js"]
-```
-
-**Size Comparison:**
-- Single-stage Node.js build: ~500MB
-- Multistage Node.js build: ~150MB (70% reduction)
-- Go with distroless: ~15MB
-
-### 2. Alpine Linux Images
-
-Alpine Linux is a minimal Linux distribution (5-10MB base).
-
-**Benefits:**
-- Minimal base image size
-- Reduced attack surface
-- Smaller bandwidth usage for distribution
-- Faster container startup
-
-**Available Alpine Tags:**
-- `node:22-alpine` - Node.js 22 on Alpine
-- `python:3.12-alpine` - Python 3.12 on Alpine
-- `golang:1.23-alpine` - Go 1.23 on Alpine
-- `gcr.io/distroless/base-debian12` - Ultra-minimal base (Go apps)
-
-### 3. .dockerignore Files
-
-The `.dockerignore` file prevents unnecessary files from being copied into the Docker build context.
-
-**What's Excluded:**
-- Version control (`.git`, `.github`)
-- Documentation (`.md` files)
-- Tests and coverage reports
-- Development files (`.env`, IDE files)
-- `node_modules/`, `dist/`, build artifacts
-- CI/CD configuration files
-- Logs and temporary files
-
-**Benefits:**
-- Faster builds (less data to process)
-- Better security (no unnecessary files in image)
-- Cleaner images
-
-**Example:**
-```dockerfile
-# .dockerignore
-.git
-node_modules/
-*.md
-.env
-dist/
-```
-
-### 4. Security Improvements
-
-#### Non-Root User
-Containers run as non-root users to prevent privilege escalation:
-
-```dockerfile
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-USER nodejs
-```
-
-**Benefits:**
-- Even if container is compromised, attacker has limited privileges
-- Complies with container security best practices
-- Required by many security scanning tools
-
-#### Minimal Base Images
-Using Alpine and distroless images reduces the attack surface:
-- Fewer packages = fewer vulnerabilities
-- Smaller images = faster patching cycles
-- Go with distroless = only Go runtime, nothing else
-
-### 5. Health Checks
-
-Every Dockerfile includes a `HEALTHCHECK` instruction:
-
-```dockerfile
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node healthcheck.js || exit 1
-```
-
-**Benefits:**
-- Docker can restart unhealthy containers automatically
-- Kubernetes uses this data for pod replacement
-- Load balancers can route traffic away from unhealthy instances
-
-### 6. Layer Caching Optimization
-
-Dockerfile commands are ordered to maximize cache hits:
-
-```dockerfile
-# Copy package files first (changes infrequently)
-COPY package*.json ./
-RUN npm ci
-
-# Copy source code (changes frequently)
-COPY . .
-RUN npm run build
-```
-
-**Why:** If source changes but dependencies don't, Docker can reuse the cached dependency layer.
-
-## Usage Examples
-
-### Build a Service
+Validation command:
 
 ```bash
-# Build api-gateway
-docker compose build api-gateway
-
-# Build with no cache
-docker compose build --no-cache api-gateway
-
-# Build all services
-docker compose build
+docker run --rm -e KONG_DATABASE=off \
+  -e KONG_DECLARATIVE_CONFIG=/tmp/kong.yml \
+  -v "$PWD/deployments/base/kong/kong.yml:/tmp/kong.yml:ro" \
+  kong:3.8 kong config parse /tmp/kong.yml
 ```
 
-### Building with Docker CLI
+## Compose and Container Hygiene
+
+- Use health checks and startup ordering (`depends_on` with conditions) for core services.
+- Keep container names stable for predictable diagnostics.
+- Mount config files read-only whenever possible.
+- Separate persistent volumes by service domain (`postgres-data`, `minio-data`, `redis-data`).
+
+## Security and Secrets
+
+- Keep generated secrets in `.env` and never commit them.
+- Rotate JWT and service keys for shared environments.
+- Restrict CORS origins in non-local profiles.
+- Treat static local API keys as development-only defaults.
+
+## Testing and CI Practices
+
+- Use `make tests` as the integration gate (phases 1-13).
+- Keep shell scripts lint-clean (`bash -n`, `shellcheck`).
+- Capture compose logs on failures for deterministic triage.
+- Avoid weakening assertions in tests; prefer explicit failures over optional pass notes.
+
+## Troubleshooting Patterns
+
+### Stack starts but auth flow fails
+- Verify `JWT_SECRET` alignment across GoTrue and PostgREST.
+- Check Kong route policies and key-auth behavior.
+- Inspect logs with `make compose-logs SERVICE=gotrue` and `make compose-logs SERVICE=postgrest`.
+
+### Bootstrap/auth errors after env changes
+- Stop and remove volumes, then restart clean:
 
 ```bash
-# Navigate to deployments/base/api-gateway/
-cd deployments/base/api-gateway/
-
-# Build the image
-docker build -t my-api-gateway:latest .
-
-# Build with build args (for multi-platform builds)
-docker build \
-  --platform linux/amd64,linux/arm64 \
-  -t my-api-gateway:latest \
-  --push .
+make compose-down-volumes
+make compose-up
 ```
 
-### Inspect Image Size
+### Route mismatch errors
+- Re-validate `kong.yml`.
+- Confirm route paths in tests and docs match current declarative config.
 
-```bash
-# See all layers and their sizes
-docker history my-api-gateway:latest
+## Quick Checklist
 
-# Inspect image details
-docker inspect my-api-gateway:latest
-```
-
-## Best Practices Checklist
-
-When creating new Dockerfiles, ensure:
-
-- [ ] Use multistage builds (build stage + runtime stage)
-- [ ] Use Alpine or minimal base images
-- [ ] Create `.dockerignore` file with common exclusions
-- [ ] Order Dockerfile commands to maximize cache hits
-- [ ] Run as non-root user
-- [ ] Include `HEALTHCHECK` instruction
-- [ ] Set explicit image versions (not `latest`)
-- [ ] Use `--no-cache` flag during CI/CD builds for reproducibility
-- [ ] Minimize number of layers
-- [ ] Consider using distroless for compiled languages (Go, Rust)
-
-## Language-Specific Recommendations
-
-### Node.js/TypeScript
-- Use `node:22-alpine` or `node:22-slim`
-- Compile TypeScript in builder stage
-- Install only production dependencies in runtime stage
-- Size: 150-180MB
-
-### Python
-- Use `python:3.12-alpine`
-- Build wheels in builder stage, install from wheels in runtime
-- Size: 100-150MB
-
-### Go
-- Use `golang:1.23-alpine` for builder
-- Use `gcr.io/distroless/base-debian12` for runtime
-- Size: 10-20MB (very small!)
-
-### Java
-- Use `eclipse-temurin:21-alpine` for builder
-- Use `eclipse-temurin:21-alpine` for runtime (Java apps need full runtime)
-- Consider using `quay.io/distroless/java21-debian12` for minimal image
-- Size: 300-500MB
-
-## Troubleshooting
-
-### Image Size is Large
-- Check for development dependencies being installed in runtime stage
-- Verify `.dockerignore` is excluding unnecessary files
-- Use `docker history` to find large layers
-- Consider using distroless base images
-
-### Builds are Slow
-- Verify `.dockerignore` file exists and is comprehensive
-- Order Dockerfile commands to maximize cache hits
-- Avoid rebuilding unchanged layers
-- Use `--platform linux/amd64` to avoid multi-platform builds
-
-### Permission Denied Errors
-- Ensure files are properly `chown`-ed to the non-root user
-- Check that the application can write to required directories
-
-## Advanced Topics
-
-### Build Arguments
-Use build args for flexibility:
-
-```dockerfile
-ARG NODE_VERSION=22-alpine
-FROM node:${NODE_VERSION}
-```
-
-### Build Context Optimization
-Place Dockerfile in subdirectory to limit context:
-
-```bash
-docker build -f ./services/api-gateway/Dockerfile .
-```
-
-### Container Registry Integration
-Push to registry after build:
-
-```bash
-docker tag my-api-gateway:latest registry.example.com/my-api-gateway:latest
-docker push registry.example.com/my-api-gateway:latest
-```
-
-### Multi-Platform Builds
-Build for both x86 and ARM architectures:
-
-```bash
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t my-api-gateway:latest \
-  --push .
-```
-
-## References
-
-- [Docker Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
-- [Alpine Linux](https://alpinelinux.org/)
-- [Distroless Containers](https://github.com/GoogleContainerTools/distroless)
-- [Docker Security](https://docs.docker.com/engine/security/)
-- [Multistage Builds](https://docs.docker.com/build/building/multi-stage/)
+- [ ] `make compose-up` succeeds.
+- [ ] `make compose-health` succeeds for expected endpoints.
+- [ ] `make tests` passes.
+- [ ] `kong config parse` succeeds after route/plugin edits.
+- [ ] Docs are updated when commands/routes change.

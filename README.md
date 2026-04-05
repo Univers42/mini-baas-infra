@@ -1,23 +1,20 @@
 # mini-baas-infra
 
-Tool-agnostic Kubernetes infrastructure repository for the mini-baas platform.
+![CI](https://github.com/Univers42/mini-baas-infra/actions/workflows/ci.yml/badge.svg)
+
+Docker Compose infrastructure repository for the mini-baas platform.
 
 ## Purpose
 
-This repository is intentionally independent from Kustomize or Helm.
-It centralizes environment contracts, service deployment conventions, and delivery workflows.
+This repository centralizes local infrastructure orchestration, image workflows, and service contracts for the platform.
 
 ## Structure
 
 - `docs/`: architecture decisions and operational notes.
-- `platform/`: cluster and namespace-level conventions.
-- `services/contracts/`: per-service deployment contract docs.
-- `deployments/base/`: canonical Kubernetes resource definitions.
-- `deployments/overlays/`: environment-specific customizations.
-- `tooling/kustomize/`: optional Kustomize entrypoints.
-- `tooling/helm/`: optional Helm entrypoints.
-- `argocd/applications/`: optional GitOps app manifests.
-- `scripts/`: platform bootstrap and promotion helpers.
+- `services/contracts/`: per-service contract documentation.
+- `deployments/base/`: service source code, Dockerfiles, and runtime configuration.
+- `scripts/`: helper scripts.
+- `docker-compose.yml`: prebuilt stack definition.
 
 ## Services in Scope
 
@@ -25,41 +22,185 @@ It centralizes environment contracts, service deployment conventions, and delive
 - `auth-service`
 - `dynamic-api`
 - `schema-service`
+- `kong`
+- `trino`
+- `postgres`
+- `mongo`
+- `gotrue`
+- `postgrest`
+- `realtime`
+- `minio`
+- `redis`
+- `supavisor`
+- `studio`
+- `playground`
 
-`shared-library` is treated as a build-time dependency unless it evolves into a network service.
-
-## Local Infrastructure With Docker Compose
-
-This repository now includes a root `docker-compose.yml` that mirrors the service images used in `Makefile`:
-
-- `trinodb/trino`
-- `supabase/gotrue:v2.188.1`
-- `postgrest/postgrest:devel`
-- `supabase/realtime`
-- `minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1`
-- `redis:trixie`
-- `supabase/supavisor:2.7.4`
-- `supabase/studio`
-
-### Start and Stop
-
-Use Make targets:
+## Quick Start
 
 ```bash
 make compose-up
 make compose-ps
 make compose-logs
+```
+
+Stop the stack:
+
+```bash
 make compose-down
 ```
 
-Or run Compose directly:
+## Build Workflow
+
+Pull and tag prebuilt images:
 
 ```bash
-docker compose up -d
+make docker-build IMAGE_TAG=latest
 ```
 
-### Notes
+Pull upstream images defined in compose:
 
-- Some services (GoTrue, PostgREST, Realtime, Supavisor, Studio) expect external dependencies, especially PostgreSQL.
-- The compose file ships with default placeholder environment values so the stack can be bootstrapped quickly.
-- For a fully functional setup, provide real values via shell environment variables or a `.env` file.
+```bash
+make compose-pull
+```
+
+## Useful Endpoints
+
+- Gateway: `http://localhost:8000/`
+- Auth health: `http://localhost:8000/auth/v1/health`
+- REST OpenAPI info (via gateway): `http://localhost:8000/rest/v1/`
+- Studio: `http://localhost:3001/`
+- Playground: `http://localhost:3100/`
+
+## Frontend Playground (libcss Submodule)
+
+The repository includes a visual playground frontend in `playground/` that uses CSS built from the `vendor/libcss` submodule.
+
+Start it with:
+
+```bash
+make playground-up
+```
+
+This target:
+
+- installs `vendor/libcss` dependencies,
+- builds `vendor/libcss/dist/css/libcss.min.css`,
+- starts an nginx container serving the playground at `http://localhost:3100`.
+
+Useful playground commands:
+
+```bash
+make playground-logs
+make playground-down
+```
+
+Partner-facing demo guide:
+
+- `docs/Partner-Demo-Runbook.md` (dynamic CRUD across five schema models on PostgreSQL + MongoDB)
+
+## Gateway Security (Phase 2)
+
+Kong now enforces API key auth on core BaaS routes:
+- `/auth/v1`
+- `/rest/v1`
+- `/realtime/v1`
+- `/storage/v1`
+
+Local default keys are defined in `.env.example` and declarative Kong config:
+- Public key: `public-anon-key`
+- Service key: `service-role-key`
+
+Example:
+
+```bash
+curl -i http://localhost:8000/rest/v1/ \
+	-H "apikey: public-anon-key"
+```
+
+Phase 2 security smoke test:
+
+```bash
+make test-phase2
+```
+
+Optional rate-limit stress check:
+
+```bash
+RUN_RATE_LIMIT_TEST=true RATE_LIMIT_BURST=70 make test-phase2
+```
+
+Phase 5 REST metadata retrieval test:
+
+```bash
+make test-phase5
+```
+
+## Expanded Test Suites (Phases 6-13)
+
+**Phase 6: HTTP Methods & Data Mutations** — Tests CRUD operations (POST, GET, PATCH, PUT, DELETE)
+
+```bash
+make test-phase6
+```
+
+**Phase 7: Error Handling & Edge Cases** — Tests validation, error responses, security boundaries
+
+```bash
+make test-phase7
+```
+
+**Phase 8: Token Lifecycle & Refresh** — Tests JWT token generation, claims, refresh, and expiration
+
+```bash
+make test-phase8
+```
+
+**Phase 9: Storage Service Operations (MinIO)** — Tests bucket/object lifecycle plus storage gateway limits
+
+```bash
+make test-phase9
+```
+
+**Phase 10: Data Mutations & Complex Queries** — Tests batch insert, upsert, pagination, ordering, filters, and count headers
+
+```bash
+make test-phase10
+```
+
+**Phase 11: Realtime WebSocket Communication** — Tests realtime gateway accessibility and key-based WebSocket upgrade behavior
+
+```bash
+make test-phase11
+```
+
+**Phase 12: Rate Limiting Policy Enforcement** — Tests route-level rate-limiting behavior and response handling
+
+```bash
+make test-phase12
+```
+
+**Phase 13: CORS Preflight and Cross-Origin Requests** — Tests preflight handling and CORS headers across BaaS routes
+
+```bash
+make test-phase13
+```
+
+## Running All Tests
+
+`make tests` executes all 13 test phases and prints an overall summary with aggregated passed/failed counts across all phases.
+
+## Continuous Integration
+
+GitHub Actions now runs CI on push and pull requests:
+
+- Shell checks (`bash -n` and `shellcheck`) for all scripts in `scripts/`
+- Full Docker Compose integration run with `make tests`
+- Automatic compose log artifact upload on success/failure
+
+Workflow file: `.github/workflows/ci.yml`
+
+## Notes
+
+- Use a `.env` file for production-like values.
+- Some service defaults are placeholders for fast local bootstrapping.
+- For a full reset, run `make fclean`.
