@@ -117,6 +117,20 @@ VAULT_ENC_KEY=${VAULT_ENC_KEY}
 STUDIO_PG_META_URL=http://host.docker.internal:8080
 SUPABASE_URL=http://localhost:8000
 SUPABASE_PUBLIC_URL=http://localhost:8000
+
+# MongoDB
+MONGO_URI=mongodb://mongo:27017
+MONGO_DB_NAME=mini_baas
+
+# Adapter Registry
+ADAPTER_REGISTRY_DATABASE_URL=${DATABASE_URL}
+ADAPTER_REGISTRY_URL=http://adapter-registry:3020
+
+# Query Router
+QUERY_ROUTER_URL=http://query-router:4001
+
+# Logging
+LOG_LEVEL=info
 EOF
 
 chmod 600 "$ENV_FILE"
