@@ -1,0 +1,54 @@
+# File: docker-compose.ci.yml
+# CI overlay — minimal services, faster startup, no volumes persistence
+# Usage: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+
+services:
+  postgres:
+    tmpfs:
+      - /var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+  mongo:
+    tmpfs:
+      - /data/db
+
+  redis:
+    tmpfs:
+      - /data
+
+  minio:
+    tmpfs:
+      - /data
+
+  # Disable observability in CI
+  prometheus:
+    profiles: ["disabled"]
+  grafana:
+    profiles: ["disabled"]
+  loki:
+    profiles: ["disabled"]
+  promtail:
+    profiles: ["disabled"]
+  playground:
+    profiles: ["disabled"]
+
+volumes:
+  postgres-data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  mongo-data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  redis-data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  minio-data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
