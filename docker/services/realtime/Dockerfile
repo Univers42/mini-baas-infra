@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
 # File: docker/services/realtime/Dockerfile
 
-FROM supabase/realtime:v2.33.70
+FROM dlesieur/realtime-agnostic:latest
 EXPOSE 4000
