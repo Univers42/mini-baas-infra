@@ -1,0 +1,67 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-query-router.yaml */}}
+{{- if .Values.queryRouter.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-query-router
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: query-router
+spec:
+  replicas: {{ .Values.queryRouter.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "query-router" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "query-router" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: query-router
+          image: "{{ .Values.images.queryRouter.repository }}:{{ .Values.images.queryRouter.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.queryRouter.port }}
+              protocol: TCP
+          env:
+            {{- range $k, $v := .Values.queryRouter.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: jwt-secret
+          resources:
+            {{- toYaml .Values.queryRouter.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.queryRouter.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.queryRouter.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-query-router
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.queryRouter.port }}
+      name: http
+      targetPort: {{ .Values.queryRouter.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "query-router" "release" .Release.Name) | nindent 4 }}
+{{- end }}
