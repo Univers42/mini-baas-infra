@@ -1,0 +1,103 @@
+{{/* File: k8s/charts/mini-baas/templates/servicemonitors.yaml */}}
+{{/*
+  Prometheus ServiceMonitor CRDs for custom application services.
+  These are picked up by kube-prometheus-stack's Prometheus instance
+  because serviceMonitorSelectorNilUsesHelmValues: false is set.
+  Requires monitoring.coreos.com/v1 CRDs (kube-prometheus-stack).
+  Gate behind global.monitoring.enabled to avoid errors when CRDs are absent.
+*/}}
+
+{{- if and (default false .Values.global.monitoring) .Values.mongoApi.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-mongo-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: mongo-api
+spec:
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "mongo-api" "release" .Release.Name) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+{{- end }}
+---
+{{- if and (default false .Values.global.monitoring) .Values.adapterRegistry.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-adapter-registry
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: adapter-registry
+spec:
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "adapter-registry" "release" .Release.Name) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+{{- end }}
+---
+{{- if and (default false .Values.global.monitoring) .Values.queryRouter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-query-router
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: query-router
+spec:
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "query-router" "release" .Release.Name) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+{{- end }}
+---
+{{- if and (default false .Values.global.monitoring) .Values.realtime.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-realtime
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: realtime
+spec:
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "realtime" "release" .Release.Name) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /v1/metrics
+      interval: 30s
+{{- end }}
+---
+{{- if and (default false .Values.global.monitoring) .Values.gotrue.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-gotrue
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: gotrue
+spec:
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "gotrue" "release" .Release.Name) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+{{- end }}
