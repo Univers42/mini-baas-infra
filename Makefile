@@ -387,6 +387,219 @@ update: ## Update git submodules
 	@echo -e "$(_G)✓ Submodules updated$(_0)"
 
 # ========================================================================== #
+##@ Kubernetes (k3d + Helm)
+# ========================================================================== #
+
+K3D           ?= k3d
+KUBECTL       ?= kubectl
+HELM          ?= helm
+K8S_CLUSTER   ?= mini-baas
+K8S_NS        ?= mini-baas
+CHART_DIR     := k8s/charts/mini-baas
+DEV_VALUES    := k8s/overlays/dev/values-mini-baas.yaml
+KONG_PORT     ?= 8000
+PLAY_PORT     ?= 3100
+ZOO_PORT      ?= 5180
+PF_PIDFILE    := /tmp/mini-baas-pf.pids
+_CUSTOM_IMGS  := ghcr.io/univers42/mini-baas/mongo-api:latest \
+                 ghcr.io/univers42/mini-baas/adapter-registry:latest \
+                 ghcr.io/univers42/mini-baas/query-router:latest \
+                 dlesieur/realtime-agnostic:latest \
+                 mini-baas/zoo-frontend:latest
+
+_require-k8s:
+	@command -v $(KUBECTL) >/dev/null 2>&1 || { echo >&2 "kubectl is required."; exit 1; }
+	@command -v $(HELM) >/dev/null 2>&1 || { echo >&2 "helm is required."; exit 1; }
+
+_require-k3d:
+	@command -v $(K3D) >/dev/null 2>&1 || { echo >&2 "k3d is required (https://k3d.io)."; exit 1; }
+
+k8s-cluster: _require-k3d _require-docker ## Create k3d cluster (idempotent)
+	@if $(K3D) cluster list 2>/dev/null | grep -q $(K8S_CLUSTER); then \
+		echo -e "$(_G)✓ Cluster $(K8S_CLUSTER) already exists$(_0)"; \
+	else \
+		echo -e "$(_B)Creating k3d cluster…$(_0)"; \
+		$(K3D) cluster create $(K8S_CLUSTER) \
+			--port "9080:80@loadbalancer" \
+			--port "9443:443@loadbalancer" \
+			--k3s-arg "--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@server:*" \
+			--k3s-arg "--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@server:*" \
+			--wait; \
+		echo -e "$(_G)✓ Cluster created$(_0)"; \
+	fi
+
+k8s-import: _require-k3d _require-docker ## Import custom images into k3d
+	@echo -e "$(_B)Importing custom images into k3d…$(_0)"
+	@for img in $(_CUSTOM_IMGS); do \
+		if docker image inspect "$$img" >/dev/null 2>&1; then \
+			$(K3D) image import "$$img" -c $(K8S_CLUSTER) 2>/dev/null && \
+			echo -e "  $(_G)✓$(_0) $$img" || \
+			echo -e "  $(_Y)⚠$(_0) $$img (import warning)"; \
+		else \
+			echo -e "  $(_Y)↓$(_0) Pulling $$img…"; \
+			docker pull "$$img" && \
+			$(K3D) image import "$$img" -c $(K8S_CLUSTER) && \
+			echo -e "  $(_G)✓$(_0) $$img"; \
+		fi; \
+	done
+	@echo -e "$(_G)✓ Images imported$(_0)"
+
+k8s-infra: _require-k8s ## Install infra charts (PostgreSQL, MongoDB, Redis, Kong)
+	@echo -e "$(_B)Installing infrastructure charts…$(_0)"
+	@$(HELM) repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
+	@$(HELM) repo add kong https://charts.konghq.com 2>/dev/null || true
+	@$(HELM) repo update >/dev/null
+	@$(KUBECTL) create namespace $(K8S_NS) 2>/dev/null || true
+	@$(HELM) upgrade --install postgresql bitnami/postgresql \
+		--version 18.5.15 --namespace $(K8S_NS) \
+		-f k8s/third-party/postgresql/values.yaml \
+		-f k8s/overlays/dev/values-postgresql.yaml \
+		--wait --timeout 120s
+	@echo -e "  $(_G)✓$(_0) PostgreSQL"
+	@$(HELM) upgrade --install mongodb bitnami/mongodb \
+		--version 18.6.22 --namespace $(K8S_NS) \
+		-f k8s/third-party/mongodb/values.yaml \
+		-f k8s/overlays/dev/values-mongodb.yaml \
+		--wait --timeout 120s
+	@echo -e "  $(_G)✓$(_0) MongoDB"
+	@$(HELM) upgrade --install redis bitnami/redis \
+		--version 25.3.9 --namespace $(K8S_NS) \
+		-f k8s/third-party/redis/values.yaml \
+		--wait --timeout 120s
+	@echo -e "  $(_G)✓$(_0) Redis"
+	@$(HELM) upgrade --install kong kong/kong \
+		--version 3.2.0 --namespace $(K8S_NS) \
+		-f k8s/third-party/kong/values.yaml \
+		--wait --timeout 120s
+	@echo -e "  $(_G)✓$(_0) Kong"
+	@echo -e "$(_G)✓ Infrastructure ready$(_0)"
+
+k8s-playground-cm: ## Build playground ConfigMap from static files
+	@echo -e "$(_B)Building playground ConfigMap…$(_0)"
+	@bash scripts/k8s-playground-configmap.sh sandbox/apps/playground $(K8S_NS) mini-baas-playground-files \
+		| $(KUBECTL) apply --server-side -n $(K8S_NS) -f -
+	@echo -e "$(_G)✓ Playground ConfigMap applied$(_0)"
+
+k8s-deploy: _require-k8s k8s-playground-cm ## Deploy/upgrade mini-baas Helm chart
+	@echo -e "$(_B)Deploying mini-baas chart…$(_0)"
+	@$(HELM) upgrade --install mini-baas $(CHART_DIR) \
+		--namespace $(K8S_NS) \
+		-f $(DEV_VALUES) \
+		--timeout 180s
+	@echo -e "$(_G)✓ mini-baas deployed$(_0)"
+	@echo -e "$(_D)  Waiting for pods…$(_0)"
+	@$(KUBECTL) rollout status deployment -n $(K8S_NS) -l app.kubernetes.io/part-of=mini-baas --timeout=180s 2>/dev/null || true
+	@echo -e "$(_G)✓ All deployments rolled out$(_0)"
+
+k8s-up: k8s-cluster k8s-import k8s-infra k8s-deploy k8s-open ## Full K8s bring-up (cluster → deploy → open)
+	@echo -e "$(_G)$(_W)✓ mini-baas is running on Kubernetes$(_0)"
+
+k8s-down: _require-k3d ## Tear down the k3d cluster
+	@echo -e "$(_Y)Destroying k3d cluster $(K8S_CLUSTER)…$(_0)"
+	@$(MAKE) --no-print-directory k8s-pf-stop 2>/dev/null || true
+	@$(K3D) cluster delete $(K8S_CLUSTER)
+	@echo -e "$(_G)✓ Cluster destroyed$(_0)"
+
+k8s-ps: _require-k8s ## Show all pods in the mini-baas namespace
+	@$(KUBECTL) get pods -n $(K8S_NS) -o wide
+
+k8s-logs: _require-k8s ## Stream logs (SERVICE=<name> to filter)
+	@if [ -n "$(SERVICE)" ]; then \
+		$(KUBECTL) logs -n $(K8S_NS) -l app.kubernetes.io/component=$(SERVICE) -f --tail=100; \
+	else \
+		$(KUBECTL) logs -n $(K8S_NS) -l app.kubernetes.io/part-of=mini-baas -f --tail=50 --max-log-requests=15; \
+	fi
+
+k8s-pf: _require-k8s ## Start port-forwards (Kong→8000, Playground→3100, Zoo→5180)
+	@$(MAKE) --no-print-directory k8s-pf-stop 2>/dev/null || true
+	@echo -e "$(_B)Starting port-forwards…$(_0)"
+	@$(KUBECTL) port-forward -n $(K8S_NS) svc/kong-kong-proxy $(KONG_PORT):80 >/dev/null 2>&1 & \
+		echo $$! >> $(PF_PIDFILE)
+	@if $(KUBECTL) get svc -n $(K8S_NS) mini-baas-playground >/dev/null 2>&1; then \
+		$(KUBECTL) port-forward -n $(K8S_NS) svc/mini-baas-playground $(PLAY_PORT):80 >/dev/null 2>&1 & \
+		echo $$! >> $(PF_PIDFILE); \
+	fi
+	@if $(KUBECTL) get svc -n $(K8S_NS) mini-baas-zoo >/dev/null 2>&1; then \
+		$(KUBECTL) port-forward -n $(K8S_NS) svc/mini-baas-zoo $(ZOO_PORT):80 >/dev/null 2>&1 & \
+		echo $$! >> $(PF_PIDFILE); \
+	fi
+	@sleep 2
+	@echo -e "  $(_G)●$(_0) Kong gateway   → http://localhost:$(KONG_PORT)"
+	@echo -e "  $(_G)●$(_0) Playground      → http://localhost:$(PLAY_PORT)"
+	@echo -e "  $(_G)●$(_0) Zoo app         → http://localhost:$(ZOO_PORT)"
+	@echo -e "$(_G)✓ Port-forwards active$(_0)"
+
+k8s-pf-stop: ## Stop all port-forwards
+	@if [ -f $(PF_PIDFILE) ]; then \
+		while read pid; do kill $$pid 2>/dev/null || true; done < $(PF_PIDFILE); \
+		rm -f $(PF_PIDFILE); \
+	fi
+	@pkill -f "kubectl port-forward.*$(K8S_NS)" 2>/dev/null || true
+	@echo -e "$(_G)✓ Port-forwards stopped$(_0)"
+
+k8s-open: k8s-pf ## Open playground in browser
+	@sleep 1
+	@echo -e "$(_B)Opening playground…$(_0)"
+	@xdg-open "http://localhost:$(PLAY_PORT)" 2>/dev/null \
+		|| open "http://localhost:$(PLAY_PORT)" 2>/dev/null \
+		|| echo -e "  Open: $(_W)http://localhost:$(PLAY_PORT)$(_0)"
+
+k8s-health: _require-k8s ## Quick health-check of all K8s routes via Kong
+	@echo -e "$(_B)Checking K8s endpoints…$(_0)"
+	@ok=0; ko=0; \
+	for ep in \
+		"auth:/auth/v1/health" \
+		"rest:/rest/v1/" \
+		"mongo:/mongo/v1/health/live" \
+		"meta:/meta/v1/health" \
+		"query:/query/v1/health/live" \
+		"realtime:/realtime/v1/v1/health" \
+		"adapters:/admin/v1/health/live" \
+		"trino:/sql/v1/info"; \
+	do \
+		name=$${ep%%:*}; path=$${ep#*:}; \
+		code=$$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" \
+			-H "apikey: anon-key-placeholder" "http://localhost:$(KONG_PORT)$${path}" 2>/dev/null); \
+		if [ "$$code" = "200" ]; then \
+			echo -e "  $(_G)✓$(_0) $$name"; ok=$$((ok+1)); \
+		else \
+			echo -e "  $(_R)✗$(_0) $$name  (HTTP $$code)"; ko=$$((ko+1)); \
+		fi; \
+	done; \
+	echo ""; \
+	echo -e "  $(_G)$$ok passed$(_0), $(_R)$$ko failed$(_0)"; \
+	[ "$$ko" -eq 0 ]
+
+k8s-e2e: _require-k8s ## Run full e2e test suite against K8s
+	@PLAYGROUND_URL=http://localhost:$(PLAY_PORT) \
+		ZOO_URL=http://localhost:$(ZOO_PORT) \
+		bash scripts/k8s-e2e-test.sh "http://localhost:$(KONG_PORT)"
+
+k8s-restart: _require-k8s ## Rolling restart all mini-baas deployments
+	@$(KUBECTL) rollout restart deployment -n $(K8S_NS) -l app.kubernetes.io/part-of=mini-baas
+	@echo -e "$(_G)✓ Rolling restart initiated$(_0)"
+
+k8s-zoo-build: _require-docker ## Build zoo frontend image & import into k3d
+	@echo -e "$(_B)Building zoo frontend image…$(_0)"
+	@docker build -t mini-baas/zoo-frontend:latest sandbox/apps/app2
+	@echo -e "$(_G)✓ Image built$(_0)"
+	@if $(K3D) cluster list 2>/dev/null | grep -q $(K8S_CLUSTER); then \
+		$(K3D) image import mini-baas/zoo-frontend:latest -c $(K8S_CLUSTER); \
+		echo -e "$(_G)✓ Image imported into k3d$(_0)"; \
+	fi
+
+k8s-zoo-seed: _require-k8s ## Seed zoo tables, functions, data & auth users
+	@echo -e "$(_B)Seeding zoo database…$(_0)"
+	@bash scripts/k8s-zoo-seed.sh "http://localhost:$(KONG_PORT)" "anon-key-placeholder"
+	@echo -e "$(_G)✓ Zoo seeded$(_0)"
+
+k8s-zoo-open: _require-k8s ## Open zoo app in browser
+	@echo -e "$(_B)Opening zoo app…$(_0)"
+	@xdg-open "http://localhost:$(ZOO_PORT)" 2>/dev/null \
+		|| open "http://localhost:$(ZOO_PORT)" 2>/dev/null \
+		|| echo -e "  Open: $(_W)http://localhost:$(ZOO_PORT)$(_0)"
+
+# ========================================================================== #
 ##@ Help
 # ========================================================================== #
 
@@ -410,4 +623,8 @@ help: ## Show this help
 	adapter-add adapter-ls \
 	play play-css play-down play-logs \
 	env preflight hooks update help \
-	_require-docker _require-compose _rm-stale
+	k8s-cluster k8s-import k8s-infra k8s-deploy k8s-up k8s-down \
+	k8s-ps k8s-logs k8s-pf k8s-pf-stop k8s-open k8s-health k8s-e2e \
+	k8s-restart k8s-playground-cm \
+	k8s-zoo-build k8s-zoo-seed k8s-zoo-open \
+	_require-docker _require-compose _rm-stale _require-k8s _require-k3d
