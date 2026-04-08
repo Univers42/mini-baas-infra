@@ -1,0 +1,16 @@
+# File: k8s/base/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mini-baas
+  labels:
+    app.kubernetes.io/part-of: mini-baas
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app.kubernetes.io/part-of: mini-baas-monitoring
