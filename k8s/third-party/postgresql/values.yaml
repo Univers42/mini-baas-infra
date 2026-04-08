@@ -1,0 +1,46 @@
+# File: k8s/third-party/postgresql/values.yaml
+# Bitnami PostgreSQL Helm chart values for mini-BaaS
+# Chart: bitnami/postgresql  Version: 16.4.x
+# Docs: https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+
+auth:
+  postgresPassword: "postgres" # Override with Secret in prod
+  database: "postgres"
+
+primary:
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "" # Use cluster default
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # Run the bootstrap SQL after init
+  initdb:
+    scriptsConfigMap: "mini-baas-db-bootstrap"
+
+  # pg_isready-based probe (matches compose healthcheck)
+  readinessProbe:
+    enabled: true
+  livenessProbe:
+    enabled: true
+
+  # Network alias for backward compat (compose aliased as "db")
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+
+# No read replicas for dev; enable in prod overlay
+readReplicas:
+  replicaCount: 0
