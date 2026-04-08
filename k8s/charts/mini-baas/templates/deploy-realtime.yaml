@@ -1,0 +1,109 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-realtime.yaml */}}
+{{- if .Values.realtime.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-realtime
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: realtime
+spec:
+  replicas: {{ .Values.realtime.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "realtime" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "realtime" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: realtime
+          image: "{{ .Values.images.realtime.repository }}:{{ .Values.images.realtime.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.realtime.port }}
+              protocol: TCP
+          command:
+            - sh
+            - -c
+            - |
+              cp /etc/realtime/realtime.json /tmp/realtime.json
+              sed -i "s|__JWT_SECRET__|${REALTIME_JWT_SECRET}|g" /tmp/realtime.json
+              exec env REALTIME_CONFIG=/tmp/realtime.json /app/realtime-server
+          env:
+            {{- range $k, $v := .Values.realtime.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: REALTIME_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: jwt-secret
+          volumeMounts:
+            - name: realtime-config
+              mountPath: /etc/realtime
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.realtime.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: {{ .Values.realtime.port }}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: {{ .Values.realtime.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 15
+      volumes:
+        - name: realtime-config
+          configMap:
+            name: {{ include "mini-baas.fullname" . }}-realtime-config
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-realtime
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.realtime.port }}
+      name: http
+      targetPort: {{ .Values.realtime.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "realtime" "release" .Release.Name) | nindent 4 }}
+---
+{{- if .Values.realtime.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-realtime
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "mini-baas.fullname" . }}-realtime
+  minReplicas: {{ .Values.realtime.hpa.minReplicas }}
+  maxReplicas: {{ .Values.realtime.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.realtime.hpa.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}
