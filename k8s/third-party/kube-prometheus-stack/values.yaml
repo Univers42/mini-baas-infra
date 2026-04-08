@@ -1,0 +1,71 @@
+# File: k8s/third-party/kube-prometheus-stack/values.yaml
+# kube-prometheus-stack Helm chart values for mini-BaaS
+# Chart: prometheus-community/kube-prometheus-stack  Version: 67.9.x
+# Includes: Prometheus, Grafana, Alertmanager, node-exporter, kube-state-metrics
+
+# ─── Prometheus ─────────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    retention: 72h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 10Gi
+    # Scrape mini-baas namespace ServiceMonitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+# ─── Grafana ────────────────────────────────────────────────────
+grafana:
+  enabled: true
+  adminPassword: "admin" # Override in prod
+  service:
+    type: ClusterIP
+    port: 3000
+  # Auto-provision Loki datasource
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local:80
+      isDefault: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# ─── Alertmanager ───────────────────────────────────────────────
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+# ─── Node Exporter ──────────────────────────────────────────────
+nodeExporter:
+  enabled: true
+
+# ─── Kube State Metrics ────────────────────────────────────────
+kubeStateMetrics:
+  enabled: true
