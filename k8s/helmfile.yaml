@@ -1,0 +1,126 @@
+# File: k8s/helmfile.yaml
+# Helmfile — single source of truth for all Helm releases in the cluster
+# Usage:
+#   helmfile -f k8s/helmfile.yaml sync        # install/upgrade everything
+#   helmfile -f k8s/helmfile.yaml diff        # dry-run diff
+#   helmfile -f k8s/helmfile.yaml destroy     # tear down everything
+#
+# Prerequisites:
+#   brew install helmfile helm
+#   helm plugin install https://github.com/databus23/helm-diff
+
+helmDefaults:
+  wait: true
+  timeout: 300
+  createNamespace: true
+
+repositories:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: kong
+    url: https://charts.konghq.com
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+
+environments:
+  dev: {}
+  prod: {}
+
+---
+releases:
+  # ═══════════════════════════════════════════════════════════════════
+  # Layer 0 — Data stores (must be healthy before anything else)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: postgresql
+    namespace: mini-baas
+    chart: bitnami/postgresql
+    version: "18.5.15"
+    values:
+      - third-party/postgresql/values.yaml
+      - overlays/{{ .Environment.Name }}/values-postgresql.yaml
+    needs: []
+
+  - name: mongodb
+    namespace: mini-baas
+    chart: bitnami/mongodb
+    version: "18.6.22"
+    values:
+      - third-party/mongodb/values.yaml
+      - overlays/{{ .Environment.Name }}/values-mongodb.yaml
+    needs: []
+
+  - name: redis
+    namespace: mini-baas
+    chart: bitnami/redis
+    version: "25.3.9"
+    values:
+      - third-party/redis/values.yaml
+    needs: []
+
+  # ═══════════════════════════════════════════════════════════════════
+  # Layer 1 — Object storage
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: minio
+    namespace: mini-baas
+    chart: bitnami/minio
+    version: "14.8.5"
+    values:
+      - third-party/minio/values.yaml
+    needs: []
+
+  # ═══════════════════════════════════════════════════════════════════
+  # Layer 2 — API gateway (Kong Ingress Controller)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: kong
+    namespace: mini-baas
+    chart: kong/kong
+    version: "3.2.0"
+    values:
+      - third-party/kong/values.yaml
+    needs:
+      - mini-baas/postgresql
+
+  # ═══════════════════════════════════════════════════════════════════
+  # Layer 3 — mini-BaaS application services (custom chart)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: mini-baas
+    namespace: mini-baas
+    chart: charts/mini-baas
+    values:
+      - charts/mini-baas/values.yaml
+      - overlays/{{ .Environment.Name }}/values-mini-baas.yaml
+    needs:
+      - mini-baas/postgresql
+      - mini-baas/mongodb
+      - mini-baas/redis
+      - mini-baas/kong
+
+  # ═══════════════════════════════════════════════════════════════════
+  # Layer 4 — Observability (separate namespace)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: kube-prometheus-stack
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: "67.9.0"
+    values:
+      - third-party/kube-prometheus-stack/values.yaml
+    installed:
+      { { eq .Environment.Name "prod" | or (eq .Environment.Name "dev") } }
+
+  - name: loki
+    namespace: monitoring
+    chart: grafana/loki
+    version: "6.24.0"
+    values:
+      - third-party/kube-prometheus-stack/loki-values.yaml
+    needs:
+      - monitoring/kube-prometheus-stack
+    installed:
+      { { eq .Environment.Name "prod" | or (eq .Environment.Name "dev") } }
