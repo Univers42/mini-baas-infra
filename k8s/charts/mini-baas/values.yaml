@@ -1,0 +1,207 @@
+# File: k8s/charts/mini-baas/values.yaml
+# Default values for mini-baas application services.
+# Override per environment in k8s/overlays/{dev,prod}/values.yaml
+
+global:
+  registry: ghcr.io/univers42/mini-baas
+  imagePullPolicy: IfNotPresent
+  # Kubernetes Secret that holds all shared credentials
+  secretName: mini-baas-secrets
+  # Enable ServiceMonitor CRDs (requires kube-prometheus-stack)
+  monitoring: false
+
+# ─── Kong API key references (used by KongConsumer CRDs) ────────
+kong:
+  anonKey: "anon-key-placeholder"
+  serviceRoleKey: "service-role-key-placeholder"
+
+# ─── Image tags (updated by CI on merge to main) ────────────────
+images:
+  mongoApi:
+    repository: ghcr.io/univers42/mini-baas/mongo-api
+    tag: latest
+  adapterRegistry:
+    repository: ghcr.io/univers42/mini-baas/adapter-registry
+    tag: latest
+  queryRouter:
+    repository: ghcr.io/univers42/mini-baas/query-router
+    tag: latest
+  realtime:
+    repository: dlesieur/realtime-agnostic
+    tag: latest
+  gotrue:
+    repository: supabase/gotrue
+    tag: v2.188.1
+  postgrest:
+    repository: postgrest/postgrest
+    tag: v12.2.3
+  pgMeta:
+    repository: supabase/postgres-meta
+    tag: v0.91.0
+  trino:
+    repository: trinodb/trino
+    tag: "467"
+  studio:
+    repository: supabase/studio
+    tag: 2026.03.30-sha-12a43e5
+  supavisor:
+    repository: supabase/supavisor
+    tag: 2.7.4
+
+# ─── Service: GoTrue (auth) ─────────────────────────────────────
+gotrue:
+  enabled: true
+  replicas: 1
+  port: 9999
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  env:
+    GOTRUE_API_HOST: "0.0.0.0"
+    GOTRUE_API_PORT: "9999"
+    GOTRUE_SITE_URL: "http://localhost:3001"
+    GOTRUE_DB_DRIVER: "postgres"
+    GOTRUE_MAILER_AUTOCONFIRM: "true"
+    GOTRUE_JWT_DEFAULT_GROUP_NAME: "authenticated"
+    GOTRUE_JWT_EXP: "3600"
+  # Secrets injected from mini-baas-secrets:
+  #   GOTRUE_DB_DATABASE_URL  ← postgres-url
+  #   GOTRUE_JWT_SECRET       ← jwt-secret
+
+# ─── Service: PostgREST ─────────────────────────────────────────
+postgrest:
+  enabled: true
+  replicas: 1
+  port: 3000
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  env:
+    PGRST_DB_SCHEMA: "public"
+    PGRST_SERVER_PORT: "3000"
+    PGRST_DB_SCHEMAS: "public"
+    PGRST_DB_ANON_ROLE: "anon"
+
+# ─── Service: pg-meta ───────────────────────────────────────────
+pgMeta:
+  enabled: true
+  replicas: 1
+  port: 8080
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  env:
+    PG_META_PORT: "8080"
+    PG_META_DB_HOST: "postgresql"
+    PG_META_DB_PORT: "5432"
+
+# ─── Service: Realtime ──────────────────────────────────────────
+realtime:
+  enabled: true
+  replicas: 1
+  port: 4000
+  resources:
+    requests: { cpu: 100m, memory: 64Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+  env:
+    REALTIME_HOST: "0.0.0.0"
+    REALTIME_PORT: "4000"
+    RUST_LOG: "info"
+  # Mounts realtime-config ConfigMap at /etc/realtime/realtime.json
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+# ─── Service: Mongo API ─────────────────────────────────────────
+mongoApi:
+  enabled: true
+  replicas: 1
+  port: 3010
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  env:
+    PORT: "3010"
+    MONGO_DB_NAME: "mini_baas"
+    LOG_LEVEL: "info"
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+# ─── Service: Adapter Registry ──────────────────────────────────
+adapterRegistry:
+  enabled: true
+  replicas: 1
+  port: 3020
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  env:
+    PORT: "3020"
+    LOG_LEVEL: "info"
+
+# ─── Service: Query Router ──────────────────────────────────────
+queryRouter:
+  enabled: true
+  replicas: 1
+  port: 4001
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  env:
+    PORT: "4001"
+    ADAPTER_REGISTRY_URL: "http://mini-baas-adapter-registry:3020"
+    LOG_LEVEL: "info"
+
+# ─── Service: Trino ─────────────────────────────────────────────
+trino:
+  enabled: true
+  replicas: 1
+  port: 8080
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits: { cpu: 1000m, memory: 2Gi }
+
+# ─── Service: Studio (admin dashboard, optional) ────────────────
+studio:
+  enabled: false # opt-in, same as profiles: [extras]
+  replicas: 1
+  port: 3000
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 250m, memory: 512Mi }
+  env:
+    HOSTNAME: "0.0.0.0"
+    STUDIO_PG_META_URL: "http://mini-baas-pg-meta:8080"
+
+# ─── Service: Supavisor (connection pooler, optional) ───────────
+supavisor:
+  enabled: false
+  replicas: 1
+  port: 6543
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+
+# ─── Playground (static frontend) ───────────────────────────────
+playground:
+  enabled: true
+  image: nginx
+  tag: "1.27-alpine"
+
+# ─── Zoo (Savanna Park Zoo — React SPA) ─────────────────────────
+zoo:
+  enabled: true
+  image: mini-baas/zoo-frontend
+  tag: latest
+
+# ─── DB Bootstrap Job ───────────────────────────────────────────
+dbBootstrap:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
