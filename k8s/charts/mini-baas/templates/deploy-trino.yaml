@@ -1,0 +1,104 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-trino.yaml */}}
+{{- if .Values.trino.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-trino-config
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+data:
+  config.properties: |
+    coordinator=true
+    node-scheduler.include-coordinator=true
+    http-server.http.port=8080
+    discovery.uri=http://localhost:8080
+    catalog.management=${ENV:CATALOG_MANAGEMENT}
+    http-server.process-forwarded=true
+  jvm.config: |
+    -server
+    -Xmx1024m
+    -Xms512m
+    -XX:+UseG1GC
+    -XX:G1HeapRegionSize=32M
+    -XX:+ExplicitGCInvokesConcurrent
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:+ExitOnOutOfMemoryError
+    -XX:ReservedCodeCacheSize=128M
+    -Djdk.attach.allowAttachSelf=true
+    -Djdk.nio.maxCachedBufferSize=2000000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-trino
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: trino
+spec:
+  replicas: {{ .Values.trino.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "trino" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "trino" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: trino
+          image: "{{ .Values.images.trino.repository }}:{{ .Values.images.trino.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.trino.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: trino-config
+              mountPath: /etc/trino/config.properties
+              subPath: config.properties
+              readOnly: true
+            - name: trino-config
+              mountPath: /etc/trino/jvm.config
+              subPath: jvm.config
+              readOnly: true
+          resources:
+            {{- toYaml .Values.trino.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /v1/info
+              port: {{ .Values.trino.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /v1/info
+              port: {{ .Values.trino.port }}
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /v1/info
+              port: {{ .Values.trino.port }}
+            periodSeconds: 15
+            failureThreshold: 5
+      volumes:
+        - name: trino-config
+          configMap:
+            name: {{ include "mini-baas.fullname" . }}-trino-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-trino
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.trino.port }}
+      targetPort: {{ .Values.trino.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "trino" "release" .Release.Name) | nindent 4 }}
+{{- end }}
