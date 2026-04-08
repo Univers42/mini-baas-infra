@@ -1,0 +1,47 @@
+# File: k8s/third-party/kube-prometheus-stack/loki-values.yaml
+# Grafana Loki Helm chart values for mini-BaaS
+# Chart: grafana/loki  Version: 6.24.x
+
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  limits_config:
+    retention_period: 72h
+
+# Single-binary mode for dev; switch to microservices in prod
+deploymentMode: SingleBinary
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# Gateway (nginx) for ingress
+gateway:
+  enabled: true
+
+# Promtail as DaemonSet to ship logs
+promtail:
+  enabled: true
+  config:
+    clients:
+      - url: http://loki-gateway.monitoring.svc.cluster.local:80/loki/api/v1/push
