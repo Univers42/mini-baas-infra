@@ -235,9 +235,15 @@ services:
       REALTIME_HOST: 0.0.0.0
       REALTIME_PORT: 4000
       REALTIME_JWT_SECRET: ${JWT_SECRET}
-      REALTIME_PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
-      REALTIME_MONGO_URL: mongodb://mongo:27017
       RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - ./docker/services/realtime/conf/realtime.json:/etc/realtime/realtime.json:ro
+    command: >
+      sh -c '
+        cp /etc/realtime/realtime.json /tmp/realtime.json &&
+        sed -i "s|__JWT_SECRET__|$${REALTIME_JWT_SECRET}|g" /tmp/realtime.json &&
+        exec env REALTIME_CONFIG=/tmp/realtime.json /app/realtime-server
+      '
     depends_on:
       postgres:
         condition: service_healthy
