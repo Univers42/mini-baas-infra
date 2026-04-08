@@ -1,0 +1,33 @@
+# File: k8s/third-party/redis/values.yaml
+# Bitnami Redis Helm chart values for mini-BaaS
+# Chart: bitnami/redis  Version: 20.6.x
+# Docs: https://github.com/bitnami/charts/tree/main/bitnami/redis
+
+architecture: standalone # 'replication' in prod for sentinel HA
+
+auth:
+  enabled: false # No password in dev
+
+master:
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  # Match compose: redis-server --appendonly yes
+  configuration: |
+    appendonly yes
+    maxmemory 100mb
+    maxmemory-policy allkeys-lru
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
