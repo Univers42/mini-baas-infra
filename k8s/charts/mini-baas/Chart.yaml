@@ -1,0 +1,19 @@
+# File: k8s/charts/mini-baas/Chart.yaml
+apiVersion: v2
+name: mini-baas
+description: Backend-as-a-Service platform — application services
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: LESdylan
+    email: dev.pro.photo@gmail.com
+keywords:
+  - baas
+  - realtime
+  - api-gateway
+  - postgres
+  - mongodb
+home: https://github.com/Univers42/mini-baas-infra
+sources:
+  - https://github.com/Univers42/mini-baas-infra
