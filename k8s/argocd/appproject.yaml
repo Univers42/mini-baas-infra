@@ -1,0 +1,42 @@
+# File: k8s/argocd/appproject.yaml
+# ArgoCD AppProject — scoped permissions for mini-baas resources
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: mini-baas
+  namespace: argocd
+spec:
+  description: "mini-BaaS infrastructure project"
+
+  # Only allow deploying to these namespaces
+  destinations:
+    - namespace: mini-baas
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+
+  # Only allow resources from these repos
+  sourceRepos:
+    - https://github.com/Univers42/mini-baas-infra.git
+    - https://charts.bitnami.com/bitnami
+    - https://charts.konghq.com
+    - https://prometheus-community.github.io/helm-charts
+    - https://grafana.github.io/helm-charts
+
+  # Allowed K8s resource types
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: batch
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+    - group: networking.k8s.io
+      kind: "*"
+    - group: configuration.konghq.com
+      kind: "*"
