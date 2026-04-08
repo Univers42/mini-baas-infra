@@ -1,0 +1,72 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-pg-meta.yaml */}}
+{{- if .Values.pgMeta.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-pg-meta
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: pg-meta
+spec:
+  replicas: {{ .Values.pgMeta.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "pg-meta" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "pg-meta" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: pg-meta
+          image: "{{ .Values.images.pgMeta.repository }}:{{ .Values.images.pgMeta.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.pgMeta.port }}
+              protocol: TCP
+          env:
+            {{- range $k, $v := .Values.pgMeta.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: PG_META_DB_NAME
+              value: "postgres"
+            - name: PG_META_DB_USER
+              value: "postgres"
+            - name: PG_META_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: postgres-password
+          resources:
+            {{- toYaml .Values.pgMeta.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.pgMeta.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.pgMeta.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-pg-meta
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.pgMeta.port }}
+      name: http
+      targetPort: {{ .Values.pgMeta.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "pg-meta" "release" .Release.Name) | nindent 4 }}
+{{- end }}
