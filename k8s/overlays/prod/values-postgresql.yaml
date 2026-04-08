@@ -1,0 +1,35 @@
+# File: k8s/overlays/prod/values-postgresql.yaml
+# Prod overrides for bitnami/postgresql
+auth:
+  existingSecret: "mini-baas-secrets"
+  secretKeys:
+    adminPasswordKey: postgres-password
+
+primary:
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+readReplicas:
+  replicaCount: 1
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring

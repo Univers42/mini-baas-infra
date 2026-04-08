@@ -1,0 +1,16 @@
+# File: k8s/overlays/prod/kustomization.yaml
+# Kustomize overlay for production environment
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base/namespace.yaml
+
+commonLabels:
+  environment: prod
+
+# Production overlays enforce:
+# - Sealed/SOPS-encrypted secrets (no cleartext)
+# - HPA enabled for stateless services
+# - Higher replica counts and resource limits
+# - Persistent volumes with larger capacity
