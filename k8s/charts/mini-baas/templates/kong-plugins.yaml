@@ -1,0 +1,523 @@
+{{/* File: k8s/charts/mini-baas/templates/kong-plugins.yaml */}}
+{{/*
+  Kong Ingress Controller CRD resources — migrated from the declarative kong.yml.
+  These define consumers, global plugins, services routing, and per-route plugins.
+
+  Requires: kong/kong chart with ingressController.enabled=true and installCRDs=true.
+*/}}
+
+# ═══════════════════════════════════════════════════════════════════
+# Consumers & Credentials
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: anon
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: anon
+credentials:
+  - anon-key-auth
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: service-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: service_role
+credentials:
+  - service-role-key-auth
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: anon-key-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    konghq.com/credential: key-auth
+type: Opaque
+stringData:
+  key: {{ .Values.kong.anonKey | default "anon-key-placeholder" | quote }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: service-role-key-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    konghq.com/credential: key-auth
+type: Opaque
+stringData:
+  key: {{ .Values.kong.serviceRoleKey | default "service-role-key-placeholder" | quote }}
+
+---
+# ═══════════════════════════════════════════════════════════════════
+# Global Plugins
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: global-cors
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    global: "true"
+  annotations:
+    kubernetes.io/ingress.class: kong
+plugin: cors
+config:
+  origins:
+    - "http://localhost:3001"
+    - "http://localhost:3100"
+    - "http://localhost:3000"
+  methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  headers:
+    - Authorization
+    - Content-Type
+    - apikey
+    - x-client-info
+    - X-Request-ID
+  exposed_headers:
+    - X-Kong-Upstream-Latency
+    - X-Kong-Proxy-Latency
+    - X-Request-ID
+  credentials: true
+  max_age: 3600
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: global-correlation-id
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    global: "true"
+  annotations:
+    kubernetes.io/ingress.class: kong
+plugin: correlation-id
+config:
+  header_name: X-Request-ID
+  generator: uuid#counter
+  echo_downstream: true
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: global-security-headers
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    global: "true"
+  annotations:
+    kubernetes.io/ingress.class: kong
+plugin: response-transformer
+config:
+  add:
+    headers:
+      - "Strict-Transport-Security:max-age=31536000; includeSubDomains"
+      - "X-Content-Type-Options:nosniff"
+      - "X-Frame-Options:DENY"
+      - "Referrer-Policy:strict-origin-when-cross-origin"
+
+---
+# ═══════════════════════════════════════════════════════════════════
+# Per-Route Plugins (KongPlugin — namespaced)
+# ═══════════════════════════════════════════════════════════════════
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: key-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: key-auth
+config:
+  key_names:
+    - apikey
+  hide_credentials: false
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 60
+  hour: 2000
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-rest
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 180
+  hour: 5000
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-realtime
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 120
+  hour: 3000
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 60
+  hour: 1500
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: storage-size-limit
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: request-size-limiting
+config:
+  allowed_payload_size: 10
+  size_unit: megabytes
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-meta
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 120
+  hour: 3000
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-query
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 300
+  hour: 8000
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-trino
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 60
+  hour: 1000
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: trino-strip-forwarded
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: request-transformer
+config:
+  remove:
+    headers:
+      - x-forwarded-for
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-studio
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+plugin: rate-limiting
+config:
+  policy: local
+  limit_by: ip
+  minute: 300
+  hour: 5000
+
+---
+# ═══════════════════════════════════════════════════════════════════
+# Ingress Routes (one per backend service)
+# ═══════════════════════════════════════════════════════════════════
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-auth
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /auth/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-gotrue
+                port:
+                  number: {{ .Values.gotrue.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-rest
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-rest
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /rest/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-postgrest
+                port:
+                  number: {{ .Values.postgrest.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-realtime
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-realtime
+    konghq.com/protocols: http,https
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /realtime/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-realtime
+                port:
+                  number: {{ .Values.realtime.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-storage,storage-size-limit
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /storage/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: minio
+                port:
+                  number: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-meta
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-meta
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /meta/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-pg-meta
+                port:
+                  number: {{ .Values.pgMeta.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-mongo
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-rest
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /mongo/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-mongo-api
+                port:
+                  number: {{ .Values.mongoApi.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-adapters
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-auth
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /admin/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-adapter-registry
+                port:
+                  number: {{ .Values.adapterRegistry.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-query
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,rate-limit-query
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /query/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-query-router
+                port:
+                  number: {{ .Values.queryRouter.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-trino
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: key-auth,trino-strip-forwarded,rate-limit-trino
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /sql
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-trino
+                port:
+                  number: {{ .Values.trino.port }}
+---
+{{- if .Values.studio.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-studio
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+  annotations:
+    konghq.com/plugins: rate-limit-studio
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /studio
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mini-baas.fullname" . }}-studio
+                port:
+                  number: {{ .Values.studio.port }}
+{{- end }}
