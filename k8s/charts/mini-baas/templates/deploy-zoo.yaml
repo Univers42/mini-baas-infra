@@ -1,0 +1,59 @@
+{{- if .Values.zoo.enabled -}}
+# ── Zoo Frontend Deployment ─────────────────────────────────────
+# Serves the Savanna Park Zoo React SPA via nginx.
+# The app connects directly to Kong at localhost:8000 (port-forward).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-zoo
+  labels: &labels
+    app.kubernetes.io/name: zoo
+    app.kubernetes.io/part-of: mini-baas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zoo
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: zoo
+          image: "{{ .Values.zoo.image }}:{{ .Values.zoo.tag }}"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-zoo
+  labels:
+    app.kubernetes.io/name: zoo
+    app.kubernetes.io/part-of: mini-baas
+spec:
+  selector:
+    app.kubernetes.io/name: zoo
+  ports:
+    - port: 80
+      targetPort: 80
+{{- end }}
