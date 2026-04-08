@@ -1,0 +1,51 @@
+{
+  "host": "0.0.0.0",
+  "port": 4000,
+  "static_dir": "/app/static",
+  "auth": {
+    "type": "jwt",
+    "secret": "__JWT_SECRET__"
+  },
+  "event_bus": {
+    "type": "inprocess",
+    "capacity": 65536
+  },
+  "performance": {
+    "send_queue_capacity": 256,
+    "fanout_workers": 0,
+    "dispatch_channel_capacity": 65536
+  },
+  "engine": {
+    "limits": {
+      "max_patterns": 10000,
+      "max_subscriptions_per_pattern": 100000,
+      "max_subscriptions_per_connection": 200,
+      "max_composite_keys": 2000000,
+      "max_fields_per_pattern": 64,
+      "max_total_subscriptions": 1000000,
+      "evaluation_slow_threshold_us": 5000,
+      "circuit_breaker_trip_count": 50,
+      "circuit_breaker_cooldown_ms": 5000
+    }
+  },
+  "databases": [
+    {
+      "adapter": "postgresql",
+      "config": {
+        "connection_string": "postgres://postgres:postgres@postgres:5432/postgres",
+        "channel": "realtime_events",
+        "topic_prefix": "pg",
+        "poll_interval_ms": 100
+      }
+    },
+    {
+      "adapter": "mongodb",
+      "config": {
+        "uri": "mongodb://mongo:27017",
+        "database": "mini_baas",
+        "topic_prefix": "mongo",
+        "full_document": "updateLookup"
+      }
+    }
+  ]
+}
