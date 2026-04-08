@@ -1,0 +1,36 @@
+# File: k8s/third-party/minio/values.yaml
+# Bitnami MinIO Helm chart values for mini-BaaS
+# Chart: bitnami/minio  Version: 14.8.x
+# Docs: https://github.com/bitnami/charts/tree/main/bitnami/minio
+
+mode: standalone # 'distributed' in prod
+
+auth:
+  rootUser: "minioadmin"
+  rootPassword: "minioadmin" # Override with Secret in prod
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+  ports:
+    api: 9000
+    console: 9001
+
+# Default bucket creation
+provisioning:
+  enabled: true
+  buckets:
+    - name: storage
+      policy: none
