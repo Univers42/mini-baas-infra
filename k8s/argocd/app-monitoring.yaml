@@ -1,0 +1,51 @@
+# File: k8s/argocd/app-monitoring.yaml
+# ArgoCD Application for the monitoring stack (kube-prometheus-stack + Loki)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mini-baas-monitoring
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: mini-baas
+spec:
+  project: mini-baas
+
+  # Use Helmfile to deploy the observability stack
+  # ArgoCD doesn't natively support Helmfile, so we use the
+  # argocd-lovely-plugin or deploy monitoring via a separate
+  # ApplicationSet. For now, this app uses the kube-prometheus-stack
+  # chart directly.
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: "67.9.0"
+    helm:
+      releaseName: kube-prometheus-stack
+      valueFiles: []
+      values: |
+        prometheus:
+          prometheusSpec:
+            retention: 72h
+            serviceMonitorSelectorNilUsesHelmValues: false
+        grafana:
+          enabled: true
+          adminPassword: admin
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-gateway.monitoring.svc.cluster.local:80
+        alertmanager:
+          enabled: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true # Required for CRDs
