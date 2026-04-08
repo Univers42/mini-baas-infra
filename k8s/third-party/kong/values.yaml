@@ -1,0 +1,49 @@
+# File: k8s/third-party/kong/values.yaml
+# Kong Kubernetes Ingress Controller Helm chart values for mini-BaaS
+# Chart: kong/kong  Version: 2.44.x
+# Docs: https://docs.konghq.com/kubernetes-ingress-controller/latest/
+#
+# Strategy: Run Kong as the cluster ingress gateway (replacing the
+# declarative DB-less compose setup). Routes are defined as KongPlugin
+# and Ingress/HTTPRoute CRDs per service.
+
+ingressController:
+  enabled: true
+  installCRDs: true
+
+proxy:
+  type: LoadBalancer # NodePort on k3s, LoadBalancer on cloud
+  http:
+    enabled: true
+    containerPort: 8000
+    servicePort: 80
+  tls:
+    enabled: true
+    containerPort: 8443
+    servicePort: 443
+
+admin:
+  enabled: true
+  type: ClusterIP
+  http:
+    enabled: true
+    containerPort: 8001
+    servicePort: 8001
+
+env:
+  database: "off"
+  proxy_access_log: /dev/stdout
+  admin_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+  admin_error_log: /dev/stderr
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Rate limiting, CORS, key-auth — defined as KongPlugin CRDs per service
+# See k8s/charts/mini-baas/templates/kong-plugins.yaml (TODO: phase 2)
