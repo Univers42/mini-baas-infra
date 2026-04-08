@@ -1,0 +1,77 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-adapter-registry.yaml */}}
+{{- if .Values.adapterRegistry.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-adapter-registry
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: adapter-registry
+spec:
+  replicas: {{ .Values.adapterRegistry.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "adapter-registry" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "adapter-registry" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: adapter-registry
+          image: "{{ .Values.images.adapterRegistry.repository }}:{{ .Values.images.adapterRegistry.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.adapterRegistry.port }}
+              protocol: TCP
+          env:
+            {{- range $k, $v := .Values.adapterRegistry.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: postgres-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: jwt-secret
+            - name: VAULT_ENC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: vault-enc-key
+          resources:
+            {{- toYaml .Values.adapterRegistry.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.adapterRegistry.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.adapterRegistry.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-adapter-registry
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.adapterRegistry.port }}
+      name: http
+      targetPort: {{ .Values.adapterRegistry.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "adapter-registry" "release" .Release.Name) | nindent 4 }}
+{{- end }}
