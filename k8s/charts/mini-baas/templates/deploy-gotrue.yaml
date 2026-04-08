@@ -1,0 +1,74 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-gotrue.yaml */}}
+{{- if .Values.gotrue.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-gotrue
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: gotrue
+spec:
+  replicas: {{ .Values.gotrue.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "gotrue" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "gotrue" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: gotrue
+          image: "{{ .Values.images.gotrue.repository }}:{{ .Values.images.gotrue.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.gotrue.port }}
+              protocol: TCP
+          env:
+            {{- range $k, $v := .Values.gotrue.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: API_EXTERNAL_URL
+              value: "http://kong-kong-proxy:8000/auth/v1"
+            - name: GOTRUE_DB_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: postgres-url
+            - name: GOTRUE_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: jwt-secret
+          resources:
+            {{- toYaml .Values.gotrue.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.gotrue.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.gotrue.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-gotrue
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.gotrue.port }}
+      name: http
+      targetPort: {{ .Values.gotrue.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "gotrue" "release" .Release.Name) | nindent 4 }}
+{{- end }}
