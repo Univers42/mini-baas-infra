@@ -1,0 +1,21 @@
+# File: k8s/overlays/dev/values-mongodb.yaml
+# Dev overrides for bitnami/mongodb
+# Use 1 replica in dev (standalone mode) for lower resource use
+# NOTE: Change streams require replica set; keep replicaCount >= 1
+# with architecture: replicaset even in dev.
+architecture: replicaset
+replicaCount: 1
+
+persistence:
+  size: 2Gi
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+metrics:
+  enabled: false
