@@ -1,0 +1,91 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-mongo-api.yaml */}}
+{{- if .Values.mongoApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-mongo-api
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: mongo-api
+spec:
+  replicas: {{ .Values.mongoApi.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "mongo-api" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "mongo-api" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: mongo-api
+          image: "{{ .Values.images.mongoApi.repository }}:{{ .Values.images.mongoApi.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.mongoApi.port }}
+              protocol: TCP
+          env:
+            {{- range $k, $v := .Values.mongoApi.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: jwt-secret
+          resources:
+            {{- toYaml .Values.mongoApi.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.mongoApi.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.mongoApi.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-mongo-api
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.mongoApi.port }}
+      targetPort: {{ .Values.mongoApi.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "mongo-api" "release" .Release.Name) | nindent 4 }}
+---
+{{- if .Values.mongoApi.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-mongo-api
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "mini-baas.fullname" . }}-mongo-api
+  minReplicas: {{ .Values.mongoApi.hpa.minReplicas }}
+  maxReplicas: {{ .Values.mongoApi.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.mongoApi.hpa.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}
