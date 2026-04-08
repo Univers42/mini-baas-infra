@@ -1,0 +1,159 @@
+{{/* File: k8s/charts/mini-baas/templates/configmap-db-bootstrap.yaml */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-db-bootstrap
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+data:
+  db-bootstrap.sql: |
+    -- Full bootstrap: roles, schemas, helper functions, demo tables, RLS, GRANTs.
+    -- Executed by the db-bootstrap Job after PostgreSQL is healthy.
+    CREATE SCHEMA IF NOT EXISTS auth;
+    ALTER ROLE postgres IN DATABASE postgres SET search_path = auth, public;
+
+    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') AS anon_role_exists \gset
+    \if :anon_role_exists
+    \else
+    CREATE ROLE anon NOLOGIN;
+    \endif
+
+    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') AS authenticated_role_exists \gset
+    \if :authenticated_role_exists
+    \else
+    CREATE ROLE authenticated NOLOGIN;
+    \endif
+
+    GRANT USAGE ON SCHEMA public TO anon, authenticated;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO anon, authenticated;
+
+    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') AS role_exists \gset
+    \if :role_exists
+    ALTER ROLE supabase_admin WITH LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION BYPASSRLS PASSWORD :'pwd';
+    \else
+    CREATE ROLE supabase_admin LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION BYPASSRLS PASSWORD :'pwd';
+    \endif
+
+    SELECT format('CREATE DATABASE %I', :'realtime_db')
+    WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'realtime_db') \gexec
+
+    -- Helper function for JWT extraction (used by RLS policies)
+    CREATE OR REPLACE FUNCTION auth.uid() RETURNS UUID AS $$
+      SELECT (current_setting('request.jwt.claims', true)::jsonb->>'sub')::uuid;
+    $$ LANGUAGE SQL STABLE;
+
+    -- Demo / test tables
+    CREATE TABLE IF NOT EXISTS public.users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      email TEXT UNIQUE NOT NULL,
+      name TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS public.user_profiles (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+      bio TEXT,
+      avatar_url TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS public.posts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      content TEXT,
+      is_public BOOLEAN DEFAULT false,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS public.projects (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name TEXT NOT NULL,
+      status TEXT DEFAULT 'active' CHECK (status IN ('active', 'paused', 'archived')),
+      owner_id TEXT NOT NULL,
+      description TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS public.mock_orders (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      owner_id TEXT NOT NULL,
+      order_number TEXT NOT NULL UNIQUE,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    );
+
+    -- Enable RLS on all tables
+    ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.mock_orders ENABLE ROW LEVEL SECURITY;
+
+    -- RLS policies: strict ownership enforcement
+    DROP POLICY IF EXISTS projects_owner_crud ON public.projects;
+    CREATE POLICY projects_owner_crud ON public.projects
+      FOR ALL USING (auth.uid()::text = owner_id)
+      WITH CHECK (auth.uid()::text = owner_id);
+
+    DROP POLICY IF EXISTS mock_orders_owner_crud ON public.mock_orders;
+    CREATE POLICY mock_orders_owner_crud ON public.mock_orders
+      FOR ALL USING (auth.uid()::text = owner_id)
+      WITH CHECK (auth.uid()::text = owner_id);
+
+    DROP POLICY IF EXISTS users_select_own ON public.users;
+    CREATE POLICY users_select_own ON public.users
+      FOR SELECT USING (auth.uid()::text = id::text);
+
+    DROP POLICY IF EXISTS user_profiles_select_own ON public.user_profiles;
+    CREATE POLICY user_profiles_select_own ON public.user_profiles
+      FOR SELECT USING (auth.uid()::text = user_id::text);
+
+    DROP POLICY IF EXISTS posts_select ON public.posts;
+    CREATE POLICY posts_select ON public.posts
+      FOR SELECT USING (is_public OR auth.uid()::text = user_id::text);
+
+    DROP POLICY IF EXISTS posts_insert ON public.posts;
+    CREATE POLICY posts_insert ON public.posts
+      FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+    DROP POLICY IF EXISTS posts_update ON public.posts;
+    CREATE POLICY posts_update ON public.posts
+      FOR UPDATE USING (auth.uid()::text = user_id::text);
+
+    DROP POLICY IF EXISTS posts_delete ON public.posts;
+    CREATE POLICY posts_delete ON public.posts
+      FOR DELETE USING (auth.uid()::text = user_id::text);
+
+    -- Grant access to roles
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.users TO authenticated;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_profiles TO authenticated;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.posts TO authenticated;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.projects TO authenticated;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.mock_orders TO authenticated;
+    GRANT SELECT ON public.users TO anon;
+
+    -- Sync auth.users → public.users on signup
+    CREATE OR REPLACE FUNCTION public.handle_new_user()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      INSERT INTO public.users (id, email)
+      VALUES (NEW.id, NEW.email)
+      ON CONFLICT (id) DO NOTHING;
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+    DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+    CREATE TRIGGER on_auth_user_created
+      AFTER INSERT ON auth.users
+      FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
