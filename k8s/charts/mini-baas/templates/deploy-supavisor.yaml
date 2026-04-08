@@ -1,0 +1,71 @@
+{{/* File: k8s/charts/mini-baas/templates/deploy-supavisor.yaml */}}
+{{- if .Values.supavisor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-supavisor
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+    app.kubernetes.io/name: supavisor
+spec:
+  replicas: {{ .Values.supavisor.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mini-baas.selectorLabels" (dict "name" "supavisor" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mini-baas.selectorLabels" (dict "name" "supavisor" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: supavisor
+          image: "{{ .Values.images.supavisor.repository }}:{{ .Values.images.supavisor.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.supavisor.port }}
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: postgres-url
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: secret-key-base
+            - name: VAULT_ENC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: vault-enc-key
+          resources:
+            {{- toYaml .Values.supavisor.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.supavisor.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.supavisor.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mini-baas.fullname" . }}-supavisor
+  labels:
+    {{- include "mini-baas.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.supavisor.port }}
+      name: http
+      targetPort: {{ .Values.supavisor.port }}
+      protocol: TCP
+  selector:
+    {{- include "mini-baas.selectorLabels" (dict "name" "supavisor" "release" .Release.Name) | nindent 4 }}
+{{- end }}
