@@ -1,0 +1,16 @@
+# File: k8s/overlays/dev/kustomization.yaml
+# Kustomize overlay for local / development environment
+# Usage: kustomize build k8s/overlays/dev
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base/namespace.yaml
+
+# Patch labels for dev identification
+commonLabels:
+  environment: dev
+
+# Dev-specific Helmfile values are referenced from helmfile.yaml
+# This overlay mainly provides namespace + label context for
+# non-Helm resources (CRDs, Jobs, etc.)

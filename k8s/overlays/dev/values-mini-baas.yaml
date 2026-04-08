@@ -1,0 +1,82 @@
+# File: k8s/overlays/dev/values-mini-baas.yaml
+# Helm value overrides for mini-baas chart in dev environment
+# Referenced by helmfile.yaml: environments.dev.values
+
+global:
+  imagePullPolicy: IfNotPresent
+
+gotrue:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+postgrest:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+pgMeta:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+realtime:
+  replicas: 1
+  hpa:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+mongoApi:
+  replicas: 1
+  hpa:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+adapterRegistry:
+  replicas: 1
+
+queryRouter:
+  replicas: 1
+
+trino:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 3Gi
+
+studio:
+  enabled: false
+
+supavisor:
+  enabled: false
