@@ -136,3 +136,40 @@ jobs:
       - name: Teardown stack
         if: always()
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
+
+  # ─── Job 4: Helm Chart Validation ──────────────────────────────
+  helm-validate:
+    name: Helm Chart Validation
+    runs-on: ubuntu-latest
+    needs: static-analysis
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Helm lint
+        run: helm lint k8s/charts/mini-baas
+
+      - name: Helm template (dry-run dev)
+        run: |
+          helm template mini-baas k8s/charts/mini-baas \
+            -f k8s/charts/mini-baas/values.yaml \
+            -f k8s/overlays/dev/values-mini-baas.yaml \
+            --namespace mini-baas > /dev/null
+
+      - name: Helm template (dry-run prod)
+        run: |
+          helm template mini-baas k8s/charts/mini-baas \
+            -f k8s/charts/mini-baas/values.yaml \
+            -f k8s/overlays/prod/values-mini-baas.yaml \
+            --namespace mini-baas > /dev/null
+
+      - name: Install Helmfile
+        run: |
+          curl -fsSL https://github.com/helmfile/helmfile/releases/download/v0.169.2/helmfile_0.169.2_linux_amd64.tar.gz \
+            | tar xz -C /usr/local/bin helmfile
+          helm plugin install https://github.com/databus23/helm-diff
+
+      - name: Helmfile lint (dev)
+        run: cd k8s && helmfile -e dev lint
