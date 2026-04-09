@@ -51,4 +51,17 @@ const requireServiceOrUser = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, requireUser, requireServiceOrUser };
+/**
+ * Middleware that requires a JWT with role = 'service_role'.
+ * Used for admin-only operations (e.g. deleting any tenant's data).
+ */
+const requireServiceRole = (req, res, next) => {
+  const user = verifyToken(req);
+  if (!user || user.role !== 'service_role') {
+    return res.status(403).json({ success: false, error: { code: 'forbidden', message: 'Service-role JWT required' } });
+  }
+  req.user = user;
+  next();
+};
+
+module.exports = { verifyToken, requireUser, requireServiceOrUser, requireServiceRole };

@@ -46,6 +46,8 @@ services:
         condition: service_healthy
       realtime:
         condition: service_healthy
+      email-service:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
@@ -182,7 +184,14 @@ services:
       GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:3001}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
-      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: ${GOTRUE_MAILER_AUTOCONFIRM:-true}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-mailpit}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-1025}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${EMAIL_FROM:-noreply@mini-baas.local}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 3600
@@ -303,6 +312,8 @@ services:
     environment:
       PORT: 3020
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      ADAPTER_REGISTRY_DB_USER: ${ADAPTER_REGISTRY_DB_USER:-adapter_registry_role}
+      ADAPTER_REGISTRY_DB_PASSWORD: ${ADAPTER_REGISTRY_DB_PASSWORD:-adapter_registry_pw}
       JWT_SECRET: ${JWT_SECRET}
       VAULT_ENC_KEY: ${VAULT_ENC_KEY:-0123456789abcdef0123456789abcdef}
       ADAPTER_REGISTRY_SERVICE_TOKEN: ${ADAPTER_REGISTRY_SERVICE_TOKEN}
@@ -345,6 +356,67 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:4001/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Email Service ────────────────────────────────────────────────
+  email-service:
+    build:
+      context: ./docker/services/email-service
+      dockerfile: Dockerfile
+    container_name: mini-baas-email-service
+    env_file: [.env]
+    environment:
+      PORT: 3030
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@mini-baas.local}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3030/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Storage Router (presigned URLs) ─────────────────────────────
+  storage-router:
+    build:
+      context: ./docker/services/storage-router
+      dockerfile: Dockerfile
+    container_name: mini-baas-storage-router
+    env_file: [.env]
+    environment:
+      PORT: 3040
+      JWT_SECRET: ${JWT_SECRET}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      PRESIGN_EXPIRES_SECONDS: ${PRESIGN_EXPIRES_SECONDS:-3600}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      minio:
+        condition: service_started
+    profiles: [extras]
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3040/health/live || exit 1"]
       interval: 5s
       timeout: 3s
       start_period: 8s
