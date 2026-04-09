@@ -1,72 +1,113 @@
 # Kong Gateway Configuration Guide
 
-This guide explains how to add and manage API endpoints in Kong using the prebuilt-image approach with declarative configuration.
+This guide explains how to manage API endpoints through the Kong declarative configuration. Kong is the sole ingress point for all client traffic in the mini-baas stack. Understanding its configuration model is necessary for adding services, modifying routes, applying plugins, and debugging routing issues.
 
-## Overview
+---
 
-Kong runs as a prebuilt Docker image and is configured entirely through:
-- **Declarative config file**: `deployments/base/kong/kong.yml`
-- **Environment variables**: Set in `docker-compose.yml`
-- **Mounted volumes**: Config mounted read-only at `/etc/kong/kong.yml`
+## Table of Contents
 
-No source code modification is required. Changes are purely declarative and applied at startup.
+- [Configuration Model](#configuration-model)
+- [Current Route Table](#current-route-table)
+- [Declarative Config Structure](#declarative-config-structure)
+- [Adding Endpoints](#adding-endpoints)
+  - [Add a path to an existing service](#add-a-path-to-an-existing-service)
+  - [Add a new service with routes](#add-a-new-service-with-routes)
+  - [Add plugins to a service](#add-plugins-to-a-service)
+- [Key Parameters](#key-parameters)
+- [Plugin Configuration](#plugin-configuration)
+  - [CORS (global)](#cors-global)
+  - [API key authentication](#api-key-authentication)
+  - [Rate limiting](#rate-limiting)
+  - [Request transformation](#request-transformation)
+- [Validation and Deployment](#validation-and-deployment)
+- [Admin API (debug only)](#admin-api-debug-only)
+- [Upstream Service Reference](#upstream-service-reference)
+- [Troubleshooting](#troubleshooting)
+- [Best Practices](#best-practices)
 
-## Current Setup
+---
 
-### Kong image location
-- **File**: `docker-compose.yml` service `kong`
-- **Config file**: `deployments/base/kong/kong.yml`
-- **Mode**: Database-off (declarative only)
+## Configuration Model
 
-### Current endpoints (and their upstreams)
+Kong runs in **database-off** (declarative) mode. Its entire configuration lives in a single YAML file:
 
-| Public Path | Service | Internal Target |
-|-------------|---------|-----------------|
-| `/auth/v1` | GoTrue | `http://gotrue:9999` |
-| `/rest/v1` | PostgREST | `http://postgrest:3000` |
-| `/realtime/v1` | Realtime | `http://realtime:4000` |
-| `/storage/v1` | MinIO | `http://minio:9000` |
-| `/meta/v1` | PG Meta | `http://pg-meta:8080` |
-| `/studio` | Studio | `http://studio:3000` |
+```
+docker/services/kong/conf/kong.yml
+```
 
-## Structure of Kong declarative config (YAML)
+```mermaid
+flowchart LR
+  YAML["kong.yml<br/>declarative config"] -->|mounted :ro| Kong["Kong container"]
+  ENV[".env variables"] -->|sed templating| YAML
+  Kong -->|routes traffic| Upstreams["Upstream services"]
+```
 
-The Kong config follows this structure:
+There is no database behind Kong. Changes to routing, plugins, or consumers require editing the YAML file and restarting the container. Environment variables (API keys, secrets) are injected at startup through `sed` templating in the Kong entrypoint.
+
+---
+
+## Current Route Table
+
+| Public Path | Service | Internal Target | Key Plugins |
+|-------------|---------|-----------------|-------------|
+| `/auth/v1` | GoTrue | `http://gotrue:9999` | key-auth, rate-limiting |
+| `/rest/v1` | PostgREST | `http://postgrest:3000` | key-auth, rate-limiting |
+| `/mongo/v1` | mongo-api | `http://mongo-api:3010` | key-auth, rate-limiting |
+| `/realtime/v1` | Realtime | `http://realtime:4000` | key-auth, rate-limiting |
+| `/storage/v1` | MinIO | `http://minio:9000` | key-auth, rate-limiting, request-size-limiting |
+| `/meta/v1` | pg-meta | `http://pg-meta:8080` | key-auth |
+| `/studio` | Studio | `http://studio:3000` | key-auth |
+
+All routes also inherit the **global CORS plugin**.
+
+---
+
+## Declarative Config Structure
 
 ```yaml
 _format_version: "3.0"
 _transform: true
 
-# Global plugins (apply to all routes)
+# Global plugins — applied to every route
 plugins:
   - name: cors
-    config: { ... }
+    config:
+      origins: ["*"]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type, apikey, x-client-info]
+      credentials: true
 
+# Consumers — API key holders
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: ${ANON_KEY}
+  - username: service_role
+    keyauth_credentials:
+      - key: ${SERVICE_ROLE_KEY}
+
+# Services — each maps to one upstream
 services:
-  - name: my-service
-    url: http://upstream-host:port
-    # Service-level plugins (optional)
+  - name: gotrue
+    url: http://gotrue:9999
     plugins:
-      - name: plugin-name
-        config: { ... }
+      - name: key-auth
+        config: { key_names: [apikey] }
+      - name: rate-limiting
+        config: { minute: 60, policy: local }
     routes:
-      - name: route-name
-        paths:
-          - /public-path-1
-          - /public-path-2
+      - name: gotrue-route
+        paths: [/auth/v1]
         strip_path: true
-        methods:
-          - GET
-          - POST
 ```
 
-## How to Add a New Endpoint
+---
 
-### Option 1: Add a route to an existing service
+## Adding Endpoints
 
-If your new endpoint goes to a service that already has Kong routes, add a new entry to its `paths`:
+### Add a path to an existing service
 
-**Example**: Add `/auth/admin` to the GoTrue service
+To expose an additional path that routes to a service already in the config, append to its `paths` array:
 
 ```yaml
 services:
@@ -76,50 +117,32 @@ services:
       - name: gotrue-route
         paths:
           - /auth/v1
-          - /auth
-          - /auth/admin          # <- New path
+          - /auth/admin    # new path
         strip_path: true
-        methods:
-          - GET
-          - POST
-          - PUT
-          - PATCH
-          - DELETE
-          - OPTIONS
 ```
 
-### Option 2: Add a new service with routes
+### Add a new service with routes
 
-If your endpoint goes to a service Kong doesn't yet proxy, add a new service block:
-
-**Example**: Add a new microservice answering at `/api/custom`
+To proxy a service not yet registered in Kong, add a new service block:
 
 ```yaml
 services:
-  # ... existing services ...
-
   - name: custom-service
     url: http://custom-service:3000
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
     routes:
       - name: custom-route
-        paths:
-          - /api/custom
-          - /api/custom/v1
+        paths: [/api/custom]
         strip_path: true
-        methods:
-          - GET
-          - POST
-          - PUT
-          - PATCH
-          - DELETE
-          - OPTIONS
+        methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
 ```
 
-### Option 3: Add service-level plugins (e.g., auth, rate limiting)
+### Add plugins to a service
 
-If you need to protect or transform requests to a specific service, add plugins under the service:
-
-**Example**: Add API key auth to a service
+Plugins declared under a service apply to all of its routes:
 
 ```yaml
 services:
@@ -128,299 +151,205 @@ services:
     plugins:
       - name: key-auth
         config:
-          key_names:
-            - apikey
+          key_names: [apikey]
           hide_credentials: true
-    routes:
-      - name: protected-route
-        paths:
-          - /protected
-```
-
-## Common parameters
-
-### `strip_path`
-- `true`: Kong removes the matched path prefix before forwarding to upstream
-  - Request: `GET /auth/v1/health` → Upstream receives: `GET /health`
-- `false`: Path is forwarded as-is (less common)
-
-### `methods`
-List of HTTP methods the route should accept. Omit to accept all methods.
-
-### `protocols`
-Allowed protocols for the route:
-- `http`, `https` (standard)
-- WebSocket proxying should use `http`/`https` routes plus Upgrade headers
-
-### `hosts`
-Optional: match on Host header
-```yaml
-routes:
-  - name: example
-    paths:
-      - /api
-    hosts:
-      - api.example.com
-```
-
-## Plugin configuration
-
-### Global CORS plugin (already configured)
-
-All routes inherit CORS settings. Current config allows:
-- All origins (`*`)
-- All standard methods
-- Headers: `Authorization`, `Content-Type`, `apikey`, `x-client-info`
-- Credentials enabled
-
-To restrict, modify the global plugin in `kong.yml`:
-
-```yaml
-plugins:
-  - name: cors
-    config:
-      origins:
-        - https://myapp.com
-        - https://myapp.staging.com
-      credentials: true
-```
-
-### Adding security plugins
-
-**API Key authentication** (protect a service with API keys):
-
-```yaml
-services:
-  - name: secure-api
-    url: http://api:8000
-    plugins:
-      - name: key-auth
-        config:
-          key_names:
-            - apikey
-          hide_credentials: true
-    routes:
-      - name: secure-route
-        paths:
-          - /secure
-```
-
-**Rate limiting** (limit requests per consumer):
-
-```yaml
-services:
-  - name: rate-limited-api
-    url: http://api:8000
-    plugins:
       - name: rate-limiting
         config:
           minute: 100
           policy: local
     routes:
-      - name: limited-route
-        paths:
-          - /api
+      - name: protected-route
+        paths: [/protected]
 ```
 
-## Request transformation plugins
+---
 
-### Remove headers
+## Key Parameters
 
-Use `request-transformer` to strip problematic headers for an upstream service:
+### `strip_path`
+
+Controls whether Kong removes the matched path prefix before forwarding:
+
+| Value | Behavior | Example |
+|-------|----------|---------|
+| `true` | Prefix stripped | `GET /auth/v1/health` → upstream receives `GET /health` |
+| `false` | Path forwarded as-is | `GET /auth/v1/health` → upstream receives `GET /auth/v1/health` |
+
+Most services in this stack expect `strip_path: true` because they handle root-relative paths internally.
+
+### `methods`
+
+Restricts which HTTP methods the route accepts. Omit the field to accept all methods.
+
+### `protocols`
+
+Defaults to `["http", "https"]`. WebSocket proxying works through standard `http`/`https` routes combined with `Upgrade` headers.
+
+### `hosts`
+
+Optional host-based routing. Useful for multi-tenant deployments:
 
 ```yaml
-services:
-  - name: internal-service
-    url: http://internal-service:8080
-    plugins:
-      - name: request-transformer
-        config:
-          remove:
-            headers:
-              - x-forwarded-for
-    routes:
-      - name: internal-route
-        paths:
-          - /internal
-        strip_path: true
+routes:
+  - name: tenant-route
+    paths: [/api]
+    hosts: [api.tenant-a.com]
 ```
 
-### Add headers
+---
+
+## Plugin Configuration
+
+### CORS (global)
+
+The global CORS plugin is already configured and applies to all routes:
+
+```yaml
+plugins:
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type, apikey, x-client-info]
+      credentials: true
+```
+
+To restrict origins for a non-local environment:
+
+```yaml
+origins:
+  - https://app.example.com
+  - https://staging.example.com
+```
+
+### API key authentication
+
+```yaml
+plugins:
+  - name: key-auth
+    config:
+      key_names: [apikey]
+      hide_credentials: false
+```
+
+When `hide_credentials` is `true`, Kong strips the `apikey` header before forwarding to the upstream.
+
+### Rate limiting
+
+```yaml
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 100
+      hour: 5000
+      policy: local
+```
+
+### Request transformation
+
+Remove or add headers before forwarding:
 
 ```yaml
 plugins:
   - name: request-transformer
     config:
+      remove:
+        headers: [x-forwarded-for]
       add:
-        headers:
-          - x-custom-header:custom-value
+        headers: ["x-custom-header:value"]
 ```
 
-## Validating configuration
+---
 
-Before deploying, validate the Kong config syntax:
+## Validation and Deployment
+
+**Step 1 — Validate the config before restarting:**
 
 ```bash
-cd /home/daniel/projects/mini-baas-infra
-
-# Validate the declarative config
 docker run --rm -e KONG_DATABASE=off \
   -e KONG_DECLARATIVE_CONFIG=/tmp/kong.yml \
-  -v "$PWD/deployments/base/kong/kong.yml:/tmp/kong.yml:ro" \
+  -v "$PWD/docker/services/kong/conf/kong.yml:/tmp/kong.yml:ro" \
   kong:3.8 kong config parse /tmp/kong.yml
 ```
 
-Expected output on success:
-```
-parse successful
-```
+Expected output: `parse successful`
 
-## Applying changes
-
-1. **Edit** `deployments/base/kong/kong.yml` with your new endpoint
-2. **Validate** using the command above
-3. **Restart Kong** to load the new config:
-   ```bash
-   docker compose restart kong
-   ```
-4. **Test** your new route:
-   ```bash
-   curl -v http://localhost:8000/your/new/path
-   ```
-
-## Checking Kong admin API
-
-Kong 3.8 runs with an admin API at `http://localhost:8001` for debugging (read-only in declarative mode):
+**Step 2 — Restart Kong to load changes:**
 
 ```bash
-# List all services
-curl http://localhost:8001/services
-
-# List all routes
-curl http://localhost:8001/routes
-
-# List active plugins
-curl http://localhost:8001/plugins
+docker compose restart kong
 ```
 
-## Testing a new endpoint
-
-After adding and restarting Kong:
+**Step 3 — Test the new route:**
 
 ```bash
-# Simple health check
-curl -i http://localhost:8000/your/new/path
-
-# Verbose (show headers)
-curl -i -v http://localhost:8000/your/new/path
-
-# With auth headers (if protected)
-curl -H "apikey: your-key" http://localhost:8000/your/new/path
+curl -i http://localhost:8000/your/new/path \
+  -H "apikey: $ANON_KEY"
 ```
 
-## Best practices for this setup
+A syntax error in `kong.yml` will prevent Kong from starting entirely. Always validate first.
 
-1. **Always validate before deploying**. A syntax error in `kong.yml` breaks the entire gateway.
+---
 
-2. **Use versioned paths** (e.g., `/api/v1/endpoint`). Makes a future API version migration cleaner.
+## Admin API (debug only)
 
-3. **Document upstream expectations**:
-   - Required headers
-   - Authentication schemes
-   - Expected response formats
+Kong exposes a read-only admin API at `:8001` in declarative mode:
 
-4. **Test strip_path behavior**.
-   - If `strip_path: true`, the upstream must handle the path without the prefix.
-   - If uncertain, check logs: `docker compose logs kong`
+```bash
+curl http://localhost:8001/services     # List all services
+curl http://localhost:8001/routes       # List all routes
+curl http://localhost:8001/plugins      # List active plugins
+```
 
-5. **Use plugins consistently**. If auth is needed, apply it at the service level so all routes inherit it.
+This is useful for confirming that the declarative config was loaded correctly.
 
-6. **Mount config read-only**. The volume in `docker-compose.yml` is `:ro` to prevent accidental modification inside the container.
+---
 
-## Upstream service considerations
+## Upstream Service Reference
 
-### GoTrue (Auth)
-- **Port**: 9999
-- **Expects**: `/` prefix (strip_path works well)
-- **Note**: Responds to `/health` for health checks
+| Service | Port | `strip_path` Behavior | Notes |
+|---------|------|----------------------|-------|
+| GoTrue | 9999 | Works with `true` | Responds at `/health` for health checks |
+| PostgREST | 3000 | Works with `true` | Validates JWTs via `PGRST_JWT_SECRET` |
+| mongo-api | 3010 | Works with `true` | Validates JWTs via `JWT_SECRET` |
+| Realtime | 4000 | Works with `true` | Requires HTTP Upgrade headers for WebSocket |
+| MinIO | 9000 | Works with `true` | S3-compatible API |
+| pg-meta | 8080 | Works with `true` | Used by Studio for schema inspection |
+| Studio | 3000 | Check path expectations | Needs `SUPABASE_URL` pointing to Kong |
+| Trino | 8080 | Not currently exposed via Kong | Available for future federation routes |
 
-### PostgREST (SQL REST API)
-- **Port**: 3000
-- **Expects**: Postgres authentication headers or JWT
-- **Note**: In the current stack, PostgREST validates JWTs directly via `PGRST_JWT_SECRET`
-
-### Realtime (WebSocket)
-- **Port**: 4000
-- **Expects**: HTTP Upgrade headers for WebSocket
-- **Note**: Test with WebSocket client library
-
-### Trino (SQL federation)
-- **Port**: 8080
-- **Note**: Not exposed via Kong gateway in the near-term product contract
-
-### PG Meta (Schema introspection)
-- **Port**: 8080
-- **Expects**: No special headers
-- **Note**: Used by Studio for schema browsing
-
-### Studio (Admin UI)
-- **Port**: 3000
-- **Expects**: Environment URLs pointing to Kong gateway
-- **Note**: Needs `SUPABASE_URL` and `SUPABASE_PUBLIC_URL` set to Kong entrypoint
+---
 
 ## Troubleshooting
 
 ### Route not responding
-1. Verify config syntax: `docker run ... kong config parse`
-2. Check Kong is restarted: `docker compose logs kong | tail -30`
-3. Verify upstream is healthy: `docker compose logs <service-name>`
-4. Check if path matches exactly (case-sensitive)
+
+1. Validate config syntax: run the parse command above.
+2. Check Kong logs: `docker compose logs kong | tail -30`.
+3. Verify the upstream is healthy: `docker compose ps`.
+4. Confirm path matching is case-sensitive and exact.
 
 ### 502 Bad Gateway
-- Upstream service is down or misconfigured
-- Check: `docker compose ps` to see if upstream is running
-- Check upstream logs: `docker compose logs <service-name>`
+
+The upstream service is down or unreachable. Check:
+
+- `docker compose ps` — is the service running?
+- `docker compose logs <service>` — any startup errors?
 
 ### 404 Not Found
-- Path doesn't match any Kong route
-- Check path in `kong.yml` (case-sensitive)
-- Verify `strip_path` behavior
 
-## Example: Adding a new BaaS module endpoint
+No route matches the request path. Verify:
 
-Here's a complete example of adding a custom internal route:
+- The path in `kong.yml` matches the request (case-sensitive).
+- `strip_path` is set correctly for the upstream's expectations.
 
-```yaml
-# In deployments/base/kong/kong.yml, add:
+---
 
-services:
-  - name: internal-service
-    url: http://internal-service:8080
-    plugins:
-      - name: request-transformer
-        config:
-          add:
-            headers:
-              - x-internal-origin: gateway
-    routes:
-      - name: internal-route
-        paths:
-          - /internal/v1
-        strip_path: true
-        methods:
-          - GET
-          - POST
-          - OPTIONS
-```
+## Best Practices
 
-Then:
-1. Ensure your target service is available in `docker-compose.yml`
-2. Validate: `docker run ... kong config parse`
-3. Restart: `docker compose restart kong`
-4. Test: `curl http://localhost:8000/internal/v1/health`
-
-## Further reading
-
-- [Kong official documentation](https://docs.konghq.com/gateway/latest/)
-- [Kong declarative config format](https://docs.konghq.com/gateway/latest/reference/configuration/#declarative_config)
-- [Kong plugins reference](https://docs.konghq.com/hub/)
+1. **Always validate before deploying.** A single syntax error breaks the entire gateway.
+2. **Use versioned paths** (`/api/v1/resource`). This simplifies future API migrations.
+3. **Apply auth at the service level** so all routes under a service inherit it.
+4. **Mount config read-only.** The volume is `:ro` to prevent accidental modification inside the container.
+5. **Test `strip_path` behavior** for every new route. If uncertain, check Kong logs to see what path the upstream received.
+6. **Document upstream expectations** (required headers, expected path format) alongside the route definition.
