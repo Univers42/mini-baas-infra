@@ -81,4 +81,26 @@ async function query(connectionString, collection, body = {}) {
   }
 }
 
-module.exports = { query };
+/**
+ * List all collection names in the database
+ * @param {string} connectionString - MongoDB connection URI
+ * @returns {Promise<string[]>} Array of collection names
+ */
+async function listTables(connectionString) {
+  const client = new MongoClient(connectionString, {
+    serverSelectionTimeoutMS: 5000,
+    maxPoolSize: 5,
+  });
+  await client.connect();
+  try {
+    const url = new URL(connectionString);
+    const dbName = url.pathname.slice(1) || 'test';
+    const db = client.db(dbName);
+    const collections = await db.listCollections({}, { nameOnly: true }).toArray();
+    return collections.map(c => c.name).sort();
+  } finally {
+    await client.close();
+  }
+}
+
+module.exports = { query, listTables };

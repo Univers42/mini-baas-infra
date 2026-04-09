@@ -90,4 +90,24 @@ async function query(connectionString, table, body = {}) {
   }
 }
 
-module.exports = { query };
+/**
+ * List all user tables in the public schema
+ * @param {string} connectionString - PostgreSQL connection URI
+ * @returns {Promise<string[]>} Array of table names
+ */
+async function listTables(connectionString) {
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  try {
+    const result = await client.query(
+      `SELECT table_name FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+       ORDER BY table_name`
+    );
+    return result.rows.map(r => r.table_name);
+  } finally {
+    await client.end();
+  }
+}
+
+module.exports = { query, listTables };
