@@ -9,7 +9,7 @@ services:
     env_file: [.env]
     ports:
       - "${KONG_HTTP_PORT:-8000}:8000"
-      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001"
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
@@ -33,10 +33,10 @@ services:
       '
     healthcheck:
       test: ["CMD-SHELL", "kong health"]
-      interval: 10s
-      timeout: 5s
-      start_period: 15s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      start_period: 20s
+      retries: 10
     depends_on:
       gotrue:
         condition: service_healthy
@@ -46,16 +46,17 @@ services:
         condition: service_healthy
       realtime:
         condition: service_healthy
-      trino:
-        condition: service_started
     networks:
       - mini-baas
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
 
-  # ─── SQL Federation ──────────────────────────────────────────────
+  # ─── SQL Federation (extras) ─────────────────────────────────────
   trino:
     image: trinodb/trino:467
     container_name: mini-baas-trino
+    profiles: [extras]
     env_file: [.env]
     volumes:
       - ./docker/services/trino/conf/config.properties:/etc/trino/config.properties:ro
@@ -86,8 +87,11 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
       interval: 5s
-      timeout: 5s
-      retries: 20
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    mem_limit: 512m
+    cpus: 1.0
 
   # ─── Database Bootstrap ──────────────────────────────────────────
   db-bootstrap:
@@ -130,10 +134,13 @@ services:
       - mini-baas
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "mongosh -u \"$$MONGO_INITDB_ROOT_USERNAME\" -p \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --quiet --eval \"db.runCommand({ ping: 1 }).ok\""]
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.runCommand({ ping: 1 }).ok\""]
       interval: 5s
-      timeout: 5s
-      retries: 20
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 0.5
 
   # ─── MongoDB REST API ───────────────────────────────────────────
   mongo-api:
@@ -156,10 +163,12 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3010/health/live || exit 1"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
-      start_period: 5s
-      retries: 3
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── Authentication ──────────────────────────────────────────────
   gotrue:
@@ -187,10 +196,12 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:9999/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      start_period: 10s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 8
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── PostgreSQL REST API ─────────────────────────────────────────
   postgrest:
@@ -214,11 +225,14 @@ services:
     networks:
       - mini-baas
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
 
-  # ─── PostgreSQL Metadata ─────────────────────────────────────────
+  # ─── PostgreSQL Metadata (extras) ────────────────────────────────
   pg-meta:
     image: supabase/postgres-meta:v0.91.0
     container_name: mini-baas-pg-meta
+    profiles: [extras]
     env_file: [.env]
     environment:
       PG_META_PORT: 8080
@@ -256,10 +270,12 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:4000/v1/health > /dev/null || exit 1"]
+      interval: 5s
       timeout: 3s
-      interval: 10s
-      start_period: 5s
-      retries: 3
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── In-Memory Cache ─────────────────────────────────────────────
   redis:
@@ -274,6 +290,8 @@ services:
     networks:
       - mini-baas
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── Adapter Registry (DB credential store) ─────────────────────
   adapter-registry:
@@ -297,10 +315,12 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3020/health/live || exit 1"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
-      start_period: 5s
-      retries: 3
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── Query Router (universal data plane) ─────────────────────────
   query-router:
@@ -318,15 +338,19 @@ services:
     depends_on:
       adapter-registry:
         condition: service_healthy
+      kong:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:4001/health/live || exit 1"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
-      start_period: 5s
-      retries: 3
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── Object Storage (extras) ─────────────────────────────────────
   minio:

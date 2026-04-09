@@ -29,16 +29,16 @@ HOOKS_DIR      := vendor/scripts/hooks
 # Image map — local_name=upstream_ref  (single source of truth, pinned versions)
 IMAGES_CORE := \
 	kong=kong:3.8 \
-	trino=trinodb/trino:467 \
 	gotrue=supabase/gotrue:v2.188.1 \
 	postgrest=postgrest/postgrest:v12.2.3 \
 	postgres=postgres:16-alpine \
 	realtime=dlesieur/realtime-agnostic:latest \
 	redis=redis:7-alpine \
-	mongo=mongo:7 \
-	pg-meta=supabase/postgres-meta:v0.91.0
+	mongo=mongo:7
 
 IMAGES_EXTRAS := \
+	trino=trinodb/trino:467 \
+	pg-meta=supabase/postgres-meta:v0.91.0 \
 	minio=minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1 \
 	supavisor=supabase/supavisor:2.7.4 \
 	studio=supabase/studio:2026.03.30-sha-12a43e5
@@ -101,7 +101,28 @@ up: _require-compose _rm-stale ## Start stack in detached mode
 	echo -e "$(_B)Starting stack from $(COMPOSE_FILE)…$(_0)"; \
 	$(DC) up -d; \
 	echo -e "$(_G)✓ Stack started$(_0)"
-
+bench-startup: _require-compose _rm-stale ## Time core stack startup until all health checks pass
+	@echo -e "$$(_B)Benchmarking core stack startup…$$(_0)"
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	t0=$$(date +%s); \
+	$(DC) up -d; \
+	SERVICES="mini-baas-postgres mini-baas-mongo mini-baas-gotrue mini-baas-postgrest mini-baas-kong mini-baas-mongo-api mini-baas-realtime mini-baas-adapter-registry mini-baas-query-router"; \
+	for svc in $$SERVICES; do \
+		printf "  Waiting: %-30s" "$$svc"; \
+		timeout 120 sh -c "\
+			while [ \"$$(docker inspect --format='{{.State.Health.Status}}' $$svc 2>/dev/null)\" != 'healthy' ]; do \
+				sleep 1; \
+			done" 2>/dev/null \
+		&& echo -e "$$(_G)✓$$(_0)" \
+		|| echo -e "$$(_R)✗ (timeout)$$(_0)"; \
+	done; \
+	t1=$$(date +%s); \
+	elapsed=$$((t1 - t0)); \
+	if [ "$$elapsed" -le 90 ]; then \
+		echo -e "\n$$(_G)$$(_W)✓ All healthy in $${elapsed}s (target ≤90s)$$(_0)"; \
+	else \
+		echo -e "\n$$(_R)$$(_W)✗ Took $${elapsed}s — exceeds 90s target$$(_0)"; \
+	fi
 down: _require-compose ## Stop and remove stack resources
 	@echo -e "$(_Y)Stopping stack…$(_0)"
 	@$(DC) down
@@ -401,7 +422,7 @@ help: ## Show this help
 
 # --------------------------------------------------------------------------- #
 .PHONY: all clean fclean re \
-	up down restart ps logs pull health \
+	up down restart ps logs pull health bench-startup \
 	build build-% build-optimized tag push push-bake images image-sizes \
 	tests test-phase% test-postgres \
 	migrate migrate-mongo migrate-down migrate-status \
