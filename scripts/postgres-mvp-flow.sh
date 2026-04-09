@@ -40,6 +40,7 @@ fail_and_exit() {
   local message="$1"
   echo -e "${RED}[FAIL]${NC} $message" >&2
   exit 1
+  return 0
 }
 
 pass() {

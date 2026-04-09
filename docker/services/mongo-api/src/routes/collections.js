@@ -44,7 +44,7 @@ const parsePagination = (req) => {
 const parseSort = (rawSort) => {
   if (!rawSort || typeof rawSort !== 'string') return { created_at: -1 };
   const [field, direction] = rawSort.split(':');
-  if (!field || !/^[a-zA-Z0-9_]{1,64}$/.test(field)) return { created_at: -1 };
+  if (!field || !/^\w{1,64}$/.test(field)) return { created_at: -1 };
   return { [field]: String(direction || 'asc').toLowerCase() === 'desc' ? -1 : 1 };
 };
 

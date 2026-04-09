@@ -33,7 +33,7 @@ smoke() {
     -H "$HDR_APIKEY" \
     "$url" 2>/dev/null || echo "000")
 
-  if [ "$code" = "$expected" ]; then
+  if [[ "$code" = "$expected" ]]; then
     echo -e "  ${GREEN}✓${NC} $name  (HTTP $code)"
     PASSED=$((PASSED + 1))
   else
@@ -72,7 +72,7 @@ elapsed=$((t1 - t0))
 echo ""
 echo -e "${BOLD}Results:${NC} ${GREEN}$PASSED passed${NC}, ${RED}$FAILED failed${NC}  (${elapsed}s)"
 
-if [ "$FAILED" -gt 0 ]; then
+if [[ "$FAILED" -gt 0 ]]; then
   echo -e "${RED}${BOLD}✗ Smoke test failed${NC}"
   exit 1
 fi

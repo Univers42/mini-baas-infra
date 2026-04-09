@@ -57,7 +57,7 @@ const requireServiceOrUser = (req, res, next) => {
  */
 const requireServiceRole = (req, res, next) => {
   const user = verifyToken(req);
-  if (!user || user.role !== 'service_role') {
+  if (user?.role !== 'service_role') {
     return res.status(403).json({ success: false, error: { code: 'forbidden', message: 'Service-role JWT required' } });
   }
   req.user = user;

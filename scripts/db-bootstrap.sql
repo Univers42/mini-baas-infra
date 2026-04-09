@@ -194,26 +194,31 @@ ALTER TABLE public.tenant_databases ENABLE ROW LEVEL SECURITY;
 -- Force RLS even for the table owner (superuser is still exempt)
 ALTER TABLE public.tenant_databases FORCE ROW LEVEL SECURITY;
 
+-- Helper: returns the current tenant ID set per-transaction by the app layer
+CREATE OR REPLACE FUNCTION public.current_tenant_id() RETURNS TEXT AS $$
+  SELECT current_setting('app.current_user_id', true);
+$$ LANGUAGE SQL STABLE;
+
 -- SELECT: tenant can only see own rows
 DROP POLICY IF EXISTS tenant_databases_select ON public.tenant_databases;
 CREATE POLICY tenant_databases_select ON public.tenant_databases
   FOR SELECT USING (
-    tenant_id = current_setting('app.current_user_id', true)
+    tenant_id = current_tenant_id()
   );
 
 -- INSERT: tenant can only insert rows for themselves
 DROP POLICY IF EXISTS tenant_databases_insert ON public.tenant_databases;
 CREATE POLICY tenant_databases_insert ON public.tenant_databases
   FOR INSERT WITH CHECK (
-    tenant_id = current_setting('app.current_user_id', true)
+    tenant_id = current_tenant_id()
   );
 
 -- UPDATE: only last_healthy_at may be touched, and only own rows
 DROP POLICY IF EXISTS tenant_databases_update ON public.tenant_databases;
 CREATE POLICY tenant_databases_update ON public.tenant_databases
   FOR UPDATE USING (
-    tenant_id = current_setting('app.current_user_id', true)
+    tenant_id = current_tenant_id()
   ) WITH CHECK (
-    tenant_id = current_setting('app.current_user_id', true)
+    tenant_id = current_tenant_id()
   );
 GRANT UPDATE (last_healthy_at) ON public.tenant_databases TO adapter_registry_role;

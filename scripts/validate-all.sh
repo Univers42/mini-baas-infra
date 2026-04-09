@@ -37,18 +37,18 @@ echo ""
 # ── 1. Shell syntax check (bash -n) ──────────────────────────────
 echo -e "${BOLD}1. Shell syntax${NC}"
 sh_files=$(find "$ROOT_DIR/scripts" "$ROOT_DIR/vendor/scripts" -type f -name '*.sh' 2>/dev/null || true)
-if [ -z "$sh_files" ]; then
+if [[ -z "$sh_files" ]]; then
   echo -e "  ${YELLOW}⚠${NC} No .sh files found"
 else
   sh_fail=0
   while IFS= read -r f; do
     if ! bash -n "$f" 2>/dev/null; then
-      echo -e "  ${RED}✗${NC} Syntax error: $f"
+      echo -e "  ${RED}✗${NC} Syntax error: $f" >&2
       sh_fail=1
     fi
   done <<< "$sh_files"
   CHECKS=$((CHECKS + 1))
-  if [ "$sh_fail" -eq 0 ]; then
+  if [[ "$sh_fail" -eq 0 ]]; then
     count=$(echo "$sh_files" | wc -l)
     echo -e "  ${GREEN}✓${NC} $count .sh files passed bash -n"
   else
@@ -60,18 +60,18 @@ fi
 echo -e "${BOLD}2. JavaScript syntax${NC}"
 js_files=$(find "$ROOT_DIR/docker/services" -type f -name '*.js' \
   -not -path '*/node_modules/*' 2>/dev/null || true)
-if [ -z "$js_files" ]; then
+if [[ -z "$js_files" ]]; then
   echo -e "  ${YELLOW}⚠${NC} No .js files found"
 else
   js_fail=0
   while IFS= read -r f; do
     if ! node --check "$f" 2>/dev/null; then
-      echo -e "  ${RED}✗${NC} Syntax error: $f"
+      echo -e "  ${RED}✗${NC} Syntax error: $f" >&2
       js_fail=1
     fi
   done <<< "$js_files"
   CHECKS=$((CHECKS + 1))
-  if [ "$js_fail" -eq 0 ]; then
+  if [[ "$js_fail" -eq 0 ]]; then
     count=$(echo "$js_files" | wc -l)
     echo -e "  ${GREEN}✓${NC} $count .js files passed node --check"
   else
@@ -86,9 +86,9 @@ check "docker compose config --quiet" \
 
 # ── 4. Secrets validation ────────────────────────────────────────
 echo -e "${BOLD}4. Secrets${NC}"
-if [ -f "$ROOT_DIR/.env" ]; then
-  if [ -x "$ROOT_DIR/scripts/secrets/validate-secrets.sh" ] || \
-     [ -f "$ROOT_DIR/scripts/secrets/validate-secrets.sh" ]; then
+if [[ -f "$ROOT_DIR/.env" ]]; then
+  if [[ -x "$ROOT_DIR/scripts/secrets/validate-secrets.sh" ]] || \
+     [ -f "$ROOT_DIR/scripts/secrets/validate-secrets.sh" ]]; then
     check "make secrets-validate" \
       bash "$ROOT_DIR/scripts/secrets/validate-secrets.sh"
   else
@@ -105,7 +105,7 @@ check "make check-secrets" \
 
 # ── Summary ──────────────────────────────────────────────────────
 echo ""
-if [ "$ERRORS" -gt 0 ]; then
+if [[ "$ERRORS" -gt 0 ]]; then
   echo -e "${RED}${BOLD}✗ $ERRORS/$CHECKS checks failed${NC}"
   exit 1
 fi
