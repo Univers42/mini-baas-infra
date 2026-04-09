@@ -2,7 +2,7 @@
 const { Router } = require('express');
 const { query } = require('../lib/db');
 const { encrypt, decrypt } = require('../lib/crypto');
-const { requireUser } = require('../lib/jwt');
+const { requireUser, requireServiceOrUser } = require('../lib/jwt');
 
 const router = Router();
 
@@ -23,13 +23,13 @@ router.post('/', requireUser, async (req, res) => {
       return res.status(400).json({ success: false, error: { code: 'invalid_connection', message: 'Connection string is required' } });
     }
 
-    const { encrypted, iv, tag } = encrypt(connection_string);
+    const { encrypted, iv, tag, salt } = await encrypt(connection_string);
 
     const result = await query(
-      `INSERT INTO tenant_databases (tenant_id, engine, name, connection_enc, connection_iv, connection_tag)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO tenant_databases (tenant_id, engine, name, connection_enc, connection_iv, connection_tag, connection_salt)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, tenant_id, engine, name, created_at`,
-      [req.user.id, engine, name, encrypted, iv, tag]
+      [req.user.id, engine, name, encrypted, iv, tag, salt]
     );
 
     res.status(201).json({ success: true, data: result.rows[0] });
@@ -76,10 +76,10 @@ router.get('/:id', requireUser, async (req, res) => {
 });
 
 // Get decrypted connection string (internal use by query-router)
-router.get('/:id/connect', requireUser, async (req, res) => {
+router.get('/:id/connect', requireServiceOrUser, async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, engine, name, connection_enc, connection_iv, connection_tag
+      `SELECT id, engine, name, connection_enc, connection_iv, connection_tag, connection_salt
        FROM tenant_databases WHERE id = $1 AND tenant_id = $2`,
       [req.params.id, req.user.id]
     );
@@ -88,7 +88,7 @@ router.get('/:id/connect', requireUser, async (req, res) => {
     }
 
     const row = result.rows[0];
-    const connectionString = decrypt(row.connection_enc, row.connection_iv, row.connection_tag);
+    const connectionString = await decrypt(row.connection_enc, row.connection_iv, row.connection_tag, row.connection_salt);
 
     // Update last_healthy_at
     await query('UPDATE tenant_databases SET last_healthy_at = now() WHERE id = $1', [row.id]);

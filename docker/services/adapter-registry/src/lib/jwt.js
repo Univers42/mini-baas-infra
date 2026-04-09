@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const SERVICE_TOKEN = process.env.ADAPTER_REGISTRY_SERVICE_TOKEN;
 
 const verifyToken = (req) => {
   const auth = req.headers.authorization || '';
@@ -16,6 +17,18 @@ const verifyToken = (req) => {
   }
 };
 
+/**
+ * Accept an internal service token via X-Service-Token header.
+ * When used, X-Tenant-Id header must supply the acting tenant.
+ */
+const verifyServiceToken = (req) => {
+  const token = req.headers['x-service-token'];
+  if (!token || !SERVICE_TOKEN || token !== SERVICE_TOKEN) return null;
+  const tenantId = req.headers['x-tenant-id'];
+  if (!tenantId) return null;
+  return { id: tenantId, email: null, role: 'service' };
+};
+
 const requireUser = (req, res, next) => {
   const user = verifyToken(req);
   if (!user) {
@@ -25,4 +38,17 @@ const requireUser = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, requireUser };
+/**
+ * Middleware that accepts either a valid user JWT or a service token.
+ * Service-to-service callers supply X-Service-Token + X-Tenant-Id headers.
+ */
+const requireServiceOrUser = (req, res, next) => {
+  const user = verifyServiceToken(req) || verifyToken(req);
+  if (!user) {
+    return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Valid JWT or service token required' } });
+  }
+  req.user = user;
+  next();
+};
+
+module.exports = { verifyToken, requireUser, requireServiceOrUser };

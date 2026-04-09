@@ -7,6 +7,7 @@ const mongodbEngine = require('../engines/mongodb');
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADAPTER_REGISTRY_URL = process.env.ADAPTER_REGISTRY_URL;
+const SERVICE_TOKEN = process.env.ADAPTER_REGISTRY_SERVICE_TOKEN;
 
 const requireUser = (req, res, next) => {
   const auth = req.headers.authorization || '';
@@ -17,7 +18,6 @@ const requireUser = (req, res, next) => {
     const claims = jwt.verify(auth.slice(7).trim(), JWT_SECRET, { algorithms: ['HS256'] });
     if (!claims || !claims.sub) throw new Error('no sub');
     req.user = { id: claims.sub, role: claims.role };
-    req.token = auth.slice(7).trim();
     next();
   } catch {
     res.status(401).json({ success: false, error: { code: 'invalid_token', message: 'Invalid JWT' } });
@@ -33,9 +33,12 @@ const ENGINES = {
 // POST /query/:dbId/tables/:table
 router.post('/:dbId/tables/:table', requireUser, async (req, res) => {
   try {
-    // Fetch connection info from adapter-registry
+    // Fetch connection info from adapter-registry using internal service token
     const regResponse = await fetch(`${ADAPTER_REGISTRY_URL}/databases/${req.params.dbId}/connect`, {
-      headers: { Authorization: `Bearer ${req.token}` },
+      headers: {
+        'X-Service-Token': SERVICE_TOKEN,
+        'X-Tenant-Id': req.user.id,
+      },
     });
 
     if (!regResponse.ok) {
@@ -63,7 +66,10 @@ router.post('/:dbId/tables/:table', requireUser, async (req, res) => {
 router.get('/:dbId/tables', requireUser, async (req, res) => {
   try {
     const regResponse = await fetch(`${ADAPTER_REGISTRY_URL}/databases/${req.params.dbId}/connect`, {
-      headers: { Authorization: `Bearer ${req.token}` },
+      headers: {
+        'X-Service-Token': SERVICE_TOKEN,
+        'X-Tenant-Id': req.user.id,
+      },
     });
 
     if (!regResponse.ok) {

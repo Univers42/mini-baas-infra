@@ -9,6 +9,7 @@ services:
     env_file: [.env]
     ports:
       - "${KONG_HTTP_PORT:-8000}:8000"
+      - "127.0.0.1:8001:8001"
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
@@ -16,7 +17,7 @@ services:
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: "127.0.0.1:8001"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
     volumes:
       - ./docker/services/kong/conf/kong.yml:/etc/kong/kong.yml.tmpl:ro
     command: >
@@ -73,6 +74,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -118,13 +121,16 @@ services:
     env_file: [.env]
     ports:
       - "${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-mongo}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mongo}
     volumes:
       - mongo-data:/data/db
     networks:
       - mini-baas
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      test: ["CMD-SHELL", "mongosh -u \"$$MONGO_INITDB_ROOT_USERNAME\" -p \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --quiet --eval \"db.runCommand({ ping: 1 }).ok\""]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -138,7 +144,7 @@ services:
     env_file: [.env]
     environment:
       PORT: 3010
-      MONGO_URI: mongodb://mongo:27017
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
       MONGO_DB_NAME: ${MONGO_DB_NAME:-mini_baas}
       JWT_SECRET: ${JWT_SECRET}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -238,7 +244,7 @@ services:
       REALTIME_PORT: 4000
       REALTIME_JWT_SECRET: ${JWT_SECRET}
       REALTIME_PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
-      REALTIME_MONGO_URL: mongodb://mongo:27017
+      REALTIME_MONGO_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
       RUST_LOG: ${RUST_LOG:-info}
     depends_on:
       postgres:
@@ -281,6 +287,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
       JWT_SECRET: ${JWT_SECRET}
       VAULT_ENC_KEY: ${VAULT_ENC_KEY:-0123456789abcdef0123456789abcdef}
+      ADAPTER_REGISTRY_SERVICE_TOKEN: ${ADAPTER_REGISTRY_SERVICE_TOKEN}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       db-bootstrap:
@@ -306,6 +313,7 @@ services:
       PORT: 4001
       ADAPTER_REGISTRY_URL: http://adapter-registry:3020
       JWT_SECRET: ${JWT_SECRET}
+      ADAPTER_REGISTRY_SERVICE_TOKEN: ${ADAPTER_REGISTRY_SERVICE_TOKEN}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       adapter-registry:
