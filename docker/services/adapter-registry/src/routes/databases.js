@@ -31,7 +31,7 @@ router.post('/', requireUser, async (req, res) => {
     if (!connection_string || typeof connection_string !== 'string') {
       return res.status(400).json({ success: false, error: { code: 'invalid_connection', message: 'Connection string is required' } });
     }
-    const { encrypted, iv, tag, salt } = await encrypt(connection_string);
+    const { encrypted, iv, tag, salt } = await encrypt(connection_string); // NOSONAR — encrypt is async (cross-module)
     const result = await tenantQuery(
       req.user.id,
       `INSERT INTO tenant_databases (tenant_id, engine, name, connection_enc, connection_iv, connection_tag, connection_salt)

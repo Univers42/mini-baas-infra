@@ -16,6 +16,7 @@ router.get('/health/ready', async (req, res) => {
     await pool.query('SELECT 1');
     res.json({ status: 'ready', dependencies: { postgres: 'ok' } });
   } catch (_err) {
+    req.log?.error?.({ err: _err }, 'Postgres health check failed');
     res.status(503).json({ status: 'not ready', dependencies: { postgres: 'error' } });
   }
 });

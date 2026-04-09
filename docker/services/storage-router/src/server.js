@@ -2,7 +2,7 @@
 const express = require('express');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const jwt = require('jsonwebtoken');
 const { register } = require('prom-client');
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');

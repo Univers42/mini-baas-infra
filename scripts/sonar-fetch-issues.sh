@@ -25,7 +25,7 @@ while true; do
   issues=$(echo "$resp" | jq '.issues // []')
   count=$(echo "$issues" | jq 'length')
 
-  if [ "$count" -eq 0 ]; then
+  if [[ "$count" -eq 0 ]]; then
     break
   fi
 
@@ -36,7 +36,7 @@ while true; do
   fetched=$(jq 'length' "$ALL_FILE")
   echo "  Page $PAGE — fetched $count issues (total so far: $fetched / $total)"
 
-  if [ "$fetched" -ge "$total" ]; then
+  if [[ "$fetched" -ge "$total" ]]; then
     break
   fi
   PAGE=$((PAGE + 1))
