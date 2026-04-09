@@ -1,31 +1,43 @@
-# Kong Gateway Blocker Analysis (Historical Archive)
+# Kong Blocker Analysis — Historical Archive
 
-This file is preserved as historical context from early integration discussions.
+> **Status:** Archived. The issues described in this document have been resolved. It is preserved as historical context for understanding early integration decisions.
 
-## Current Status
+---
 
-As of the current branch state, Kong integration is no longer an active bring-up blocker.
+## Context
 
-What is currently in place:
-- Declarative Kong routing for auth, rest, realtime, storage, meta, and studio paths.
-- Route policies for key-auth and rate limiting.
-- Global CORS policy.
-- Storage request-size limiting.
-- Automated validation through phase-based test scripts and CI integration.
+This analysis was written during an earlier integration phase when Kong gateway bring-up was the primary blocker for the mini-baas stack. At that time, declarative routing had not yet been validated, API key enforcement was incomplete, and no automated test suite existed.
 
-## Why This File Is Archived
+---
 
-The original analysis was written during an earlier integration phase and assumes unresolved gateway bring-up issues. Those assumptions are now outdated for the current repository state.
+## What Has Since Been Resolved
 
-## Use This File For
+| Original Blocker | Resolution |
+|-----------------|------------|
+| Kong declarative routing not validated | All routes for auth, rest, mongo, realtime, storage, meta, and studio are active and tested |
+| API key enforcement incomplete | `key-auth` plugin applied to every route with the `apikey` header |
+| No rate limiting | Per-route `rate-limiting` plugin configured |
+| CORS not handled | Global `cors` plugin active on all routes |
+| Storage request size unbounded | `request-size-limiting` plugin applied to the storage route |
+| No automated validation | Phases 1–13 test the full routing, auth, and policy stack in CI |
 
-- Understanding earlier decision tradeoffs.
-- Reviewing prior gateway strategy discussions.
-- Historical context when auditing the project timeline.
+---
 
-## Use These Docs For Current Operations
+## When to Reference This File
 
-- docs/Project-Status-BaaS-Integration-Blockers.md
-- docs/Kong-Gateway-Configuration.md
-- docs/Kong-Database-Authentication-Integration.md
-- README.md
+- Understanding early architectural trade-offs and why certain decisions were made.
+- Reviewing prior gateway strategy discussions during project retrospectives.
+- Providing historical context when auditing the project timeline.
+
+---
+
+## Current Documentation
+
+For up-to-date operational guidance, refer to:
+
+| Document | Purpose |
+|----------|---------|
+| [Kong Gateway Configuration](Kong-Gateway-Configuration.md) | How to add and manage routes |
+| [Kong + Database Auth Integration](Kong-Database-Authentication-Integration.md) | End-to-end auth flow through the gateway |
+| [Project Status](Project-Status-BaaS-Integration-Blockers.md) | Current state and next priorities |
+| [README.md](../README.md) | Full project overview |

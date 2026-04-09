@@ -1,4 +1,15 @@
-// File: docker/services/query-router/src/engines/mongodb.js
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   mongodb.js                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:36:20 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:53:49 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // MongoDB query engine for query-router
 const { MongoClient } = require('mongodb');
 

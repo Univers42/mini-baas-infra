@@ -1,4 +1,15 @@
-// File: docker/services/adapter-registry/src/lib/db.js
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   db.js                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:33:44 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:52:04 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 const { Pool } = require('pg');
 
 /** Superuser pool – used ONLY for DDL / schema migrations at startup. */

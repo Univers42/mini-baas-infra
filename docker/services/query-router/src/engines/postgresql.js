@@ -1,4 +1,15 @@
-// File: docker/services/query-router/src/engines/postgresql.js
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   postgresql.js                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:36:22 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:53:47 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // PostgreSQL query engine for query-router
 const pg = require('pg');
 

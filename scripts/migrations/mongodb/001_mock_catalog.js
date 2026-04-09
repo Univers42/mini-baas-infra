@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   001_mock_catalog.js                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:37:43 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:37:44 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // File: scripts/migrations/mongodb/001_mock_catalog.js
 // Migration: Create mock_catalog collection with JSON Schema validation
 // Run with: mongosh <uri> scripts/migrations/mongodb/001_mock_catalog.js

@@ -1,4 +1,15 @@
-// File: docker/services/mongo-api/src/lib/mongo.js
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   mongo.js                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:35:11 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:52:54 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // MongoDB connection pool with monitoring
 const { MongoClient } = require('mongodb');
 

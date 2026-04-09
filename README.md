@@ -1,1331 +1,844 @@
-# MASTER PROMPT ENGINEERING DOCUMENT
-## For Claude Opus — mini-BaaS Production Redesign & Optimization
-### Version 1.0 — Full Architecture, Docker Optimization, Production Hardening
+# mini-baas-infra
+
+A self-hosted, Docker Compose–first **Backend as a Service** (BaaS) platform.
+
+The intent is to provide a single stack that any frontend — or any set of microservices — can treat as a complete backend without writing server-side code. You get authentication, relational data, document data, realtime subscriptions, object storage, email, and a multi-tenant query plane, all behind one API gateway with a unified auth model.
 
 ---
 
-> **HOW TO USE THIS DOCUMENT**
-> Feed this entire document to Claude Opus as a system prompt or a leading user message.
-> It provides the full context, current state, constraints, goals, and explicit instructions
-> for every subsystem Claude Opus will redesign.
+## Table of contents
+
+1. [Intent and goals](#1-intent-and-goals)
+2. [Stack overview](#2-stack-overview)
+3. [Full architecture diagram](#3-full-architecture-diagram)
+4. [Request lifecycle](#4-request-lifecycle)
+5. [Service-by-service breakdown](#5-service-by-service-breakdown)
+6. [Auth and security model](#6-auth-and-security-model)
+7. [Data plane patterns](#7-data-plane-patterns)
+8. [Multi-tenant adapter pattern](#8-multi-tenant-adapter-pattern)
+9. [Observability](#9-observability)
+10. [Compose profiles](#10-compose-profiles)
+11. [Quick start](#11-quick-start)
+12. [Environment variables](#12-environment-variables)
+13. [Project rules and conventions](#13-project-rules-and-conventions)
 
 ---
 
-## ═══════════════════════════════════════════════
-## SECTION 0 — WHO YOU ARE AND WHAT YOU MUST DO
-## ═══════════════════════════════════════════════
+## 1. Intent and goals
 
-You are a **world-class distributed systems architect and DevOps engineer** with deep expertise in:
-- Multi-engine Backend-as-a-Service (BaaS) platforms at production scale
-- Docker build optimization (BuildKit, layer caching, multi-stage builds, Docker Build Cloud)
-- API gateway patterns (Kong, Nginx, Envoy)
-- Polyglot persistence (PostgreSQL, MongoDB, and beyond)
-- Security-first platform design (JWT, RLS, mTLS, RBAC, tenant isolation)
-- Node.js, Go, and Python microservice development
-- CI/CD pipeline design and test automation
+### What this is
 
-Your job is to **completely redesign, optimize, and harden** an existing mini-BaaS
-infrastructure project so it becomes:
+A production-ready backend platform that any application can consume via plain HTTP. The platform owns:
 
-1. **Blazing-fast to build** (Docker images in seconds, not minutes)
-2. **Production-ready** (secrets management, health checks, graceful shutdown, observability)
-3. **Universally extensible** (plug any database engine via a credential-driven adapter pattern)
-4. **Secure by default** (zero-trust internal network, per-tenant isolation, rate-limiting, CORS)
-5. **Self-documenting** (OpenAPI, AsyncAPI, Swagger UI embedded in gateway)
-6. **Developer-friendly** (one-command bootstrap, SDK generation, playground UI)
+- **Identity** — sign up, log in, JWT issuance and validation
+- **Relational data** — auto-generated REST API over PostgreSQL with row-level security
+- **Document data** — REST API over MongoDB with owner-scoped isolation
+- **Realtime** — WebSocket subscriptions watching PostgreSQL and MongoDB changes
+- **Object storage** — S3-compatible file storage with presigned URL generation
+- **Email** — transactional email dispatch
+- **Multi-tenant external databases** — register and query any external PostgreSQL or MongoDB from a single endpoint
 
-You will produce **complete, runnable, production-grade code and configuration** —
-not summaries, not pseudocode, not placeholders. Every file you output must be
-deployable as-is.
+### What it is NOT
 
----
+- A framework. There is no application code here, only infrastructure.
+- Opinionated about your data model. PostgREST exposes whatever schema you put in PostgreSQL; the MongoDB service exposes any collection you address.
+- A hosted service. Everything runs locally or on your own machines.
 
-## ═══════════════════════════════════════════════════════
-## SECTION 1 — CURRENT STATE ANALYSIS (READ CAREFULLY)
-## ═══════════════════════════════════════════════════════
+### Core design decisions
 
-The project is a Docker Compose–based BaaS stack. Here is an honest assessment
-of every current weakness you must fix:
-
-### 1.1 — Docker Build Problems (CRITICAL — Fix First)
-
-**Current anti-patterns you will eliminate:**
-
-```
-# CURRENT (BAD) — Every Dockerfile is nearly empty
-FROM node:20-alpine
-WORKDIR /app
-COPY package.json ./
-RUN npm install --omit=dev    ← No cache mount, reinstalls every time
-COPY server.js ./
-```
-
-**Problems:**
-- No BuildKit cache mounts → `npm install` runs from scratch on every build
-- No multi-stage builds → dev dependencies leak into production images
-- Base images are pulled fresh on every CI run (no pinned digests)
-- No `.dockerignore` optimization per service (generic glob patterns miss files)
-- `docker-compose.yml` uses `build:` context for nearly every service
-  but most services are just thin wrappers around upstream images with no
-  custom logic — unnecessary rebuild surface
-- Kong config templating is done in shell inside `command:` — fragile and slow
-- No health-check tuning (default intervals are too slow for CI)
-- `db-bootstrap` is a separate container that runs `psql` — adds cold-start latency
-- No image layer analysis or size budgets
-
-**What Docker Build Cloud / BuildKit optimization gives you (reference: docs.docker.com/build-cloud/optimization/):**
-- `RUN --mount=type=cache` eliminates re-downloading packages
-- `RUN --mount=type=secret` for secrets at build time without baking them in
-- Multi-stage builds cut final image size 60–90%
-- `COPY --link` decouples layers for maximum cache reuse
-- `--cache-from` / `--cache-to` in CI for cross-run cache sharing
-- Pinned digests (`image@sha256:...`) for reproducible builds
-- Build matrix parallelism for independent services
-
-### 1.2 — Architecture Problems
-
-**Current topology:**
-
-```
-Client → Kong (8000) → GoTrue / PostgREST / Realtime / MinIO / mongo-api
-                     → PostgreSQL / MongoDB (direct, no pooling for Mongo)
-```
-
-**Problems:**
-- `mongo-api` (Node.js/Express) is a hand-rolled CRUD layer with no:
-  - Connection pooling tuning
-  - Request tracing / correlation IDs
-  - Structured logging (JSON)
-  - Circuit breaker / retry logic
-  - Schema registry (any collection can be created)
-  - Aggregation pipeline support
-- Kong is configured with `database: off` (DB-less) which is correct,
-  but the template substitution approach is fragile
-- No service mesh or sidecar → internal services trust each other blindly
-- No tenant registration flow → API keys are static and hardcoded
-- No credential management for additional database engines
-- PostgREST is the only SQL adapter; no MySQL, SQLite, or other engines
-- Realtime (Supabase Realtime) is included but poorly tested
-- No distributed tracing (OpenTelemetry)
-- No centralized structured logging (ELK / Loki / CloudWatch)
-- No metrics endpoint (Prometheus / OTEL metrics)
-
-### 1.3 — Security Problems
-
-**Critical gaps:**
-- JWT secret is a single shared secret across all services (no key rotation)
-- No mTLS between internal services
-- CORS origins are env-var controlled but default to `localhost` — easy to misconfigure
-- MongoDB has no authentication enabled (auth is only at the HTTP service layer)
-- MinIO credentials are weak defaults
-- No secret rotation mechanism
-- `supabase_admin` role is SUPERUSER — should be scoped
-- RLS policies are correct but there are no automated regression tests that
-  prove they haven't been accidentally weakened (the `OR true` bug found previously)
-- No API key rotation or expiry
-- Rate limiting is IP-based only — trivially bypassed behind proxies (need `X-Real-IP` trust)
-- No request signature verification for webhook-style callbacks
-
-### 1.4 — Developer Experience Problems
-
-- `make compose-up` takes 2–4 minutes on a cold start (image pulls + bootstrap)
-- No hot-reload for `mongo-api` during development
-- No local SDK generation
-- Playground CSS build (`npm --prefix vendor/libcss`) adds fragile external dependency
-- No environment validation script (fails late with cryptic errors)
-- Test output formatting is inconsistent between bash and Python phases
-- No contract testing between Kong routes and upstream services
+| Decision | Reason |
+|---|---|
+| Single internal Docker network | All services communicate by name, no exposed ports unless explicitly needed |
+| One gateway for all HTTP traffic | Kong is the only ingress; clients talk to Kong, never to upstream services directly |
+| DB-less Kong (declarative YAML) | No database dependency for the gateway; config is rendered at container start from a template |
+| JWT shared secret | GoTrue issues JWTs; every service validates the same `JWT_SECRET`; no OAuth server needed |
+| Two API keys (anon + service_role) | Public frontend key is safe to expose; service key is for internal M2M calls only |
+| RLS enforced at the database | PostgreSQL row-level security uses `auth.uid()` extracted from the request JWT — the app layer cannot bypass it |
+| Owner-id pattern in MongoDB | The API layer auto-injects `owner_id` from the JWT on write and enforces it on read/update/delete |
+| AES-256-GCM for stored credentials | Connection strings in the Adapter Registry are encrypted at rest with scrypt key derivation |
 
 ---
 
-## ═══════════════════════════════════════════════════════
-## SECTION 2 — YOUR DELIVERABLES (EXPLICIT LIST)
-## ═══════════════════════════════════════════════════════
-
-You will produce the following, in order. Do not skip any item.
-
-### DELIVERABLE 1 — Optimized Dockerfile for Every Service
-
-For each service (`kong`, `postgres`, `mongo`, `mongo-api`, `gotrue`,
-`postgrest`, `realtime`, `minio`, `redis`, `pg-meta`, `studio`, `supavisor`):
-
-Write a fully optimized `Dockerfile` using:
-
-```dockerfile
-# syntax=docker/dockerfile:1.7-labs   ← Always use latest frontend for --link support
-
-# Stage 1: deps (cached independently)
-FROM node:20-alpine AS deps
-WORKDIR /app
-# Cache mount for npm — survives across builds
-RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=bind,source=package.json,target=package.json \
-    npm ci --omit=dev
-
-# Stage 2: production image (tiny)
-FROM node:20-alpine AS runtime
-# ...copy only artifacts, not source
-```
-
-Rules:
-- All `npm install` / `pip install` / `go mod download` must use `--mount=type=cache`
-- All images must have a non-root user (`USER node` / `USER nobody`)
-- All images must have a `HEALTHCHECK` instruction
-- Multi-stage for any image with a build step
-- Pinned base image digests for reproducibility in production profile
-- Development profile uses `:alpine` tags for speed
-- Each Dockerfile must document its build arguments with `ARG` and `# Description:` comments
-
-### DELIVERABLE 2 — Optimized docker-compose.yml (Three Profiles)
-
-Produce three Compose files:
-
-**`docker-compose.yml`** — Development (fast iteration, hot reload, no auth on internal services)
-**`docker-compose.prod.yml`** — Production overlay (secrets, resource limits, no exposed ports)
-**`docker-compose.ci.yml`** — CI overlay (minimal services, fast health checks, no volumes)
-
-Key requirements:
-
-```yaml
-# Use BuildKit cache exports in CI
-x-build-defaults: &build-defaults
-  cache_from:
-    - type=gha          # GitHub Actions cache
-    - type=registry,ref=${REGISTRY}/cache:${SERVICE}
-
-# Resource limits (production)
-deploy:
-  resources:
-    limits:
-      memory: 512m
-      cpus: '0.5'
-    reservations:
-      memory: 128m
-
-# Faster health checks for CI
-healthcheck:
-  interval: 2s      # was 5s
-  timeout: 3s
-  retries: 10
-  start_period: 5s  # was 20s
-```
-
-Requirements:
-- All secrets via Docker secrets (`secrets:` block) in production, env vars in dev
-- Internal network segmentation: `db-net` (postgres, mongo), `api-net` (services), `gateway-net` (kong)
-- No service exposes ports in production except kong (8000) and minio console (9001)
-- `depends_on` with `condition: service_healthy` everywhere
-- Named volumes with explicit driver options
-
-### DELIVERABLE 3 — Database Engine Adapter System
-
-Design and implement a `database-adapter` pattern that allows this BaaS to connect
-to **any database engine** using user-supplied credentials.
-
-Architecture:
+## 2. Stack overview
 
 ```
-Client registers a database connection:
-POST /admin/v1/databases
-{
-  "engine": "postgresql" | "mongodb" | "mysql" | "redis" | "sqlite",
-  "connection_string": "...",
-  "name": "my-prod-db",
-  "tenant_id": "uuid"
-}
-
-BaaS stores credentials encrypted (AES-256-GCM) in its own PostgreSQL instance.
-BaaS provisions a scoped API key for that database connection.
-Client uses that API key to query any table/collection in their registered DB.
+Layer               │ Component            │ Upstream Image / Build
+────────────────────┼──────────────────────┼──────────────────────────────────────
+Gateway             │ Kong                 │ kong:3.8
+Auth                │ GoTrue               │ supabase/gotrue:v2.188.1
+SQL REST            │ PostgREST            │ postgrest/postgrest:v12.2.3
+SQL DB              │ PostgreSQL           │ postgres:16-alpine
+Document REST       │ mongo-api (custom)   │ ./docker/services/mongo-api
+Document DB         │ MongoDB              │ mongo:7
+Realtime            │ realtime-agnostic    │ dlesieur/realtime-agnostic:latest
+Cache               │ Redis                │ redis:7-alpine
+Object storage      │ MinIO                │ minio/minio (extras profile)
+Storage signing     │ storage-router       │ ./docker/services/storage-router (extras)
+Email               │ email-service        │ ./docker/services/email-service
+Adapter Registry    │ adapter-registry     │ ./docker/services/adapter-registry
+Query Router        │ query-router         │ ./docker/services/query-router
+DB bootstrap        │ db-bootstrap (job)   │ postgres:16-alpine (one-shot SQL runner)
+── extras ──────────┼──────────────────────┼──────────────────────────────────────
+SQL federation      │ Trino                │ trinodb/trino:467 (extras)
+Admin UI            │ Studio               │ supabase/studio (extras)
+Metadata API        │ pg-meta              │ supabase/postgres-meta (extras)
+Connection pooler   │ Supavisor            │ supabase/supavisor (extras)
+── observability ───┼──────────────────────┼──────────────────────────────────────
+Metrics             │ Prometheus           │ prom/prometheus (observability)
+Dashboards          │ Grafana              │ grafana/grafana (observability)
+Log aggregation     │ Loki + Promtail      │ grafana/loki + grafana/promtail (observability)
 ```
 
-Implement:
+---
 
-**`services/adapter-registry/`** — Go or Node.js service that:
-- Accepts database registrations via REST
-- Validates connection strings before storing
-- Encrypts credentials at rest using `VAULT_ENC_KEY`
-- Issues scoped JWT claims: `{ "db_id": "uuid", "tenant_id": "uuid", "engine": "postgresql" }`
-- Exposes `/adapters/:engine/health` to test connectivity
+## 3. Full architecture diagram
 
-**`services/query-router/`** — Service that:
-- Receives queries from API clients (REST or GraphQL)
-- Reads JWT to identify the registered database
-- Fetches decrypted credentials from adapter-registry
-- Routes to the correct engine adapter
-- Returns a unified response envelope:
+### High-level topology
 
+```mermaid
+graph TB
+    subgraph CLIENT["Client / Frontend"]
+        FE["App<br/>(browser / mobile / microservice)"]
+    end
+
+    subgraph GATEWAY["API Gateway Layer"]
+        KONG["Kong :8000<br/><i>key-auth · CORS · rate-limit<br/>correlation-id · security headers</i>"]
+    end
+
+    subgraph AUTH_LAYER["Identity Layer"]
+        GT["GoTrue :9999<br/><i>/auth/v1</i>"]
+    end
+
+    subgraph DATA_LAYER["Data Layer"]
+        PGREST["PostgREST :3000<br/><i>/rest/v1</i>"]
+        MAPI["mongo-api :3010<br/><i>/mongo/v1</i>"]
+        RT["realtime-agnostic :4000<br/><i>/realtime/v1</i>"]
+        MINIO["MinIO :9000<br/><i>/storage/v1</i>"]
+        SR["storage-router :3040<br/><i>/storage/v1/sign</i>"]
+        EMAIL["email-service :3030<br/><i>/email/v1</i>"]
+    end
+
+    subgraph MULTITENANCY["Multi-tenant Data Plane"]
+        AR["adapter-registry :3020<br/><i>/admin/v1/databases</i>"]
+        QR["query-router :4001<br/><i>/query/v1</i>"]
+    end
+
+    subgraph STORAGE["Persistence Layer"]
+        PG[("PostgreSQL :5432")]
+        MONGO[("MongoDB :27017")]
+        REDIS[("Redis :6379")]
+    end
+
+    subgraph BOOTSTRAP["Bootstrap (one-shot)"]
+        DBS["db-bootstrap<br/><i>runs migrations + roles</i>"]
+    end
+
+    FE -->|"apikey header<br/>+ optional JWT"| KONG
+
+    KONG --> GT
+    KONG --> PGREST
+    KONG --> MAPI
+    KONG --> RT
+    KONG --> MINIO
+    KONG --> SR
+    KONG --> EMAIL
+    KONG --> AR
+    KONG --> QR
+
+    GT --> PG
+    PGREST --> PG
+    MAPI --> MONGO
+    RT --> PG
+    RT --> MONGO
+    RT --> REDIS
+    AR --> PG
+    QR --> AR
+    SR --> MINIO
+    DBS --> PG
+
+    style GATEWAY fill:#e8f5e9,stroke:#4caf50
+    style AUTH_LAYER fill:#e3f2fd,stroke:#2196f3
+    style DATA_LAYER fill:#fff8e1,stroke:#ff9800
+    style MULTITENANCY fill:#fce4ec,stroke:#e91e63
+    style STORAGE fill:#ede7f6,stroke:#673ab7
+```
+
+### Request flow — authenticated data read
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant K as Kong
+    participant P as PostgREST
+    participant DB as PostgreSQL
+
+    C->>K: GET /rest/v1/posts<br/>apikey: anon-key<br/>Authorization: Bearer JWT
+    Note over K: 1. Validate apikey (key-auth plugin)<br/>2. Inject X-Request-ID<br/>3. Strip path prefix
+    K->>P: GET /posts
+    Note over P: 4. Decode JWT → extract sub (user id)<br/>5. SET request.jwt.claims = JWT payload<br/>6. Execute SELECT * FROM posts
+    P->>DB: SELECT * FROM posts
+    Note over DB: 7. RLS policy fires:<br/>row.owner_id = auth.uid()<br/>→ only your rows returned
+    DB-->>P: filtered rows
+    P-->>K: 200 JSON
+    K-->>C: 200 JSON + X-Request-ID header
+```
+
+### Auth flow — sign up → obtain JWT → use API
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant K as Kong
+    participant GT as GoTrue
+    participant PG as PostgreSQL
+
+    C->>K: POST /auth/v1/signup<br/>apikey: anon-key<br/>{ email, password }
+    K->>GT: POST / (path stripped)
+    GT->>PG: INSERT INTO auth.users
+    GT-->>K: 200 { access_token, refresh_token }
+    K-->>C: 200 { access_token, refresh_token }
+
+    Note over C: Store access_token
+
+    C->>K: GET /rest/v1/posts<br/>apikey: anon-key<br/>Authorization: Bearer access_token
+    K->>GT: (key-auth passes, JWT forwarded downstream)
+    Note over K: JWT is NOT stripped —<br/>PostgREST reads it for RLS
+```
+
+### Multi-tenant query plane
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant K as Kong
+    participant QR as query-router
+    participant AR as adapter-registry
+    participant EXT as External DB<br/>(PostgreSQL / MongoDB)
+
+    C->>K: POST /query/v1/{dbId}/tables/{table}<br/>{ filter, sort, limit }
+    K->>QR: POST /query/{dbId}/tables/{table}
+    Note over QR: 1. Validate JWT (Bearer)
+    QR->>AR: GET /databases/{dbId}/connect<br/>X-Service-Token: svc-token
+    Note over AR: 2. Decrypt AES-256-GCM connection string<br/>3. Check tenant ownership (RLS)
+    AR-->>QR: { engine: "postgresql", connection_string }
+    Note over QR: 4. Select engine adapter<br/>5. Build safe parameterised query
+    QR->>EXT: Parameterised query
+    EXT-->>QR: rows / documents
+    QR-->>K: { success: true, engine, data }
+    K-->>C: 200
+```
+
+---
+
+## 4. Request lifecycle
+
+Every single request through the platform follows the same lifecycle:
+
+```
+Client sends request
+  │
+  ▼
+Kong receives on :8000
+  ├─ (1) key-auth plugin: validates apikey header
+  │       → rejects with 401 if missing or unknown
+  ├─ (2) correlation-id plugin: injects / propagates X-Request-ID header
+  ├─ (3) cors plugin: validates Origin, adds CORS headers
+  ├─ (4) rate-limiting plugin: per-IP, per-minute + per-hour limits
+  ├─ (5) response-transformer: adds security headers (HSTS, X-Frame-Options …)
+  ├─ (6) Matches route path → strips prefix → forwards to upstream service
+  │
+  ▼
+Upstream service (GoTrue / PostgREST / mongo-api / …)
+  ├─ (7) Reads X-Request-ID for structured logging (pino)
+  ├─ (8) Validates JWT Bearer token (if route requires authentication)
+  │       → checks signature against shared JWT_SECRET
+  │       → extracts sub (user id) and role (anon / authenticated)
+  ├─ (9) Executes business logic
+  ├─ (10) Database enforces data isolation (RLS / owner_id filter)
+  │
+  ▼
+Response flows back through Kong → Client
+  └─ All security response headers already attached
+```
+
+**Two levels of auth** are always enforced separately and independently:
+
+| Level | Mechanism | Validated by |
+|---|---|---|
+| Gateway access | `apikey` header | Kong key-auth plugin |
+| Data ownership | `Authorization: Bearer JWT` | Individual upstream services + PostgreSQL RLS |
+
+A request with a valid `apikey` but no JWT can reach public read endpoints (e.g., `GET /rest/v1/animals` with anon RLS policy). A request with an invalid JWT is always rejected by the upstream before hitting the database.
+
+---
+
+## 5. Service-by-service breakdown
+
+### Kong — API Gateway
+
+| Property | Value |
+|---|---|
+| Port (host) | `${KONG_HTTP_PORT}` (default `8000`) |
+| Admin API | `127.0.0.1:8001` (local only) |
+| Mode | DB-less declarative (`kong.yml`) |
+| Config rendered | At container start via `sed` substitution of env vars |
+
+Kong is the **only** entry point. Clients must never call upstream services directly. Kong enforces:
+
+- `apikey` validation for every route (two consumers: `anon`, `service_role`)
+- Per-route rate limits (auth: 60 req/min, REST: 180 req/min, query: 300 req/min, …)
+- CORS with an explicit allowlist (wildcard disabled when `credentials: true`)
+- `X-Request-ID` correlation header (UUID, echoed downstream)
+- Security response headers (HSTS, nosniff, X-Frame-Options, Referrer-Policy)
+
+### GoTrue — Authentication
+
+| Property | Value |
+|---|---|
+| Kong path | `/auth/v1` |
+| Upstream | `gotrue:9999` |
+| JWT expiry | 3 600 s (1 hour) |
+
+GoTrue (by Supabase) manages the full identity lifecycle: signup, login, JWT issuance, refresh, password recovery, email confirmation. It stores users in the `auth` schema on PostgreSQL.
+
+The JWT payload includes `sub` (user UUID), `role` (anon / authenticated), and optionally `user_metadata` for app-specific claims. Every downstream service uses the same `JWT_SECRET` to verify these tokens without any service-to-service call.
+
+### PostgREST — PostgreSQL REST API
+
+| Property | Value |
+|---|---|
+| Kong path | `/rest/v1` |
+| Upstream | `postgrest:3000` |
+| Schema | `public` |
+
+PostgREST automatically generates a full REST API from the PostgreSQL `public` schema. It reads the JWT, sets `request.jwt.claims` as a PostgreSQL session variable, and lets row-level security policies evaluate `auth.uid()` to enforce data isolation. No code needed for CRUD — define your schema and RLS, and you get a REST API instantly.
+
+### mongo-api — MongoDB REST API (custom service)
+
+| Property | Value |
+|---|---|
+| Kong path | `/mongo/v1` |
+| Upstream | `mongo-api:3010` |
+| Max body | 256 KB |
+
+A custom Node.js/Express service that provides a REST interface to MongoDB. It mirrors the PostgREST ownership pattern: on every write, `owner_id` is set to the JWT's `sub` claim server-side. On every read, update, and delete, the query is automatically scoped to `{ owner_id: req.user.id }`. Clients cannot read or modify another user's documents even if they know the document `_id`.
+
+**Response envelope** (always):
 ```json
 {
   "success": true,
-  "engine": "postgresql",
-  "data": [...],
-  "meta": {
-    "rows": 10,
-    "duration_ms": 12,
-    "query_id": "uuid"
-  }
+  "data": { },
+  "error": null,
+  "meta": { "request_id": "uuid", "pagination": { "limit": 20, "offset": 0, "total": 100 } }
 }
 ```
 
-**Engine adapters (one per engine):**
+### realtime-agnostic — Realtime WebSocket
+
+| Property | Value |
+|---|---|
+| Kong path | `/realtime/v1` |
+| Upstream | `realtime:4000/v1` |
+| Supports | WebSocket upgrades |
+
+A custom Rust-based service (`dlesieur/realtime-agnostic`) that provides WebSocket subscriptions over PostgreSQL logical replication and MongoDB change streams. Clients subscribe using a valid JWT; the service enforces the same identity model as the rest of the stack.
+
+### adapter-registry — External Database Credential Store
+
+| Property | Value |
+|---|---|
+| Kong path | `/admin/v1/databases` |
+| Upstream | `adapter-registry:3020` |
+| Internal-only path | via service token |
+
+Stores encrypted connection strings for external databases. Each record is scoped to a `tenant_id` (the user's JWT `sub`). Connection strings are encrypted with AES-256-GCM using a key derived from `VAULT_ENC_KEY` via scrypt — they are never returned to clients in plaintext. The adapter-registry uses PostgreSQL RLS (`tenant_databases`) to ensure users can only see their own registrations.
+
+Supported engines: `postgresql`, `mongodb`, `mysql`, `redis`, `sqlite`.
+
+### query-router — Universal Query Plane
+
+| Property | Value |
+|---|---|
+| Kong path | `/query/v1` |
+| Upstream | `query-router:4001` |
+
+The query-router bridges authenticated clients to their externally registered databases. On every request:
+
+1. Validates the caller's JWT
+2. Calls adapter-registry (using an internal `ADAPTER_REGISTRY_SERVICE_TOKEN`) to fetch and decrypt the target database's connection string
+3. Selects the right engine adapter (PostgreSQL or MongoDB)
+4. Executes a safe **parameterised** query — all user-supplied filter values are bound as parameters, SQL column and table names are validated against strict allow-lists (`/^[a-zA-Z_]\w{0,63}$/`)
+5. Returns a normalised `{ success, engine, data }` response
+
+### email-service — Transactional Email
+
+| Property | Value |
+|---|---|
+| Kong path | `/email/v1` |
+| Upstream | `email-service:3030` |
+| SMTP | Configurable (Mailpit in dev, any SMTP in prod) |
+
+JWT-protected email dispatch service. Validates the caller's identity before sending.
+
+### storage-router — Presigned URL Generator
+
+| Property | Value |
+|---|---|
+| Kong path | `/storage/v1/sign` |
+| Upstream | `storage-router:3040` |
+| Profile | extras |
+
+Generates time-limited S3 presigned URLs for MinIO. Validates the JWT, checks ownership, then returns a signed URL valid for `PRESIGN_EXPIRES_SECONDS` (default 1 hour). The client uses the URL to upload or download directly from MinIO without any proxy overhead.
+
+### MinIO — Object Storage
+
+| Property | Value |
+|---|---|
+| Kong path | `/storage/v1` |
+| Upstream | `minio:9000` |
+| Console | `minio:9001` (extras) |
+| Profile | extras |
+
+S3-compatible object storage. All client requests to `/storage/v1` route through Kong key-auth. For presigned operations, use `storage-router` instead.
+
+### PostgreSQL — Relational Database
+
+| Role | Details |
+|---|---|
+| Primary store | All application data |
+| Auth store | `auth` schema used by GoTrue |
+| Registry store | `tenant_databases` table for adapter-registry |
+| Health check | `pg_isready` |
+| Bootstrap | `db-bootstrap` runs once on first start |
+
+The `db-bootstrap` container runs `scripts/db-bootstrap.sql` on first startup. It creates required roles (`anon`, `authenticated`, `supabase_admin`), the `auth` schema, the `auth.uid()` helper function, the `realtime` database, and the seed tables (`users`, `posts`, `projects`, etc.).
+
+### Redis — Cache
+
+Used by the realtime service for subscription state and message brokering. Also available for any service that needs ephemeral key-value storage.
+
+---
+
+## 6. Auth and security model
+
+### Key hierarchy
 
 ```
-adapters/
-  postgresql.js   → uses pg pool, respects RLS via SET LOCAL role
-  mongodb.js      → uses mongodb driver, enforces owner_id
-  mysql.js        → uses mysql2/promise pool
-  redis.js        → uses ioredis, key-prefix scoping per tenant
+JWT_SECRET  (shared among ALL services + database)
+    │
+    ├─► GoTrue issues JWT access tokens (HS256, exp 1h)
+    ├─► PostgREST verifies JWT → sets session var for RLS
+    ├─► mongo-api verifies JWT → scopes queries by sub
+    ├─► query-router verifies JWT → passes sub to registry
+    ├─► adapter-registry verifies JWT → enforces tenant ownership
+    ├─► email-service verifies JWT → authorises dispatch
+    └─► storage-router verifies JWT → authorises presign
+
+KONG_PUBLIC_API_KEY   → consumer: anon        (safe for frontend bundles)
+KONG_SERVICE_API_KEY  → consumer: service_role (never exposed to clients)
+
+ADAPTER_REGISTRY_SERVICE_TOKEN  → internal M2M: query-router → adapter-registry
+VAULT_ENC_KEY                   → AES-256-GCM key derivation for stored credentials
 ```
 
-### DELIVERABLE 4 — Kong Configuration Overhaul
+### Two-key gateway pattern
 
-Replace the fragile shell-based template substitution with a proper
-configuration approach:
+Every HTTP client must present an `apikey` header to pass through Kong. This alone does not grant data access — it just grants access to the gateway. The two keys serve distinct roles:
 
-```
-deployments/base/kong/
-  kong.yml.tmpl            → Kept for compatibility, but simplified
-  generate-kong-config.sh  → Validates env vars before substituting
-  kong.schema.json         → JSON Schema for validating output
-```
+- **`anon` key**: Included in every frontend JavaScript bundle. It is not a secret. It lets Kong route the request and identify the consumer for rate-limiting. It grants no elevated privileges.
+- **`service_role` key**: Used only in server-side code or internal services. Never exposed to browsers.
 
-Add the following missing Kong plugins:
+### Row-level security (PostgreSQL)
 
-```yaml
-# Per-consumer JWT claims extraction (replace raw key-auth on data routes)
-- name: jwt
-  config:
-    key_claim_name: kid
-    claims_to_verify: [exp, nbf]
-
-# Request ID for distributed tracing
-- name: correlation-id
-  config:
-    header_name: X-Request-ID
-    generator: uuid#counter
-    echo_downstream: true
-
-# OpenTelemetry export
-- name: opentelemetry
-  config:
-    endpoint: http://otel-collector:4318/v1/traces
-    resource_attributes:
-      service.name: kong-gateway
-
-# Response transformer to add security headers
-- name: response-transformer
-  config:
-    add:
-      headers:
-        - Strict-Transport-Security:max-age=31536000; includeSubDomains
-        - X-Content-Type-Options:nosniff
-        - X-Frame-Options:DENY
-        - Referrer-Policy:strict-origin-when-cross-origin
-```
-
-Add new Kong routes:
-
-```yaml
-# Adapter registry
-- name: adapter-registry
-  url: http://adapter-registry:4000
-  routes:
-    - name: admin-adapters
-      paths: [/admin/v1/databases]
-      plugins:
-        - name: key-auth
-        - name: acl
-          config:
-            allow: [admin]   # Only admin consumers
-
-# Query router (universal data plane)
-- name: query-router
-  url: http://query-router:4001
-  routes:
-    - name: query-routes
-      paths: [/query/v1]
-      plugins:
-        - name: jwt           # validates scoped DB JWT
-        - name: key-auth      # validates platform API key
-        - name: rate-limiting
-          config:
-            minute: 300
-
-# OpenAPI docs
-- name: api-docs
-  url: http://swagger-ui:8080
-  routes:
-    - name: docs-route
-      paths: [/docs]
-      strip_path: false
-```
-
-### DELIVERABLE 5 — Production Secrets Management
-
-Implement a proper secrets layer:
-
-**Option A (Docker Swarm / Compose secrets):**
-```yaml
-secrets:
-  jwt_secret:
-    file: ./secrets/jwt_secret.txt
-  postgres_password:
-    file: ./secrets/postgres_password.txt
-  vault_enc_key:
-    file: ./secrets/vault_enc_key.txt
-```
-
-**Option B (Vault integration):**
-Provide a `scripts/vault-bootstrap.sh` that:
-- Starts HashiCorp Vault in dev mode for local development
-- Configures AppRole authentication
-- Writes all secrets to Vault
-- Generates a `.env` that only contains `VAULT_ADDR` and `VAULT_ROLE_ID`
-
-Services read secrets via the Vault agent sidecar or direct API calls.
-
-**Minimum implementation:**
-A `secrets/` directory with:
-- `generate-secrets.sh` — generates all secrets with proper entropy
-- `validate-secrets.sh` — verifies all required secrets are present and correctly formatted
-- `rotate-jwt.sh` — rotates JWT secret with zero-downtime (dual-key period)
-
-### DELIVERABLE 6 — Mongo-API Service Rewrite
-
-The current `mongo-api` is missing critical production features. Rewrite it:
-
-```javascript
-// Required additions:
-
-// 1. Structured JSON logging
-const logger = require('pino')({ level: process.env.LOG_LEVEL || 'info' })
-
-// 2. Correlation ID propagation
-app.use((req, res, next) => {
-  req.requestId = req.headers['x-request-id'] || crypto.randomUUID()
-  res.setHeader('X-Request-ID', req.requestId)
-  next()
-})
-
-// 3. Connection pooling with monitoring
-const client = new MongoClient(MONGO_URI, {
-  maxPoolSize: parseInt(process.env.MONGO_MAX_POOL_SIZE || '10'),
-  minPoolSize: parseInt(process.env.MONGO_MIN_POOL_SIZE || '2'),
-  maxIdleTimeMS: 30000,
-  serverSelectionTimeoutMS: 5000,
-  monitorCommands: true,   // emit commandStarted/Succeeded/Failed events
-})
-
-// 4. Circuit breaker
-const { CircuitBreaker } = require('opossum')
-const mongoBreaker = new CircuitBreaker(executeMongoQuery, {
-  timeout: 3000,
-  errorThresholdPercentage: 50,
-  resetTimeout: 30000,
-})
-
-// 5. Schema registry — enforce validated schemas per collection
-const schemas = new Map()  // collectionName → JSON Schema
-app.post('/admin/schemas/:name', requireAdmin, async (req, res) => {
-  // Validate and store JSON Schema for a collection
-  // Apply as MongoDB $jsonSchema validator
-})
-
-// 6. Aggregation pipeline endpoint
-app.post('/collections/:name/aggregate', requireUser, async (req, res) => {
-  // Validate pipeline stages (whitelist safe stages)
-  // Execute and return with pagination
-})
-
-// 7. Bulk write endpoint
-app.post('/collections/:name/bulk', requireUser, async (req, res) => {
-  // Support insertMany, updateMany, deleteMany in one transaction-like call
-})
-
-// 8. Change streams (WebSocket) endpoint
-app.get('/collections/:name/stream', requireUser, upgradeToWS, async (req, ws) => {
-  // Open MongoDB change stream filtered by owner_id
-  // Forward change events to WebSocket client
-})
-
-// 9. Graceful shutdown
-process.on('SIGTERM', async () => {
-  logger.info('SIGTERM received, closing connections...')
-  await client.close()
-  server.close(() => process.exit(0))
-})
-
-// 10. Prometheus metrics
-const { register, Counter, Histogram } = require('prom-client')
-const httpRequestDuration = new Histogram({
-  name: 'http_request_duration_seconds',
-  help: 'Duration of HTTP requests in seconds',
-  labelNames: ['method', 'route', 'status_code'],
-  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
-})
-app.get('/metrics', (req, res) => {
-  res.set('Content-Type', register.contentType)
-  res.send(register.metrics())
-})
-```
-
-### DELIVERABLE 7 — Observability Stack
-
-Add a lightweight observability stack to `docker-compose.yml`:
-
-```yaml
-services:
-  # OpenTelemetry Collector (central fan-out)
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.100.0
-    volumes:
-      - ./config/otel/collector.yaml:/etc/otel/config.yaml:ro
-    command: ["--config=/etc/otel/config.yaml"]
-    networks: [api-net]
-
-  # Prometheus (metrics)
-  prometheus:
-    image: prom/prometheus:v2.52.0
-    volumes:
-      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    networks: [api-net]
-
-  # Grafana (dashboards)
-  grafana:
-    image: grafana/grafana:10.4.2
-    environment:
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
-    volumes:
-      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
-      - grafana-data:/var/lib/grafana
-    ports:
-      - "3030:3000"
-    networks: [api-net]
-
-  # Loki (logs aggregation)
-  loki:
-    image: grafana/loki:3.0.0
-    volumes:
-      - ./config/loki/loki.yaml:/etc/loki/config.yaml:ro
-      - loki-data:/loki
-    networks: [api-net]
-
-  # Promtail (log shipper for Docker)
-  promtail:
-    image: grafana/promtail:3.0.0
-    volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./config/promtail/promtail.yaml:/etc/promtail/config.yaml:ro
-    networks: [api-net]
-```
-
-Provide pre-built Grafana dashboards for:
-- BaaS request rate, latency p50/p95/p99 per route
-- Kong upstream response times
-- PostgreSQL connection pool utilization
-- MongoDB operation latency
-- Error rate by service
-- JWT validation failures (security monitoring)
-
-### DELIVERABLE 8 — Database Bootstrap Overhaul
-
-Replace the single `db-bootstrap.sql` run-once container with a proper
-migration system:
-
-```
-scripts/migrations/
-  postgresql/
-    001_initial_schema.sql
-    002_add_mock_orders.sql
-    003_add_projects.sql
-    004_add_adapter_registry.sql  ← NEW: stores registered DB connections
-    005_add_tenant_table.sql       ← NEW: multi-tenant scaffolding
-  mongodb/
-    001_mock_catalog_validator.js
-    002_sensor_telemetry_validator.js
-```
-
-Use **golang-migrate** or a simple custom runner that:
-- Tracks applied migrations in `schema_migrations` table
-- Is idempotent (safe to run multiple times)
-- Runs as part of `docker compose up` via a proper init container
-- Supports rollback (`make migrate-down STEPS=1`)
-
-### DELIVERABLE 9 — Multi-Tenant Scaffolding
-
-Add a tenant registration and isolation model:
+The `db-bootstrap.sql` creates `auth.uid()`:
 
 ```sql
--- New tables in adapter-registry schema
-CREATE TABLE tenants (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        TEXT NOT NULL,
-  plan        TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'enterprise')),
-  created_at  TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE tenant_api_keys (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  key_hash    TEXT NOT NULL UNIQUE,  -- bcrypt hash of the actual key
-  key_prefix  TEXT NOT NULL,          -- first 8 chars for display (e.g. "sk-live-")
-  name        TEXT,
-  scopes      TEXT[] DEFAULT ARRAY['read','write'],
-  expires_at  TIMESTAMPTZ,
-  created_at  TIMESTAMPTZ DEFAULT now(),
-  last_used_at TIMESTAMPTZ
-);
-
-CREATE TABLE tenant_databases (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id        UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  engine           TEXT NOT NULL CHECK (engine IN ('postgresql','mongodb','mysql','redis','sqlite')),
-  name             TEXT NOT NULL,
-  connection_enc   BYTEA NOT NULL,   -- AES-256-GCM encrypted connection string
-  connection_iv    BYTEA NOT NULL,   -- IV for decryption
-  connection_tag   BYTEA NOT NULL,   -- GCM auth tag
-  created_at       TIMESTAMPTZ DEFAULT now(),
-  last_healthy_at  TIMESTAMPTZ,
-  UNIQUE(tenant_id, name)
-);
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS UUID AS $$
+  SELECT (current_setting('request.jwt.claims', true)::jsonb->>'sub')::uuid;
+$$ LANGUAGE SQL STABLE;
 ```
 
-### DELIVERABLE 10 — CI/CD Pipeline Overhaul
+PostgREST sets `request.jwt.claims` to the full JWT payload before any query executes. RLS policies use `auth.uid()` to restrict rows:
 
-Rewrite `.github/workflows/ci.yml` with:
-
-```yaml
-name: CI
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  # Job 1: Static analysis (runs in parallel, no Docker needed)
-  static-analysis:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Shell checks
-        run: |
-          sudo apt-get install -y shellcheck
-          find scripts -name '*.sh' -print0 | xargs -0 shellcheck -S error -e SC1091
-      - name: Dockerfile linting
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          recursive: true
-      - name: Secret scanning
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-
-  # Job 2: Build images (BuildKit cache via GitHub Actions cache)
-  build-images:
-    runs-on: ubuntu-latest
-    needs: static-analysis
-    strategy:
-      matrix:
-        service: [kong, mongo-api, adapter-registry, query-router]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build ${{ matrix.service }}
-        uses: docker/build-push-action@v5
-        with:
-          context: ./deployments/base/${{ matrix.service }}
-          push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
-
-  # Job 3: Integration tests
-  integration:
-    runs-on: ubuntu-latest
-    needs: build-images
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - name: Generate CI environment
-        run: bash ./scripts/generate-env.sh .env
-      - name: Start minimal stack
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
-      - name: Wait for gateway (fast loop)
-        run: |
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:8000/auth/v1/health -H 'apikey: public-anon-key' && exit 0
-            sleep 2
-          done; exit 1
-      - name: Run test suite
-        run: make tests
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-artifacts-${{ github.run_id }}
-          path: artifacts/
+```sql
+-- Example policy: users see only their own rows
+CREATE POLICY "owner isolation"
+  ON public.posts
+  USING (owner_id::text = auth.uid()::text);
 ```
 
-### DELIVERABLE 11 — Production Makefile Targets
+This makes data isolation a database guarantee, not an application guarantee. Even a compromised upstream service cannot return another tenant's data.
 
-Add these Make targets:
+### Owner-id pattern (MongoDB)
 
-```makefile
-# Docker Build Cloud / BuildKit targets
-build-optimized: ## 🚀 Build all images with BuildKit cache mounts
-	@DOCKER_BUILDKIT=1 docker compose build \
-		--build-arg BUILDKIT_INLINE_CACHE=1 \
-		--parallel
+The mongo-api enforces the equivalent pattern for MongoDB:
 
-build-push-registry: ## 📤 Build and push to registry with cache
-	@docker buildx bake \
-		--file docker-bake.hcl \
-		--push \
-		--set '*.cache-to=type=registry,ref=$(REGISTRY)/cache,mode=max'
+```
+POST /mongo/v1/collections/orders/documents
+  → owner_id is ALWAYS set to req.user.id (from JWT)
+  → client-supplied owner_id in body is ignored
 
-# Migration targets
-migrate-up: ## 📈 Run all pending database migrations
-	@docker compose run --rm db-migrator migrate up
-
-migrate-down: ## 📉 Rollback N migrations (STEPS=1)
-	@docker compose run --rm db-migrator migrate down $(STEPS)
-
-migrate-status: ## 📋 Show migration status
-	@docker compose run --rm db-migrator migrate status
-
-# Secret management
-secrets-generate: ## 🔑 Generate all secrets
-	@bash scripts/secrets/generate-secrets.sh
-
-secrets-validate: ## ✅ Validate all required secrets are present
-	@bash scripts/secrets/validate-secrets.sh
-
-secrets-rotate-jwt: ## 🔄 Rotate JWT secret with zero downtime
-	@bash scripts/secrets/rotate-jwt.sh
-
-# Observability
-grafana-open: ## 📊 Open Grafana dashboard
-	@open http://localhost:3030
-
-prometheus-open: ## 📈 Open Prometheus
-	@open http://localhost:9090
-
-# Adapter management
-adapter-register: ## 🗄️ Register a new database (ENGINE= NAME= DSN=)
-	@curl -sS -X POST http://localhost:8000/admin/v1/databases \
-		-H "apikey: $$(grep KONG_SERVICE_API_KEY .env | cut -d= -f2)" \
-		-H "Content-Type: application/json" \
-		-d '{"engine":"$(ENGINE)","name":"$(NAME)","connection_string":"$(DSN)"}'
-
-# Production readiness checks
-preflight: ## ✈️  Run all pre-deployment checks
-	@bash scripts/preflight-check.sh
-
-# Image size audit
-image-sizes: ## 📦 Show image sizes for all services
-	@docker images --filter=reference='mini-baas/*' \
-		--format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'
+GET /mongo/v1/collections/orders/documents
+  → query is ALWAYS { owner_id: req.user.id }
+  → client cannot add filter to override this
 ```
 
 ---
 
-## ═══════════════════════════════════════════════════════
-## SECTION 3 — EXPLICIT DOCKER OPTIMIZATION RULES
-## ═══════════════════════════════════════════════════════
+## 7. Data plane patterns
 
-You must apply ALL of the following optimizations. Reference:
-https://docs.docker.com/build-cloud/optimization/
+### PostgreSQL via PostgREST
 
-### Rule 1: Always Enable BuildKit
+PostgREST uses PostgREST's filter syntax directly over HTTP:
+
+```
+GET  /rest/v1/posts?select=id,title&is_public=eq.true
+GET  /rest/v1/posts?id=eq.abc123
+POST /rest/v1/posts        body: { title, content }
+PATCH /rest/v1/posts?id=eq.abc123   body: { content }
+DELETE /rest/v1/posts?id=eq.abc123
+```
+
+Headers always required:
+```
+apikey: <KONG_PUBLIC_API_KEY>
+Authorization: Bearer <JWT>     ← required for RLS to know the caller
+Content-Type: application/json
+```
+
+### MongoDB via mongo-api
+
+```
+POST   /mongo/v1/collections/:name/documents       create document
+GET    /mongo/v1/collections/:name/documents       list documents (owner-scoped)
+GET    /mongo/v1/collections/:name/documents/:id   get one document
+PATCH  /mongo/v1/collections/:name/documents/:id   update (owner-scoped)
+DELETE /mongo/v1/collections/:name/documents/:id   delete (owner-scoped)
+```
+
+Collection names must match `^[a-zA-Z0-9_-]{1,64}$`. Keys `_id` and `owner_id` are reserved and will be rejected on create/update.
+
+### External databases via query-router
+
+Register a database first:
+```
+POST /admin/v1/databases
+{ "engine": "postgresql", "name": "my-analytics", "connection_string": "postgres://..." }
+→ { "success": true, "data": { "id": "db-uuid", ... } }
+```
+
+Then query it:
+```
+POST /query/v1/{dbId}/tables/{tableName}
+{ "filter": { "status": "active" }, "sort": "created_at:desc", "limit": 20, "offset": 0 }
+```
+
+The query-router builds a fully parameterised query — the `filter` values are always bound parameters, never interpolated into SQL. Column names are validated against `/^[a-zA-Z_]\w*$/`.
+
+---
+
+## 8. Multi-tenant adapter pattern
+
+```mermaid
+graph LR
+    subgraph "User A"
+        UA["JWT sub=user-A"]
+    end
+    subgraph "User B"
+        UB["JWT sub=user-B"]
+    end
+
+    subgraph "adapter-registry (PostgreSQL + RLS)"
+        DBA["db-id: aaaaa<br/>tenant_id: user-A<br/>engine: postgresql<br/>conn: AES-encrypted"]
+        DBB["db-id: bbbbb<br/>tenant_id: user-B<br/>engine: mongodb<br/>conn: AES-encrypted"]
+    end
+
+    subgraph "query-router"
+        QR["Validates JWT<br/>Fetches via service token<br/>Decrypts connection string<br/>Runs parameterised query"]
+    end
+
+    UA -->|"POST /admin/v1/databases"| DBA
+    UB -->|"POST /admin/v1/databases"| DBB
+    UA -->|"POST /query/v1/aaaaa/tables/orders"| QR
+    QR -->|"GET /databases/aaaaa/connect (service token)"| DBA
+    QR -->|"Cannot access bbbbb — RLS blocks"| DBB
+    style DBB stroke-dasharray: 5
+```
+
+The adapter-registry table has a PostgreSQL RLS policy that enforces `tenant_id = current_setting('app.current_tenant')`. The query-router sets this session variable before any query. User A can never access User B's registered database, even if they know `bbbbb`'s UUID, because the registry's own RLS policy blocks the select.
+
+---
+
+## 9. Observability
+
+Activate with `--profile observability`:
+
+```mermaid
+graph LR
+    SERVICES["All containers<br/>(stdout JSON logs)"] -->|"docker log driver"| PROMTAIL
+    PROMTAIL["Promtail<br/><i>scrapes container logs</i>"] --> LOKI["Loki<br/><i>log aggregation</i>"]
+    SERVICES -->|"/metrics endpoint"| PROMETHEUS["Prometheus<br/>:9090<br/><i>scrapes prom-client metrics</i>"]
+    LOKI --> GRAFANA["Grafana<br/>:3030<br/><i>dashboards</i>"]
+    PROMETHEUS --> GRAFANA
+```
+
+Every custom service (mongo-api, adapter-registry, query-router, email-service, storage-router) exposes:
+- **Structured JSON logs** via `pino` — level, service name, version, ISO timestamp, `X-Request-ID`
+- **Prometheus metrics** at `/metrics` via `prom-client`
+- **Health endpoints** at `/health/live` (liveness) and `/health/ready` (readiness)
+
+---
+
+## 10. Compose profiles
+
+```
+docker compose up                               ← core stack only
+docker compose --profile extras up              ← + Trino, Studio, pg-meta, MinIO, Supavisor, storage-router
+docker compose --profile observability up       ← + Prometheus, Grafana, Loki, Promtail
+docker compose --profile playground up          ← + static playground frontend on :3100
+docker compose --profile extras --profile observability up   ← combine any profiles
+```
+
+### Core stack (no profile)
+
+| Service | Internal port | Host port |
+|---|---|---|
+| Kong proxy | 8000 | `8000` (or `KONG_HTTP_PORT`) |
+| Kong admin | 8001 | `127.0.0.1:8001` |
+| PostgreSQL | 5432 | `5432` (or `PG_PORT`) |
+| MongoDB | 27017 | `27017` (or `MONGO_PORT`) |
+| Redis | 6379 | `6379` (or `REDIS_PORT`) |
+
+All other services are internal-only (no host port).
+
+### Startup order (enforced by `depends_on` + healthchecks)
+
+```mermaid
+graph TD
+    PG["postgres\n(healthy)"] --> DBS["db-bootstrap\n(completed)"]
+    MONGO["mongo\n(healthy)"] --> MAPI["mongo-api\n(healthy)"]
+    DBS --> GT["gotrue\n(healthy)"]
+    DBS --> PGREST["postgrest\n(started)"]
+    DBS --> AR["adapter-registry\n(healthy)"]
+    GT --> KONG["kong\n(healthy)"]
+    PGREST --> KONG
+    MAPI --> KONG
+    RT["realtime\n(healthy)"] --> KONG
+    AR --> QR["query-router\n(healthy)"]
+    KONG --> QR
+```
+
+---
+
+## 11. Quick start
+
+### Prerequisites
+
+- Docker Engine ≥ 24
+- Docker Compose v2 plugin
+- `make`
+- A `.env` file (copy `.env.example` and fill in secrets)
+
 ```bash
-# In ALL scripts, Makefiles, and CI:
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
+cp .env.example .env
+# edit .env — at minimum set JWT_SECRET, VAULT_ENC_KEY, ADAPTER_REGISTRY_SERVICE_TOKEN
 ```
 
-### Rule 2: Cache Mount for Every Package Manager
+### Start the core stack
 
-```dockerfile
-# Node.js
-RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-    npm ci --omit=dev
-
-# Python
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r requirements.txt
-
-# Go
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/go/pkg/mod \
-    go build -o /bin/app ./cmd/app
-```
-
-### Rule 3: COPY --link for Maximum Layer Independence
-
-```dockerfile
-# Each COPY --link creates an independent layer that doesn't
-# invalidate prior layers when source changes
-COPY --link package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
-COPY --link --chown=node:node src/ ./src/
-```
-
-### Rule 4: Separate Dependency and Source Layers
-
-```dockerfile
-FROM node:20-alpine AS deps
-WORKDIR /app
-# This layer cached until package.json changes
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
-
-FROM node:20-alpine AS runtime
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-# This layer only invalidated when source changes
-COPY --link src/ ./src/
-```
-
-### Rule 5: Pin Base Images to Digest in Production
-
-```dockerfile
-# Development (fast, mutable)
-FROM node:20-alpine
-
-# Production (reproducible, secure)
-FROM node:20-alpine@sha256:a7e4b53b9b44b7b4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d
-```
-
-Provide a `scripts/pin-digests.sh` that:
-- Reads all `FROM` statements across all Dockerfiles
-- Resolves current digests using `docker manifest inspect`
-- Creates `dockerfiles.pinned/` with digest-pinned versions
-
-### Rule 6: Multi-Stage Build for Every Custom Service
-
-```dockerfile
-# syntax=docker/dockerfile:1.7-labs
-
-# ─── Stage 1: Install dependencies ───────────────────────────────
-FROM node:20-alpine AS deps
-WORKDIR /app
-RUN --mount=type=cache,target=/root/.npm,sharing=locked \
-    --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    npm ci --omit=dev
-
-# ─── Stage 2: Production runtime ─────────────────────────────────
-FROM node:20-alpine AS runtime
-# Security: non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-WORKDIR /app
-# Copy only production artifacts
-COPY --from=deps --chown=appuser:appgroup /app/node_modules ./node_modules
-COPY --link --chown=appuser:appgroup src/ ./src/
-COPY --link --chown=appuser:appgroup package.json ./
-
-USER appuser
-
-# Health check
-HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3010/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"
-
-EXPOSE 3010
-CMD ["node", "src/server.js"]
-```
-
-### Rule 7: docker-bake.hcl for Parallel Builds
-
-Create `docker-bake.hcl`:
-
-```hcl
-group "default" {
-  targets = ["kong", "mongo-api", "adapter-registry", "query-router"]
-}
-
-variable "REGISTRY" {
-  default = "ghcr.io/univers42/mini-baas"
-}
-
-variable "TAG" {
-  default = "latest"
-}
-
-target "base" {
-  cache-from = ["type=registry,ref=${REGISTRY}/cache:base"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/cache:base,mode=max"]
-}
-
-target "kong" {
-  inherits   = ["base"]
-  context    = "./deployments/base/kong"
-  dockerfile = "Dockerfile"
-  tags       = ["${REGISTRY}/kong:${TAG}"]
-  cache-from = ["type=registry,ref=${REGISTRY}/cache:kong"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/cache:kong,mode=max"]
-}
-
-target "mongo-api" {
-  inherits   = ["base"]
-  context    = "./deployments/base/mongo-api"
-  dockerfile = "Dockerfile"
-  tags       = ["${REGISTRY}/mongo-api:${TAG}"]
-  platforms  = ["linux/amd64", "linux/arm64"]
-  cache-from = ["type=registry,ref=${REGISTRY}/cache:mongo-api"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/cache:mongo-api,mode=max"]
-}
-
-target "adapter-registry" {
-  inherits   = ["base"]
-  context    = "./services/adapter-registry"
-  dockerfile = "Dockerfile"
-  tags       = ["${REGISTRY}/adapter-registry:${TAG}"]
-  cache-from = ["type=registry,ref=${REGISTRY}/cache:adapter-registry"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/cache:adapter-registry,mode=max"]
-}
-
-target "query-router" {
-  inherits   = ["base"]
-  context    = "./services/query-router"
-  dockerfile = "Dockerfile"
-  tags       = ["${REGISTRY}/query-router:${TAG}"]
-  cache-from = ["type=registry,ref=${REGISTRY}/cache:query-router"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/cache:query-router,mode=max"]
-}
-```
-
-### Rule 8: .dockerignore Optimization Per Service
-
-Every service must have a tightly scoped `.dockerignore`:
-
-```
-# mongo-api/.dockerignore
-# Exclude everything, then whitelist
-*
-!package.json
-!package-lock.json
-!src/
-!src/**
-```
-
-### Rule 9: Minimize Layers in Final Stage
-
-```dockerfile
-# BAD: separate RUN commands = separate layers
-RUN apk add --no-cache curl
-RUN apk add --no-cache jq
-RUN adduser -S appuser
-
-# GOOD: merged RUN = single layer
-RUN apk add --no-cache curl jq \
-    && adduser -S appuser -G nobody \
-    && rm -rf /var/cache/apk/*
-```
-
-### Rule 10: Use Alpine for All Custom Services
-
-Size targets:
-- `mongo-api`: < 80 MB final image
-- `adapter-registry`: < 60 MB
-- `query-router`: < 60 MB
-- `kong` (upstream): accept as-is (~250 MB)
-- `postgres` (upstream): accept as-is (~250 MB)
-
----
-
-## ═══════════════════════════════════════════════════════
-## SECTION 4 — PRODUCTION READINESS CHECKLIST
-## ═══════════════════════════════════════════════════════
-
-Every service you produce MUST satisfy ALL of these:
-
-### 4.1 — Graceful Shutdown
-
-```javascript
-// Every Node.js service
-const server = app.listen(PORT)
-
-const shutdown = async (signal) => {
-  logger.info({ signal }, 'Shutdown initiated')
-  server.close(async () => {
-    await closeDbConnections()
-    logger.info('Clean shutdown complete')
-    process.exit(0)
-  })
-  // Force exit after 30s if connections don't drain
-  setTimeout(() => process.exit(1), 30000)
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT',  () => shutdown('SIGINT'))
-```
-
-### 4.2 — Structured Logging (JSON, no printf)
-
-```javascript
-const logger = require('pino')({
-  level: process.env.LOG_LEVEL || 'info',
-  base: { service: 'mongo-api', version: process.env.npm_package_version },
-  timestamp: pino.stdTimeFunctions.isoTime,
-})
-
-// Log every request
-app.use((req, res, next) => {
-  req.log = logger.child({ requestId: req.requestId })
-  req.log.info({ method: req.method, path: req.path }, 'Request received')
-  next()
-})
-```
-
-### 4.3 — Environment Variable Validation at Startup
-
-```javascript
-const required = ['MONGO_URI', 'JWT_SECRET', 'PORT', 'MONGO_DB_NAME']
-const missing = required.filter(k => !process.env[k])
-if (missing.length > 0) {
-  console.error(`Missing required environment variables: ${missing.join(', ')}`)
-  process.exit(1)
-}
-```
-
-### 4.4 — Health Endpoints (Liveness + Readiness)
-
-```javascript
-// Liveness: "is the process running?" (always fast)
-app.get('/health/live', (req, res) => res.json({ status: 'ok' }))
-
-// Readiness: "can the service handle traffic?" (checks dependencies)
-app.get('/health/ready', async (req, res) => {
-  try {
-    await db.command({ ping: 1 })
-    res.json({ status: 'ready', dependencies: { mongo: 'ok' } })
-  } catch (err) {
-    res.status(503).json({ status: 'not ready', dependencies: { mongo: 'error' } })
-  }
-})
-```
-
-### 4.5 — Resource Limits in Production Compose
-
-```yaml
-deploy:
-  resources:
-    limits:
-      memory: 256m
-      cpus: '0.25'
-    reservations:
-      memory: 64m
-      cpus: '0.05'
-  restart_policy:
-    condition: on-failure
-    delay: 5s
-    max_attempts: 3
-    window: 120s
-```
-
-### 4.6 — No Hardcoded Secrets Anywhere
-
-Run this check in CI:
 ```bash
-# scripts/check-secrets.sh
-if grep -rE '(password|secret|key)\s*=\s*["\x27][^"\x27$]{8,}' \
-    --include='*.js' --include='*.ts' --include='*.py' \
-    --exclude-dir=node_modules --exclude-dir='.git' .; then
-  echo "Hardcoded secret detected!"
-  exit 1
-fi
+make up
+# or: make all   (pulls images first, then starts)
+```
+
+### Start the full stack (all extras)
+
+```bash
+make all-full
+# or: docker compose --profile extras up -d
+```
+
+### Start with observability
+
+```bash
+docker compose --profile observability up -d
+# Grafana: http://localhost:3030
+# Prometheus: http://localhost:9090
+```
+
+### Common make targets
+
+```
+make up           Start stack (detached)
+make down         Stop stack
+make re           Full reset: fclean + all
+make fclean       Remove containers, volumes, and images
+make build        Build/pull all images
+make logs         Follow all logs
+make logs SERVICE=kong   Follow logs of one service
+make ps           Show container status
+make health       Check all healthchecks
+make test-smoke   Run smoke tests (scripts/phase1-smoke-test.sh)
+make help         List all targets
+```
+
+### Verify the stack is up
+
+```bash
+# Kong health (should return 200)
+curl -s http://localhost:8000/auth/v1/health -H "apikey: public-anon-key" | jq .
+
+# Sign up a user
+curl -s -X POST http://localhost:8000/auth/v1/signup \
+  -H "apikey: public-anon-key" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dev@example.com","password":"changeme123"}' | jq .
+
+# Query the REST API (with JWT from above)
+curl -s http://localhost:8000/rest/v1/users \
+  -H "apikey: public-anon-key" \
+  -H "Authorization: Bearer <access_token>" | jq .
+
+# Create a MongoDB document
+curl -s -X POST http://localhost:8000/mongo/v1/collections/notes/documents \
+  -H "apikey: public-anon-key" \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"my first note","body":"hello world"}' | jq .
 ```
 
 ---
 
-## ═══════════════════════════════════════════════════════
-## SECTION 5 — NEW DIRECTORY STRUCTURE (TARGET STATE)
-## ═══════════════════════════════════════════════════════
+## 12. Environment variables
+
+Below are the critical variables. See `.env.example` for the complete list.
+
+| Variable | Required | Description |
+|---|---|---|
+| `JWT_SECRET` | **yes** | Shared HS256 secret — GoTrue issues tokens, all services verify them |
+| `VAULT_ENC_KEY` | **yes** | 32-char key for AES-256-GCM encryption of stored connection strings |
+| `ADAPTER_REGISTRY_SERVICE_TOKEN` | **yes** | Internal M2M bearer token: query-router → adapter-registry |
+| `KONG_PUBLIC_API_KEY` | **yes** | The `anon` consumer key (safe to put in frontend code) |
+| `KONG_SERVICE_API_KEY` | **yes** | The `service_role` consumer key (backend only) |
+| `POSTGRES_PASSWORD` | **yes** | PostgreSQL superuser password |
+| `MONGO_INITDB_ROOT_PASSWORD` | **yes** | MongoDB root password |
+| `KONG_HTTP_PORT` | no | Kong proxy host port (default `8000`) |
+| `KONG_ADMIN_PORT` | no | Kong admin host port (default `8001`) |
+| `PG_PORT` | no | PostgreSQL host port (default `5432`) |
+| `MONGO_PORT` | no | MongoDB host port (default `27017`) |
+| `REDIS_PORT` | no | Redis host port (default `6379`) |
+| `GOTRUE_MAILER_AUTOCONFIRM` | no | `true` in dev to skip email confirmation (default `true`) |
+| `LOG_LEVEL` | no | Log verbosity for custom services: `debug`/`info`/`warn`/`error` (default `info`) |
+| `KONG_CORS_ORIGIN_APP` | no | Allowed CORS origin for the app frontend |
+| `KONG_CORS_ORIGIN_PLAYGROUND` | no | Allowed CORS origin for the playground |
+
+Secrets must never be committed. Use `scripts/generate-env.sh` to generate a `.env` with safe random values for local dev.
+
+---
+
+## 13. Project rules and conventions
+
+These rules are enforced across every custom service and are the standard all contributors must follow.
+
+### Service structure (Node.js custom services)
+
+Every custom service follows the same layout:
+
+```
+src/
+  server.js           ← express app + lifecycle (startup, graceful shutdown)
+  routes/
+    health.js         ← /health/live + /health/ready
+    <domain>.js       ← business routes
+  middleware/
+    auth.js           ← JWT validation middleware
+    correlationId.js  ← X-Request-ID propagation
+    errorHandler.js   ← centralised error response
+  lib/
+    db.js             ← database connection pool
+    crypto.js         ← if storing secrets
+```
+
+### Mandatory for every service
+
+- **Environment validation at startup** — check all required env vars with `process.exit(1)` if missing
+- **Structured JSON logging** via `pino` with `{ service, version }` base fields and ISO timestamps
+- **`X-Request-ID` propagation** — read from incoming request, set on response, pass to all outgoing internal calls
+- **Prometheus metrics endpoint** at `/metrics` via `prom-client`
+- **Health endpoints** — `/health/live` (process alive) and `/health/ready` (dependencies connected)
+- **Graceful shutdown** — handle `SIGTERM` and `SIGINT`, drain connections, exit 0
+
+### Security rules
+
+- All user-controlled input that forms part of a SQL query must use **bind parameters**
+- Column and table names from request params are validated against `^[a-zA-Z_]\w{0,63}$` — never interpolated directly
+- Connection strings stored in adapter-registry are **always encrypted** before persistence (AES-256-GCM + scrypt)
+- `owner_id` in MongoDB documents is **always server-injected** from the JWT — client-supplied values are stripped
+- The `service_role` API key and `ADAPTER_REGISTRY_SERVICE_TOKEN` are **never** passed to frontend code
+- JWT verification always specifies `{ algorithms: ['HS256'] }` explicitly — never trusts the JWT header's `alg` claim
+
+### Response envelope contract
+
+All custom API services return JSON in one of two forms:
+
+```json
+{ "success": true,  "data": { } }
+{ "success": false, "error": { "code": "snake_case_code", "message": "Human readable message" } }
+```
+
+`error.code` is a stable machine-readable identifier clients can `switch` on. `message` is for humans and may change.
+
+### Health check contract
+
+```
+GET /health/live   → 200 { status: "ok" }          (always, if process is running)
+GET /health/ready  → 200 { status: "ok" }          (only if all dependencies are up)
+                   → 503 { status: "degraded", details: [...] }
+```
+
+Docker healthchecks are configured on all services using `/health/live`.
+
+### Dependency startup order
+
+Services must not assume their dependencies are ready at process start. All custom services use retry loops or connection pools with built-in reconnect. The `depends_on` + `condition: service_healthy` in `docker-compose.yml` is a best-effort guard; it does not replace defensive startup code.
+
+### Makefile targets follow the 42 convention
+
+The classic `all` / `clean` / `fclean` / `re` pattern is preserved at the top level. New targets go into labelled sections (`##@`) to appear correctly in `make help`.
+
+---
+
+## Directory reference
 
 ```
 mini-baas-infra/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                    ← Rewritten (parallel, cached)
-│       └── release.yml               ← NEW: tag → build → push → deploy
-│
-├── config/                           ← NEW: All service configs
-│   ├── otel/collector.yaml
-│   ├── prometheus/prometheus.yml
-│   ├── grafana/provisioning/
-│   │   ├── dashboards/
-│   │   └── datasources/
-│   ├── loki/loki.yaml
-│   └── promtail/promtail.yaml
-│
-├── deployments/
-│   └── base/
-│       ├── kong/
-│       │   ├── Dockerfile             ← Optimized multi-stage
-│       │   ├── kong.yml.tmpl          ← Enhanced config
-│       │   └── generate-kong-config.sh
-│       ├── mongo-api/
-│       │   ├── Dockerfile             ← Multi-stage, <80MB
-│       │   ├── package.json
-│       │   └── src/
-│       │       ├── server.js          ← Rewritten with all features
-│       │       ├── middleware/
-│       │       │   ├── auth.js
-│       │       │   ├── correlationId.js
-│       │       │   ├── rateLimiter.js
-│       │       │   └── errorHandler.js
-│       │       ├── routes/
-│       │       │   ├── health.js
-│       │       │   ├── collections.js
-│       │       │   └── admin.js
-│       │       └── lib/
-│       │           ├── mongo.js       ← Connection pool + circuit breaker
-│       │           ├── jwt.js
-│       │           └── metrics.js
-│       └── [all other services unchanged or minimal wraps]
-│
-├── services/                          ← NEW: Custom BaaS services
-│   ├── adapter-registry/              ← NEW: DB credential management
-│   │   ├── Dockerfile
-│   │   ├── package.json
-│   │   └── src/
-│   │       ├── server.js
-│   │       ├── crypto.js              ← AES-256-GCM encrypt/decrypt
-│   │       ├── adapters/
-│   │       │   ├── postgresql.js
-│   │       │   ├── mongodb.js
-│   │       │   ├── mysql.js
-│   │       │   └── redis.js
-│   │       └── routes/
-│   │           ├── databases.js
-│   │           └── health.js
-│   │
-│   └── query-router/                  ← NEW: Universal query gateway
-│       ├── Dockerfile
-│       ├── package.json
-│       └── src/
-│           ├── server.js
-│           ├── router.js              ← Routes to correct engine adapter
-│           └── engines/
-│               ├── postgresql.js
-│               ├── mongodb.js
-│               └── mysql.js
-│
+├── docker-compose.yml          ← single source of truth for service topology
+├── docker-compose.prod.yml     ← production overrides
+├── docker-compose.ci.yml       ← CI overrides
+├── Makefile                    ← all lifecycle commands
+├── .env.example                ← template for environment secrets
 ├── scripts/
-│   ├── migrations/
-│   │   ├── postgresql/
-│   │   │   ├── 001_initial_schema.sql
-│   │   │   ├── 002_add_mock_orders.sql
-│   │   │   ├── 003_add_projects.sql
-│   │   │   ├── 004_add_adapter_registry.sql
-│   │   │   └── 005_add_tenant_table.sql
-│   │   └── mongodb/
-│   │       ├── 001_mock_catalog.js
-│   │       └── 002_sensor_telemetry.js
-│   ├── secrets/
-│   │   ├── generate-secrets.sh
-│   │   ├── validate-secrets.sh
-│   │   └── rotate-jwt.sh
-│   ├── preflight-check.sh             ← NEW: Pre-deployment validation
-│   ├── pin-digests.sh                 ← NEW: Pin base image digests
-│   ├── db-bootstrap.sql               ← Kept for compatibility
-│   ├── generate-env.sh
-│   ├── test-ui.sh
-│   └── phase*.sh                      ← All existing test phases kept
-│
-├── docker-compose.yml                 ← Dev profile (fast, hot-reload)
-├── docker-compose.prod.yml            ← Prod overlay (secrets, limits)
-├── docker-compose.ci.yml              ← CI overlay (fast startup)
-├── docker-bake.hcl                    ← NEW: Parallel BuildKit bake
-├── Makefile                           ← Enhanced with new targets
-├── .env.example                       ← Updated with new vars
-└── README.md                          ← Comprehensive setup guide
+│   ├── db-bootstrap.sql        ← one-shot PostgreSQL schema + roles setup
+│   ├── generate-env.sh         ← generate a .env with random secrets
+│   ├── resolve-ports.sh        ← detect port conflicts, remap if needed
+│   ├── phase1-smoke-test.sh    ← basic API reachability test
+│   └── phase{2-15}-*.sh        ← progressive integration test suite
+├── docker/
+│   ├── services/
+│   │   ├── kong/conf/kong.yml  ← declarative gateway config (template)
+│   │   ├── mongo-api/          ← custom MongoDB REST service
+│   │   ├── adapter-registry/   ← external DB credential vault
+│   │   ├── query-router/       ← universal query plane
+│   │   ├── email-service/      ← SMTP dispatcher
+│   │   ├── storage-router/     ← presigned URL generator
+│   │   └── realtime/           ← Dockerfile wrapper for realtime image
+│   └── contracts/              ← API contracts per service
+├── config/
+│   ├── prometheus/             ← Prometheus scrape config
+│   ├── grafana/provisioning/   ← Grafana datasource + dashboard provisioning
+│   ├── loki/                   ← Loki config
+│   └── promtail/               ← Promtail scrape config
+├── sandbox/
+│   └── apps/app2/              ← Example app (Savanna Park Zoo) using the BaaS
+└── docs/                       ← Architecture notes, runbooks, endpoint specs
 ```
-
----
-
-## ═══════════════════════════════════════════════════════
-## SECTION 6 — HOW THE BAAS WORKS END TO END (FINAL STATE)
-## ═══════════════════════════════════════════════════════
-
-### User Story: A developer wants to use mini-BaaS
-
-```
-1. Pull the mini-BaaS stack:
-   docker compose pull
-   make secrets-generate
-   make compose-up
-
-2. Register as a tenant:
-   POST /auth/v1/signup  →  get tenant JWT
-
-3. Register their own PostgreSQL database:
-   POST /admin/v1/databases
-   { "engine": "postgresql", "name": "my-app-db",
-     "connection_string": "postgresql://user:pass@myhost:5432/mydb" }
-   →  { "db_id": "uuid", "api_key": "sk-live-xxxx" }
-
-4. Query their database through the BaaS:
-   GET /query/v1/tables/users?limit=10
-   -H "apikey: sk-live-xxxx"
-   -H "Authorization: Bearer <tenant-jwt>"
-   →  { "success": true, "engine": "postgresql", "data": [...] }
-
-5. Or use the built-in PostgreSQL/MongoDB:
-   GET /rest/v1/projects   →  PostgREST (built-in PG)
-   POST /mongo/v1/collections/tasks/documents  →  mongo-api (built-in Mongo)
-
-6. Monitor everything:
-   open http://localhost:3030  →  Grafana dashboards
-   open http://localhost:8000/docs  →  Swagger UI
-```
-
----
-
-## ═══════════════════════════════════════════════════════
-## SECTION 7 — CODING STANDARDS YOU MUST FOLLOW
-## ═══════════════════════════════════════════════════════
-
-### JavaScript/Node.js
-- Use `pino` for logging (never `console.log` in production code)
-- Use `zod` for runtime schema validation
-- Use `opossum` for circuit breakers
-- Use `prom-client` for Prometheus metrics
-- ES modules (`"type": "module"`) preferred, CommonJS acceptable
-- All async functions wrapped in try/catch
-- All HTTP handlers validate input before touching DB
-- `package.json` must pin all dependencies (`"express": "4.21.2"` not `"^4.21.2"`)
-
-### Shell Scripts
-- All scripts must pass `shellcheck -S error`
-- Always `set -euo pipefail` at the top
-- All scripts must have a usage comment block
-- All scripts must accept `--help`
-
-### SQL
-- All migrations are reversible (each `UP` has a corresponding `DOWN`)
-- All new tables have `created_at TIMESTAMPTZ DEFAULT now()`
-- All RLS policies follow the `{table}_{action}_{scope}` naming convention
-- Never use `DROP TABLE` in a migration — use `ALTER TABLE ... RENAME`
-
-### Docker
-- Every `RUN` command that installs packages must clean up package manager cache
-- Every custom image must have both `/health/live` and `/health/ready`
-- No `latest` tag in production Compose files
-
----
-
-## ═══════════════════════════════════════════════════════
-## SECTION 8 — CONSTRAINTS AND NON-GOALS
-## ═══════════════════════════════════════════════════════
-
-**CONSTRAINTS (must respect):**
-- Must remain Docker Compose compatible (Kubernetes is out of scope)
-- Must use Kong as the API gateway (no migration to Nginx/Traefik)
-- GoTrue (Supabase Auth) is the auth layer (no migration)
-- PostgREST remains the PostgreSQL REST adapter
-- Node.js for all custom services (no language migration)
-- Single-node deployment target (no distributed coordination)
-
-**NON-GOALS (explicitly out of scope):**
-- Kubernetes deployment (use Compose only)
-- Multi-region replication
-- Paid cloud integrations (AWS RDS, Atlas, etc.) — use local engines
-- GraphQL API (REST only for MVP)
-- Billing / metering system
-- Email notifications
-- File upload beyond MinIO
-- Serverless functions
-
----
-
-## ═══════════════════════════════════════════════════════
-## SECTION 9 — OUTPUT FORMAT INSTRUCTIONS
-## ═══════════════════════════════════════════════════════
-
-When you respond to this prompt, structure your output as follows:
-
-1. **Start with the Docker optimizations** — produce every Dockerfile first
-   because these unlock the speed improvement immediately.
-
-2. **Then produce `docker-bake.hcl`** and the updated `docker-compose.yml`
-   trio (dev / prod / ci).
-
-3. **Then produce the new services** (adapter-registry, query-router) with
-   complete, runnable source code.
-
-4. **Then produce the mongo-api rewrite** with all new features.
-
-5. **Then produce the Kong configuration overhaul.**
-
-6. **Then produce the observability stack configs.**
-
-7. **Then produce the migration system.**
-
-8. **Finally produce the updated Makefile and CI workflow.**
-
-For every file you produce:
-- Include the full file path as a comment at the top: `# File: path/from/repo/root`
-- Include every line — no truncation with `# ... rest unchanged`
-- Include inline comments explaining non-obvious decisions
-- Flag any place where the developer must provide a real value with `# REPLACE: description`
-
-**Do not apologize, do not hedge, do not explain what you're about to do.**
-**Just produce the files.** We need working code, not intentions.
-
----
-
-## ═══════════════════════════════════════════════════════
-## SECTION 10 — FINAL QUALITY BAR
-## ═══════════════════════════════════════════════════════
-
-When you are done, the following commands must all succeed:
-
-```bash
-# Cold build (no cache): should complete in < 3 minutes
-DOCKER_BUILDKIT=1 docker buildx bake --no-cache
-
-# Warm build (with cache): should complete in < 30 seconds
-DOCKER_BUILDKIT=1 docker buildx bake
-
-# Stack startup: should be healthy in < 60 seconds
-make compose-up && make compose-health
-
-# Full test suite: should pass 100%
-make tests
-
-# Image sizes: all custom images < 100 MB
-make image-sizes
-
-# Secret validation: no hardcoded secrets
-bash scripts/check-secrets.sh
-
-# Preflight: all production checks pass
-make preflight
-```
-
-If any of these would fail with the code you produce, fix it before presenting output.
-
----
-
-*End of Master Prompt Engineering Document*
-*Generated for mini-BaaS — Univers42 / mini-baas-infra*
-*Target: Claude Opus (claude-opus-4-6) with extended thinking enabled*

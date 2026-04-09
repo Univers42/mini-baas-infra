@@ -12,8 +12,17 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
+      // Proxy /rest/v1 and /auth/v1 through Kong gateway
+      '/rest': {
+        target: process.env.VITE_BAAS_ENDPOINT || 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/auth': {
+        target: process.env.VITE_BAAS_ENDPOINT || 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/storage': {
+        target: process.env.VITE_BAAS_ENDPOINT || 'http://localhost:8001',
         changeOrigin: true,
       },
     },

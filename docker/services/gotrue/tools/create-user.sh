@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    create-user.sh                                     :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/04/09 23:34:24 by dlesieur          #+#    #+#              #
+#    Updated: 2026/04/09 23:34:25 by dlesieur         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 #!/usr/bin/env bash
 # File: docker/services/gotrue/tools/create-user.sh
 # Description: Create a test user via the GoTrue auth API

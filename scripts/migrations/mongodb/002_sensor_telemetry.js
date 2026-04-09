@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   002_sensor_telemetry.js                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:37:45 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:37:47 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // File: scripts/migrations/mongodb/002_sensor_telemetry.js
 // Migration: Create sensor_telemetry collection with time-series support
 // Run with: mongosh <uri> scripts/migrations/mongodb/002_sensor_telemetry.js

@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    kong.yml                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
+#    Updated: 2026/04/09 23:34:35 by dlesieur         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 # File: docker/services/kong/conf/kong.yml
 # Kong Declarative Configuration — mini-BaaS Gateway
 # Env vars are substituted at runtime via sed in the Kong entrypoint
