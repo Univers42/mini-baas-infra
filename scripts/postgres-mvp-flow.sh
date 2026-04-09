@@ -13,38 +13,46 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
+readonly HDR_PREFER='Prefer: return=representation'
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
 source "$SCRIPT_DIR/test-ui.sh"
 
 cleanup() {
   rm -rf "$TMPDIR" >/dev/null 2>&1 || true
+  return 0
 }
 trap cleanup EXIT
 
 require_cmd() {
   local cmd="$1"
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo -e "${RED}[FAIL]${NC} Required command not found: $cmd"
+    echo -e "${RED}[FAIL]${NC} Required command not found: $cmd" >&2
     exit 1
   fi
+  return 0
 }
 
 fail_and_exit() {
   local message="$1"
-  echo -e "${RED}[FAIL]${NC} $message"
+  echo -e "${RED}[FAIL]${NC} $message" >&2
   exit 1
 }
 
 pass() {
   local message="$1"
   echo -e "${GREEN}[PASS]${NC} $message"
+  return 0
 }
 
 request_code() {
   local output_file="$1"
   shift
   curl -sS -o "$output_file" -w '%{http_code}' --max-time "$TIMEOUT" "$@" 2>/dev/null || echo "000"
+  return 0
 }
 
 ensure_postgres_mvp_policies() {
@@ -98,6 +106,7 @@ SQL
   fi
 
   pass "PostgreSQL MVP RLS write policies ensured"
+  return 0
 }
 
 signup_and_login() {
@@ -111,8 +120,8 @@ signup_and_login() {
   local signup_code
   signup_code=$(request_code "$signup_file" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     -d "{\"email\":\"$email\",\"password\":\"$password\"}")
 
   [[ "$signup_code" == "200" ]] || fail_and_exit "Signup failed for $label (status $signup_code)"
@@ -124,8 +133,8 @@ signup_and_login() {
   local login_code
   login_code=$(request_code "$login_file" \
     -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     -d "{\"email\":\"$email\",\"password\":\"$password\"}")
 
   [[ "$login_code" == "200" ]] || fail_and_exit "Login failed for $label (status $login_code)"
@@ -135,6 +144,7 @@ signup_and_login() {
   [[ -n "$token" ]] || fail_and_exit "Login response missing access token for $label"
 
   printf '%s|%s\n' "$user_id" "$token"
+  return 0
 }
 
 upsert_user_row() {
@@ -147,10 +157,10 @@ upsert_user_row() {
   local code
   code=$(request_code "$out" \
     -X POST "$BASE_URL/rest/v1/users?on_conflict=email" \
-    -H 'Content-Type: application/json' \
+    -H "$CT_JSON" \
     -H 'Prefer: resolution=merge-duplicates,return=representation' \
     -H "Authorization: Bearer $token" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     -d "{\"id\":\"$user_id\",\"email\":\"$email\",\"name\":\"$label\"}")
 
   case "$code" in
@@ -161,6 +171,7 @@ upsert_user_row() {
       fail_and_exit "Upsert user row failed for $label (status $code)"
       ;;
   esac
+  return 0
 }
 
 ui_banner "PostgreSQL MVP Flow" "Auth + PostgREST CRUD + isolation"
@@ -198,10 +209,10 @@ ui_step "Step 4: User A creates private post"
 CREATE_OUT="$TMPDIR/create_post_a.json"
 CREATE_CODE=$(request_code "$CREATE_OUT" \
   -X POST "$BASE_URL/rest/v1/posts" \
-  -H 'Content-Type: application/json' \
-  -H 'Prefer: return=representation' \
+  -H "$CT_JSON" \
+  -H "$HDR_PREFER" \
   -H "Authorization: Bearer $TOKEN_A" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   -d "{\"user_id\":\"$USER_A_ID\",\"title\":\"MVP Post\",\"content\":\"Created from postgres-mvp-flow\",\"is_public\":false}")
 
 case "$CREATE_CODE" in
@@ -221,7 +232,7 @@ A_GET_OUT="$TMPDIR/a_get_post.json"
 A_GET_CODE=$(request_code "$A_GET_OUT" \
   -X GET "$BASE_URL/rest/v1/posts?id=eq.$POST_ID&select=id,user_id,title,is_public" \
   -H "Authorization: Bearer $TOKEN_A" \
-  -H "apikey: $APIKEY")
+  -H "$HDR_APIKEY")
 [[ "$A_GET_CODE" == "200" ]] || fail_and_exit "User A read own post failed (status $A_GET_CODE)"
 
 A_COUNT=$(jq -r 'length' "$A_GET_OUT" 2>/dev/null || echo "0")
@@ -231,10 +242,10 @@ pass "User A can read own private post"
 A_PATCH_OUT="$TMPDIR/a_patch_post.json"
 A_PATCH_CODE=$(request_code "$A_PATCH_OUT" \
   -X PATCH "$BASE_URL/rest/v1/posts?id=eq.$POST_ID" \
-  -H 'Content-Type: application/json' \
-  -H 'Prefer: return=representation' \
+  -H "$CT_JSON" \
+  -H "$HDR_PREFER" \
   -H "Authorization: Bearer $TOKEN_A" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   -d '{"title":"MVP Post Updated"}')
 
 case "$A_PATCH_CODE" in
@@ -251,7 +262,7 @@ B_GET_OUT="$TMPDIR/b_get_post.json"
 B_GET_CODE=$(request_code "$B_GET_OUT" \
   -X GET "$BASE_URL/rest/v1/posts?id=eq.$POST_ID&select=id,user_id,title,is_public" \
   -H "Authorization: Bearer $TOKEN_B" \
-  -H "apikey: $APIKEY")
+  -H "$HDR_APIKEY")
 [[ "$B_GET_CODE" == "200" ]] || fail_and_exit "User B read query failed (status $B_GET_CODE)"
 
 B_COUNT=$(jq -r 'length' "$B_GET_OUT" 2>/dev/null || echo "-1")
@@ -263,7 +274,7 @@ INVALID_OUT="$TMPDIR/invalid_jwt.json"
 INVALID_CODE=$(request_code "$INVALID_OUT" \
   -X GET "$BASE_URL/rest/v1/users?limit=1" \
   -H 'Authorization: Bearer invalid.jwt.token' \
-  -H "apikey: $APIKEY")
+  -H "$HDR_APIKEY")
 
 case "$INVALID_CODE" in
   401|403)
@@ -278,9 +289,9 @@ ui_step "Step 8: User A deletes own post"
 DELETE_OUT="$TMPDIR/delete_post_a.json"
 DELETE_CODE=$(request_code "$DELETE_OUT" \
   -X DELETE "$BASE_URL/rest/v1/posts?id=eq.$POST_ID" \
-  -H 'Prefer: return=representation' \
+  -H "$HDR_PREFER" \
   -H "Authorization: Bearer $TOKEN_A" \
-  -H "apikey: $APIKEY")
+  -H "$HDR_APIKEY")
 
 case "$DELETE_CODE" in
   200|204)
@@ -295,7 +306,7 @@ VERIFY_OUT="$TMPDIR/verify_deleted.json"
 VERIFY_CODE=$(request_code "$VERIFY_OUT" \
   -X GET "$BASE_URL/rest/v1/posts?id=eq.$POST_ID&select=id" \
   -H "Authorization: Bearer $TOKEN_A" \
-  -H "apikey: $APIKEY")
+  -H "$HDR_APIKEY")
 [[ "$VERIFY_CODE" == "200" ]] || fail_and_exit "Delete verification query failed (status $VERIFY_CODE)"
 
 VERIFY_COUNT=$(jq -r 'length' "$VERIFY_OUT" 2>/dev/null || echo "-1")

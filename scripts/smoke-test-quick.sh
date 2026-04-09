@@ -20,15 +20,17 @@ NC='\033[0m'
 
 PASSED=0
 FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 smoke() {
   local name="$1"
   local url="$2"
   local expected="${3:-200}"
 
-  code=$(curl -sS -o /dev/null -w '%{http_code}' \
+  code=$(curl -sS -o /dev/null -w "$CURL_FMT" \
     --max-time "$TIMEOUT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     "$url" 2>/dev/null || echo "000")
 
   if [ "$code" = "$expected" ]; then
@@ -38,6 +40,7 @@ smoke() {
     echo -e "  ${RED}✗${NC} $name  (expected $expected, got $code)"
     FAILED=$((FAILED + 1))
   fi
+  return 0
 }
 
 echo -e "${BOLD}═══ Quick Smoke Test ═══${NC}"

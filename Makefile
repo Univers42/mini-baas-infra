@@ -408,6 +408,26 @@ update: ## Update git submodules
 	@echo -e "$(_G)✓ Submodules updated$(_0)"
 
 # ========================================================================== #
+##@ Audit (SonarCloud)
+# ========================================================================== #
+
+audit-scan: ## Run SonarCloud scanner (requires TOK_SONARCLOUD in .env)
+	@echo -e "$(_B)Running SonarCloud scan…$(_0)"
+	@SONAR_TOKEN=$$(grep TOK_SONARCLOUD .env | cut -d= -f2); \
+	[ -n "$$SONAR_TOKEN" ] || { echo -e "$(_R)TOK_SONARCLOUD not found in .env$(_0)"; exit 1; }; \
+	npx sonar-scanner \
+		-Dsonar.token="$$SONAR_TOKEN" \
+		-Dsonar.qualitygate.wait=true 2>&1 | tee audit/scan.log; \
+	echo -e "$(_G)✓ Scan complete — log at audit/scan.log$(_0)"
+
+audit-fetch: ## Fetch SonarCloud issues → audit/*.json + audit/summary.txt
+	@SONAR_TOKEN=$$(grep TOK_SONARCLOUD .env | cut -d= -f2) \
+		bash scripts/sonar-fetch-issues.sh
+
+audit: audit-scan audit-fetch ## Full audit: scan + fetch issues
+	@echo -e "$(_G)✓ Audit complete — see audit/summary.txt$(_0)"
+
+# ========================================================================== #
 ##@ Help
 # ========================================================================== #
 
@@ -430,5 +450,6 @@ help: ## Show this help
 	observe observe-down grafana prometheus \
 	adapter-add adapter-ls \
 	play play-css play-down play-logs \
+	audit audit-scan audit-fetch \
 	env preflight hooks update help \
 	_require-docker _require-compose _rm-stale

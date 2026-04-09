@@ -10,7 +10,7 @@ const verifyToken = (req) => {
   const token = auth.slice(7).trim();
   try {
     const claims = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
-    if (!claims || !claims.sub) return null;
+    if (!claims?.sub) return null;
     return { id: claims.sub, email: claims.email || null, role: claims.role || null };
   } catch {
     return null;

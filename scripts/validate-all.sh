@@ -28,6 +28,7 @@ check() {
     echo -e "  ${RED}✗${NC} $label"
     ERRORS=$((ERRORS + 1))
   fi
+  return 0
 }
 
 echo -e "${BOLD}═══ mini-BaaS validate-all ═══${NC}"

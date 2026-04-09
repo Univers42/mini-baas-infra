@@ -1,6 +1,6 @@
 // File: docker/services/adapter-registry/src/lib/crypto.js
 // AES-256-GCM encryption with scrypt key derivation for database connection strings
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;

@@ -14,6 +14,7 @@ import time
 GATEWAY = "http://localhost:8000"
 ANON_KEY = "public-anon-key"
 COLLECTION = "tasks"
+HEALTH_PATH = "/mongo/v1/health"
 
 pass_count = 0
 fail_count = 0
@@ -74,21 +75,21 @@ print(f"API Key: {ANON_KEY}\n")
 print("=== P0: Auth and Gateway Security ===\n")
 
 log_info("Test 1: Missing apikey returns error")
-resp = probe("GET", "/mongo/v1/health", "")
+resp = probe("GET", HEALTH_PATH, "")
 if "No API key" in resp or "missing_authorization" in resp or "Unauthorized" in resp:
     log_pass("Missing apikey correctly rejected")
 else:
     log_fail(f"Expected auth error, got: {resp[:100]}")
 
 log_info("Test 2: Invalid apikey returns error")
-resp = probe("GET", "/mongo/v1/health", "invalid-key-xyz")
+resp = probe("GET", HEALTH_PATH, "invalid-key-xyz")
 if "Unauthorized" in resp or "Invalid" in resp or "No API key" in resp:
     log_pass("Invalid apikey correctly rejected")
 else:
     log_fail(f"Expected auth error, got: {resp[:100]}")
 
 log_info("Test 3: Valid apikey works")
-resp = probe("GET", "/mongo/v1/health", ANON_KEY)
+resp = probe("GET", HEALTH_PATH, ANON_KEY)
 if '"success":true' in resp or '"success": true' in resp:
     log_pass("Health check works with valid apikey")
 else:
@@ -110,7 +111,7 @@ try:
     else:
         log_fail(f"Signup failed: {signup_resp}")
         sys.exit(1)
-except:
+except Exception:
     log_fail(f"Signup failed: {signup_resp}")
     sys.exit(1)
 
@@ -127,7 +128,7 @@ try:
     else:
         log_fail(f"Login failed: {login_resp}")
         sys.exit(1)
-except:
+except Exception:
     log_fail(f"Login failed: {login_resp}")
     sys.exit(1)
 
@@ -146,7 +147,7 @@ try:
     else:
         log_fail(f"Signup failed: {signup_b_resp}")
         sys.exit(1)
-except:
+except Exception:
     log_fail(f"Signup failed: {signup_b_resp}")
     sys.exit(1)
 
@@ -163,7 +164,7 @@ try:
     else:
         log_fail(f"Login failed: {login_b_resp}")
         sys.exit(1)
-except:
+except Exception:
     log_fail(f"Login failed: {login_b_resp}")
     sys.exit(1)
 
@@ -182,7 +183,7 @@ try:
         log_pass(f"Created document (ID: {USER_A_DOC_ID[:8]}...)")
     else:
         log_fail(f"Create failed: {create_resp}")
-except:
+except Exception:
     log_fail(f"Create failed: {create_resp}")
 
 log_info("Test 9: List documents as user A")
@@ -194,7 +195,7 @@ try:
         log_pass(f"Listed documents (count: {count})")
     else:
         log_fail(f"List returned no documents: {list_resp}")
-except:
+except Exception:
     log_fail(f"List failed: {list_resp}")
 
 log_info("Test 10: Get single document")
@@ -206,7 +207,7 @@ try:
         log_pass(f"Retrieved document: {title}")
     else:
         log_fail(f"Get failed: {get_resp}")
-except:
+except Exception:
     log_fail(f"Get failed: {get_resp}")
 
 log_info("Test 11: Update document")
@@ -219,7 +220,7 @@ try:
         log_pass(f"Updated document status to: {status}")
     else:
         log_fail(f"Update failed: {patch_resp}")
-except:
+except Exception:
     log_fail(f"Update failed: {patch_resp}")
 
 # P0: User Isolation
@@ -234,7 +235,7 @@ try:
         log_pass("User B correctly denied (404)")
     else:
         log_fail(f"Isolation broken: {isolation_resp}")
-except:
+except Exception:
     log_fail(f"Isolation check failed: {isolation_resp}")
 
 log_info("Test 13: User B cannot PATCH user A's document")
@@ -247,7 +248,7 @@ try:
         log_pass("User B denied patch (404)")
     else:
         log_fail(f"Isolation broken: {patch_isolation_resp}")
-except:
+except Exception:
     log_fail(f"Patch isolation check failed: {patch_isolation_resp}")
 
 log_info("Test 14: User B cannot DELETE user A's document")
@@ -259,7 +260,7 @@ try:
         log_pass("User B denied delete (404)")
     else:
         log_fail(f"Isolation broken: {delete_isolation_resp}")
-except:
+except Exception:
     log_fail(f"Delete isolation check failed: {delete_isolation_resp}")
 
 # Cleanup
@@ -273,7 +274,7 @@ try:
         log_pass("Deleted document")
     else:
         log_fail(f"Delete failed: {delete_resp}")
-except:
+except Exception:
     log_fail(f"Delete failed: {delete_resp}")
 
 log_info("Test 16: Verify deletion (404)")
@@ -285,7 +286,7 @@ try:
         log_pass("Document correctly returns 404 after deletion")
     else:
         log_fail(f"Verify failed: {verify_resp}")
-except:
+except Exception:
     log_fail(f"Verify failed: {verify_resp}")
 
 # Validation
@@ -301,7 +302,7 @@ try:
         log_pass("Forbidden fields protection works")
     else:
         log_fail(f"Security issue: {forbidden_resp}")
-except:
+except Exception:
     log_fail(f"Forbidden fields check failed: {forbidden_resp}")
 
 log_info("Test 18: Missing Authorization header")
@@ -313,7 +314,7 @@ try:
         log_pass("Missing auth header rejected")
     else:
         log_fail(f"Auth check failed: {no_auth_resp}")
-except:
+except Exception:
     log_fail(f"Auth check failed: {no_auth_resp}")
 
 log_info("Test 19: Invalid ObjectId")
@@ -325,7 +326,7 @@ try:
         log_pass("Invalid ObjectId rejected")
     else:
         log_fail(f"ID validation failed: {invalid_id_resp}")
-except:
+except Exception:
     log_fail(f"ID validation failed: {invalid_id_resp}")
 
 # Summary

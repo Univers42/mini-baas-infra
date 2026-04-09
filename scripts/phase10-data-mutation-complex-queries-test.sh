@@ -20,6 +20,10 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
+readonly HDR_PREFER='Prefer: return=representation'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -37,6 +41,7 @@ pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
     ((TESTS_PASSED++))
+    return 0
 }
 
 fail() {
@@ -44,6 +49,7 @@ fail() {
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
     ((TESTS_FAILED++))
+    return 0
 }
 
 assert_code_one_of() {
@@ -60,10 +66,12 @@ assert_code_one_of() {
     done
 
     fail "$name" "expected one of ${allowed[*]}, got $actual"
+    return 0
 }
 
 cleanup() {
     rm -rf "$TMPDIR" >/dev/null 2>&1 || true
+    return 0
 }
 
 trap cleanup EXIT
@@ -74,18 +82,18 @@ ui_kv "API key" "$APIKEY"
 ui_hr
 
 ui_step "Setup: Create auth user and obtain JWT"
-SIGNUP_CODE=$(curl -sS -o "$TMPDIR/signup.json" -w '%{http_code}' \
+SIGNUP_CODE=$(curl -sS -o "$TMPDIR/signup.json" -w "$CURL_FMT" \
   -X POST "$BASE_URL/auth/v1/signup" \
-  -H 'Content-Type: application/json' \
-  -H "apikey: $APIKEY" \
+  -H "$CT_JSON" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" \
   -d "{\"email\":\"$PASS_EMAIL\",\"password\":\"$PASS_PASSWORD\"}" 2>/dev/null || echo '000')
 assert_code_one_of "Signup succeeds" "$SIGNUP_CODE" "200"
 
-LOGIN_CODE=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
+LOGIN_CODE=$(curl -sS -o "$TMPDIR/login.json" -w "$CURL_FMT" \
   -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-  -H 'Content-Type: application/json' \
-  -H "apikey: $APIKEY" \
+  -H "$CT_JSON" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" \
   -d "{\"email\":\"$PASS_EMAIL\",\"password\":\"$PASS_PASSWORD\"}" 2>/dev/null || echo '000')
 assert_code_one_of "Login succeeds" "$LOGIN_CODE" "200"
@@ -100,12 +108,12 @@ else
 fi
 
 ui_step "Test 1: Batch INSERT on /rest/v1/users"
-BATCH_INSERT_CODE=$(curl -sS -o "$TMPDIR/batch_insert.json" -w '%{http_code}' \
+BATCH_INSERT_CODE=$(curl -sS -o "$TMPDIR/batch_insert.json" -w "$CURL_FMT" \
   -X POST "$BASE_URL/rest/v1/users" \
-  -H 'Content-Type: application/json' \
-  -H 'Prefer: return=representation' \
+  -H "$CT_JSON" \
+  -H "$HDR_PREFER" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" \
   -d "[
     {\"id\":\"$MUTATION_USER_ID\",\"email\":\"$MUTATION_EMAIL\",\"name\":\"Phase10 Mutation\"},
@@ -114,32 +122,32 @@ BATCH_INSERT_CODE=$(curl -sS -o "$TMPDIR/batch_insert.json" -w '%{http_code}' \
 assert_code_one_of "Batch insert returns allowed status" "$BATCH_INSERT_CODE" "201" "200" "403" "409"
 
 ui_step "Test 2: Upsert on conflict (email)"
-UPSERT_CODE=$(curl -sS -o "$TMPDIR/upsert.json" -w '%{http_code}' \
+UPSERT_CODE=$(curl -sS -o "$TMPDIR/upsert.json" -w "$CURL_FMT" \
   -X POST "$BASE_URL/rest/v1/users?on_conflict=email" \
-  -H 'Content-Type: application/json' \
+  -H "$CT_JSON" \
   -H 'Prefer: resolution=merge-duplicates,return=representation' \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" \
   -d "{\"id\":\"$AUTH_USER_ID\",\"email\":\"$PASS_EMAIL\",\"name\":\"Phase10 Upsert Name\"}" 2>/dev/null || echo '000')
 assert_code_one_of "Upsert returns allowed status" "$UPSERT_CODE" "201" "200" "403" "409"
 
 ui_step "Test 3: PATCH update by filter"
-PATCH_CODE=$(curl -sS -o "$TMPDIR/patch.json" -w '%{http_code}' \
+PATCH_CODE=$(curl -sS -o "$TMPDIR/patch.json" -w "$CURL_FMT" \
   -X PATCH "$BASE_URL/rest/v1/users?id=eq.$AUTH_USER_ID" \
-  -H 'Content-Type: application/json' \
-  -H 'Prefer: return=representation' \
+  -H "$CT_JSON" \
+  -H "$HDR_PREFER" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" \
   -d '{"name":"Phase10 Patched"}' 2>/dev/null || echo '000')
 assert_code_one_of "PATCH returns allowed status" "$PATCH_CODE" "200" "204" "403"
 
 ui_step "Test 4: GET with select + filter"
-FILTER_CODE=$(curl -sS -o "$TMPDIR/filter.json" -w '%{http_code}' \
+FILTER_CODE=$(curl -sS -o "$TMPDIR/filter.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/rest/v1/users?select=id,email,name,created_at&email=eq.$PASS_EMAIL" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 assert_code_one_of "Filtered query status" "$FILTER_CODE" "200"
 
@@ -151,10 +159,10 @@ else
 fi
 
 ui_step "Test 5: Pagination with limit + offset"
-PAGINATION_CODE=$(curl -sS -o "$TMPDIR/pagination.json" -w '%{http_code}' \
+PAGINATION_CODE=$(curl -sS -o "$TMPDIR/pagination.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/rest/v1/users?select=id,email&order=created_at.desc&limit=2&offset=0" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 assert_code_one_of "Pagination query status" "$PAGINATION_CODE" "200"
 
@@ -166,10 +174,10 @@ else
 fi
 
 ui_step "Test 6: Complex OR filter"
-OR_CODE=$(curl -sS -o "$TMPDIR/or_filter.json" -w '%{http_code}' \
+OR_CODE=$(curl -sS -o "$TMPDIR/or_filter.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/rest/v1/users?select=id,email&or=(email.eq.$PASS_EMAIL,email.eq.$MUTATION_EMAIL)&limit=5" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 assert_code_one_of "OR filter query status" "$OR_CODE" "200"
 
@@ -182,11 +190,11 @@ fi
 
 ui_step "Test 7: HEAD request with exact count"
 HEAD_HEADERS="$TMPDIR/head.headers"
-HEAD_CODE=$(curl -sS -D "$HEAD_HEADERS" -o /dev/null -w '%{http_code}' \
+HEAD_CODE=$(curl -sS -D "$HEAD_HEADERS" -o /dev/null -w "$CURL_FMT" \
   -X HEAD "$BASE_URL/rest/v1/users?select=id" \
   -H 'Prefer: count=exact' \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 HEAD_CODE="$(printf '%s' "$HEAD_CODE" | tr -cd '0-9' | cut -c1-3)"
 assert_code_one_of "HEAD query status" "$HEAD_CODE" "200" "206"
@@ -198,19 +206,19 @@ else
 fi
 
 ui_step "Test 8: Invalid cast/filter validation"
-INVALID_FILTER_CODE=$(curl -sS -o "$TMPDIR/invalid_filter.json" -w '%{http_code}' \
+INVALID_FILTER_CODE=$(curl -sS -o "$TMPDIR/invalid_filter.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/rest/v1/users?id=eq.not-a-uuid" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 assert_code_one_of "Invalid UUID filter is rejected" "$INVALID_FILTER_CODE" "400" "406"
 
 ui_step "Test 9: DELETE by filter"
-DELETE_CODE=$(curl -sS -o "$TMPDIR/delete.json" -w '%{http_code}' \
+DELETE_CODE=$(curl -sS -o "$TMPDIR/delete.json" -w "$CURL_FMT" \
   -X DELETE "$BASE_URL/rest/v1/users?email=eq.$MUTATION_EMAIL" \
-  -H 'Prefer: return=representation' \
+  -H "$HDR_PREFER" \
   -H "Authorization: Bearer $JWT" \
-  -H "apikey: $APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 assert_code_one_of "DELETE returns allowed status" "$DELETE_CODE" "200" "204" "403"
 

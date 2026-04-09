@@ -18,6 +18,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -35,6 +38,7 @@ test_case() {
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 test_contains() {
@@ -49,6 +53,7 @@ test_contains() {
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 # Initialize test database
@@ -58,8 +63,8 @@ init_test_data() {
     
     # Sign up user
     SIGNUP_RESPONSE=$(curl -sS -X POST "$BASE_URL/auth/v1/signup" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null)
     
@@ -67,8 +72,8 @@ init_test_data() {
     
     # Login to get JWT
     LOGIN_RESPONSE=$(curl -sS -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null)
     
@@ -98,11 +103,11 @@ fi
 # Test 1: POST (Create) operation
 ui_step "Test 1: POST operation - Create user profile"
 # Create user_profiles record for the test user
-POST_HTTP=$(curl -sS -o "$TMPDIR/post_response.json" -w '%{http_code}' \
+POST_HTTP=$(curl -sS -o "$TMPDIR/post_response.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/rest/v1/user_profiles" \
-    -H 'Content-Type: application/json' \
+    -H "$CT_JSON" \
     -H "Authorization: Bearer $JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"user_id\":\"$USER_ID\",\"bio\":\"Phase 6 test profile\"}" 2>/dev/null)
 
@@ -125,11 +130,11 @@ fi
 
 # Test 2: GET (Read) operation with filter
 ui_step "Test 2: GET operation - Retrieve with filter"
-GET_HTTP=$(curl -sS -o "$TMPDIR/get_response.json" -w '%{http_code}' \
+GET_HTTP=$(curl -sS -o "$TMPDIR/get_response.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/user_profiles?user_id=eq.$USER_ID" \
-    -H 'Content-Type: application/json' \
+    -H "$CT_JSON" \
     -H "Authorization: Bearer $JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 test_case "GET filtered response status" "200" "$GET_HTTP"
@@ -146,11 +151,11 @@ fi
 
 # Test 3: PATCH (Partial update) operation
 ui_step "Test 3: PATCH operation - Update single field"
-PATCH_HTTP=$(curl -sS -o "$TMPDIR/patch_response.json" -w '%{http_code}' \
+PATCH_HTTP=$(curl -sS -o "$TMPDIR/patch_response.json" -w "$CURL_FMT" \
     -X PATCH "$BASE_URL/rest/v1/user_profiles?user_id=eq.$USER_ID" \
-    -H 'Content-Type: application/json' \
+    -H "$CT_JSON" \
     -H "Authorization: Bearer $JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     -H "Prefer: return=representation" \
     --max-time "$TIMEOUT" \
     -d "{\"bio\":\"Updated via PATCH - Phase 6\"}" 2>/dev/null)
@@ -175,11 +180,11 @@ fi
 # Test 4: POST to create posts (alternative test instead of PUT which isn't supported)
 ui_step "Test 4: POST operation - Create post"
 TIMESTAMP=$(date +%s)
-POST2_HTTP=$(curl -sS -o "$TMPDIR/post2_response.json" -w '%{http_code}' \
+POST2_HTTP=$(curl -sS -o "$TMPDIR/post2_response.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/rest/v1/posts" \
-    -H 'Content-Type: application/json' \
+    -H "$CT_JSON" \
     -H "Authorization: Bearer $JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"user_id\":\"$USER_ID\",\"title\":\"Test Post Phase 6\",\"content\":\"This is a test post created via Phase 6 test\",\"is_public\":false}" 2>/dev/null)
 
@@ -204,11 +209,11 @@ fi
 # Test 5: DELETE operation
 ui_step "Test 5: DELETE operation - Remove resource"
 if [[ -n "$POST2_ID" ]] && [[ "$POST2_ID" != "null" ]]; then
-    DELETE_HTTP=$(curl -sS -o "$TMPDIR/delete_response.json" -w '%{http_code}' \
+    DELETE_HTTP=$(curl -sS -o "$TMPDIR/delete_response.json" -w "$CURL_FMT" \
         -X DELETE "$BASE_URL/rest/v1/posts?id=eq.$POST2_ID" \
-        -H 'Content-Type: application/json' \
+        -H "$CT_JSON" \
         -H "Authorization: Bearer $JWT" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" 2>/dev/null)
 
     if [[ "$DELETE_HTTP" =~ ^(200|204)$ ]]; then
@@ -226,11 +231,11 @@ fi
 # Test 6: Verify deletion with GET
 ui_step "Test 6: Verify deletion - GET after DELETE should return empty"
 if [[ -n "$POST2_ID" ]] && [[ "$POST2_ID" != "null" ]]; then
-    VERIFY_HTTP=$(curl -sS -o "$TMPDIR/verify_response.json" -w '%{http_code}' \
+    VERIFY_HTTP=$(curl -sS -o "$TMPDIR/verify_response.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/rest/v1/posts?id=eq.$POST2_ID" \
-        -H 'Content-Type: application/json' \
+        -H "$CT_JSON" \
         -H "Authorization: Bearer $JWT" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" 2>/dev/null)
 
     test_case "GET after DELETE status" "200" "$VERIFY_HTTP"
@@ -245,10 +250,10 @@ fi
 
 # Test 7: Test method not allowed (404 on invalid method)
 ui_step "Test 7: Invalid HTTP method rejection"
-INVALID_HTTP=$(curl -sS -o "$TMPDIR/invalid.json" -w '%{http_code}' \
+INVALID_HTTP=$(curl -sS -o "$TMPDIR/invalid.json" -w "$CURL_FMT" \
     -X OPTIONS "$BASE_URL/rest/v1/user_profiles" \
     -H "Authorization: Bearer $JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 # OPTIONS is typically allowed (CORS preflight), so check for 200 or allow other valid codes
@@ -262,11 +267,11 @@ fi
 
 # Test 8: Content-Type validation
 ui_step "Test 8: Content-Type validation"
-BAD_CONTENT=$(curl -sS -o "$TMPDIR/bad_content.json" -w '%{http_code}' \
+BAD_CONTENT=$(curl -sS -o "$TMPDIR/bad_content.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/rest/v1/user_profiles" \
     -H 'Content-Type: text/plain' \
     -H "Authorization: Bearer $JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "invalid json" 2>/dev/null)
 

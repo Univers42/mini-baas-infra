@@ -17,6 +17,11 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
+readonly MSG_STORAGE_INIT='Storage route accepts initial requests'
+readonly MSG_TIMEOUT='request timed out or connection failed'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -26,6 +31,7 @@ pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
     ((TESTS_PASSED++))
+    return 0
 }
 
 fail() {
@@ -33,6 +39,7 @@ fail() {
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
     ((TESTS_FAILED++))
+    return 0
 }
 
 assert_code_one_of() {
@@ -49,6 +56,7 @@ assert_code_one_of() {
     done
 
     fail "$name" "expected one of ${allowed[*]}, got $actual"
+    return 0
 }
 
 ui_banner "Phase 12 Test Suite" "Rate Limiting Policy Enforcement"
@@ -64,10 +72,10 @@ ui_hr
 
 ui_step "Test 1: Auth route individual requests succeed"
 for i in {1..3}; do
-    CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+    CODE=$(curl -sS -o /dev/null -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/signup" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         -d "{\"email\":\"test$i.ratelimit@example.com\",\"password\":\"TestPass123!\"}" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     
@@ -80,7 +88,7 @@ done
 
 ui_step "Test 2: REST route responses include rate limit headers"
 HEADERS=$(curl -sS -i -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | head -20)
 
 if echo "$HEADERS" | grep -qi "RateLimit-Limit\|X-RateLimit-Limit"; then
@@ -93,27 +101,27 @@ ui_step "Test 3: Storage route rate limit applied to uploads"
 # Make rapid requests to storage endpoint
 STORAGE_CODES=()
 for i in {1..3}; do
-    CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+    CODE=$(curl -sS -o /dev/null -w "$CURL_FMT" \
         -X GET "$BASE_URL/storage/v1/" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time 3 2>/dev/null || echo "000")
     STORAGE_CODES+=("$CODE")
 done
 
 # Should not all be 429 immediately, but system should handle them
 if [[ "${STORAGE_CODES[0]}" == "000" ]]; then
-    fail "Storage route accepts initial requests" "request timed out or connection failed"
+    fail "$MSG_STORAGE_INIT" "$MSG_TIMEOUT"
 elif [[ "${STORAGE_CODES[0]}" =~ ^5 ]]; then
-    fail "Storage route accepts initial requests" "unexpected server error ${STORAGE_CODES[0]}"
+    fail "$MSG_STORAGE_INIT" "unexpected server error ${STORAGE_CODES[0]}"
 elif [[ "${STORAGE_CODES[0]}" != "429" ]]; then
-    pass "Storage route accepts initial requests"
+    pass "$MSG_STORAGE_INIT"
 else
-    fail "Storage route accepts initial requests" "got 429 immediately"
+    fail "$MSG_STORAGE_INIT" "got 429 immediately"
 fi
 
 ui_step "Test 4: Invalid API key still respects rate limiting"
 # Test that rate limiting applies even for unauthorized requests
-CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+CODE=$(curl -sS -o /dev/null -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
     -H "apikey: invalid-key" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
@@ -123,12 +131,12 @@ assert_code_one_of "Invalid API key request rejected" "$CODE" "401" "403"
 ui_step "Test 5: Realtime route rate limiting configured"
 # Realtime requests should return valid non-error HTTP statuses.
 for i in {1..3}; do
-    CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+    CODE=$(curl -sS -o /dev/null -w "$CURL_FMT" \
         -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY" \
         --max-time 3 2>/dev/null || echo "000")
 
     if [[ "$CODE" == "000" ]]; then
-        fail "Realtime request $i processed" "request timed out or connection failed"
+        fail "Realtime request $i processed" "$MSG_TIMEOUT"
     elif [[ "$CODE" =~ ^5 ]]; then
         fail "Realtime request $i processed" "unexpected server error $CODE"
     else
@@ -141,10 +149,10 @@ ui_step "Test 6: Auth endpoint minute limit enforces"
 # We'll try 10 rapid requests to see if we can trigger it
 RAPID_COUNT=0
 for i in {1..10}; do
-    CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+    CODE=$(curl -sS -o /dev/null -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/signup" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         -d "{\"email\":\"rapid$i.ratelimit@example.com\",\"password\":\"TestPass123!\"}" \
         --max-time 2 2>/dev/null || echo "000")
     
@@ -161,13 +169,13 @@ fi
 
 ui_step "Test 7: Different routes have different limits"
 AUTH_HEADERS=$(curl -sS -i -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     -d '{"email":"routecheck.ratelimit@example.com","password":"TestPass123!"}' \
     --max-time "$TIMEOUT" 2>/dev/null | head -30)
 
 REST_HEADERS=$(curl -sS -i -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | head -30)
 
 if echo "$AUTH_HEADERS" | grep -qi "RateLimit-Limit\|X-RateLimit-Limit" && \
@@ -179,14 +187,14 @@ fi
 
 ui_step "Test 8: Rate limit applies per IP"
 # All requests from localhost should be counted together
-CODE1=$(curl -sS -o /dev/null -w '%{http_code}' -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "apikey: $APIKEY" --max-time 3 2>/dev/null || echo "000")
-CODE2=$(curl -sS -o /dev/null -w '%{http_code}' -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "apikey: $APIKEY" --max-time 3 2>/dev/null || echo "000")
+CODE1=$(curl -sS -o /dev/null -w "$CURL_FMT" -X GET "$BASE_URL/rest/v1/users?limit=1" \
+    -H "$HDR_APIKEY" --max-time 3 2>/dev/null || echo "000")
+CODE2=$(curl -sS -o /dev/null -w "$CURL_FMT" -X GET "$BASE_URL/rest/v1/users?limit=1" \
+    -H "$HDR_APIKEY" --max-time 3 2>/dev/null || echo "000")
 
 if [[ "$CODE1" != "429" && "$CODE2" != "429" ]]; then
     if [[ "$CODE1" == "000" || "$CODE2" == "000" ]]; then
-        fail "Requests from same IP rate limiting" "request timed out or connection failed"
+        fail "Requests from same IP rate limiting" "$MSG_TIMEOUT"
     elif [[ "$CODE1" =~ ^5 || "$CODE2" =~ ^5 ]]; then
         fail "Requests from same IP rate limiting" "unexpected server error ($CODE1, $CODE2)"
     else

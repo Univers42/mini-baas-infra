@@ -1,0 +1,3144 @@
+[
+  {
+    "key": "AZ1y4rm3Ao3DRkjyNBMZ",
+    "rule": "Web:S7930",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/index.html",
+    "project": "Univers42_mini-baas-infra",
+    "line": 320,
+    "hash": "c741fa56694331171cb2fd84d7aaf9de",
+    "textRange": {
+      "startLine": 320,
+      "endLine": 320,
+      "startOffset": 8,
+      "endOffset": 54
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Duplicate id \"mongoOutput\" found. First occurrence was on line 111.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "html",
+      "web"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "BUG",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      },
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4reCAo3DRkjyNBJq",
+    "rule": "javascript:S3776",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "3ae26dda8118fd52d664e34ce1ed1676",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 15,
+              "endLine": 15,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 33,
+              "endLine": 33,
+              "startOffset": 4,
+              "endOffset": 10
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 41,
+              "endLine": 41,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 41,
+              "endLine": 41,
+              "startOffset": 17,
+              "endOffset": 19
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 43,
+              "endLine": 43,
+              "startOffset": 15,
+              "endOffset": 17
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 45,
+              "endLine": 45,
+              "startOffset": 10,
+              "endOffset": 12
+            },
+            "msg": "+3 (incl. 2 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 45,
+              "endLine": 45,
+              "startOffset": 68,
+              "endOffset": 69
+            },
+            "msg": "+4 (incl. 3 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 58,
+              "endLine": 58,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 64,
+              "endLine": 64,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 65,
+              "endLine": 65,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/mongodb.js",
+            "textRange": {
+              "startLine": 71,
+              "endLine": 71,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed.",
+    "effort": "11min",
+    "debt": "11min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJj",
+    "rule": "javascript:S3776",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "339b34432609617b2868a72566585efd",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 15,
+              "endLine": 15,
+              "startOffset": 2,
+              "endOffset": 4
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 23,
+              "endLine": 23,
+              "startOffset": 4,
+              "endOffset": 10
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 29,
+              "endLine": 29,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 29,
+              "endLine": 29,
+              "startOffset": 19,
+              "endOffset": 21
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 35,
+              "endLine": 35,
+              "startOffset": 10,
+              "endOffset": 12
+            },
+            "msg": "+3 (incl. 2 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 38,
+              "endLine": 38,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 38,
+              "endLine": 38,
+              "startOffset": 17,
+              "endOffset": 19
+            },
+            "msg": "+1"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 40,
+              "endLine": 40,
+              "startOffset": 10,
+              "endOffset": 12
+            },
+            "msg": "+3 (incl. 2 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 41,
+              "endLine": 41,
+              "startOffset": 56,
+              "endOffset": 57
+            },
+            "msg": "+4 (incl. 3 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 53,
+              "endLine": 53,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 63,
+              "endLine": 63,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 64,
+              "endLine": 64,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+            "textRange": {
+              "startLine": 76,
+              "endLine": 76,
+              "startOffset": 8,
+              "endOffset": 10
+            },
+            "msg": "+2 (incl. 1 for nesting)"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Refactor this function to reduce its Cognitive Complexity from 26 to the 15 allowed.",
+    "effort": "16min",
+    "debt": "16min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "brain-overload"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ri3Ao3DRkjyNBKd",
+    "rule": "plsql:LiteralsNonPrintableCharactersCheck",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 29,
+    "hash": "3a7338d03e6f072779c8f8c80aa98140",
+    "textRange": {
+      "startLine": 29,
+      "endLine": 29,
+      "startOffset": 0,
+      "endOffset": 42
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "An illegal character with code point 10 was found in this literal.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "pitfall"
+    ],
+    "creationDate": "2026-04-05T20:26:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ri3Ao3DRkjyNBKe",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 131,
+    "hash": "b580c37606cf832499d35a111ed33a2d",
+    "textRange": {
+      "startLine": 131,
+      "endLine": 131,
+      "startOffset": 1,
+      "endOffset": 12
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+            "textRange": {
+              "startLine": 141,
+              "endLine": 141,
+              "startOffset": 1,
+              "endOffset": 12
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+            "textRange": {
+              "startLine": 152,
+              "endLine": 152,
+              "startOffset": 1,
+              "endOffset": 12
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+            "textRange": {
+              "startLine": 164,
+              "endLine": 164,
+              "startOffset": 25,
+              "endOffset": 36
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T20:26:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ri3Ao3DRkjyNBKf",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 131,
+    "hash": "b580c37606cf832499d35a111ed33a2d",
+    "textRange": {
+      "startLine": 131,
+      "endLine": 131,
+      "startOffset": 22,
+      "endOffset": 29
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+            "textRange": {
+              "startLine": 142,
+              "endLine": 142,
+              "startOffset": 1,
+              "endOffset": 8
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+            "textRange": {
+              "startLine": 153,
+              "endLine": 153,
+              "startOffset": 1,
+              "endOffset": 8
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/model/postgres/migrations/002_functions_and_triggers.sql",
+            "textRange": {
+              "startLine": 164,
+              "endLine": 164,
+              "startOffset": 46,
+              "endOffset": 53
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T20:26:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLw",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "8a3fad08176368dddcce8c47e58fb7fb",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 77,
+      "endOffset": 93
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 144,
+              "endLine": 144,
+              "startOffset": 72,
+              "endOffset": 88
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 171,
+              "endLine": 171,
+              "startOffset": 72,
+              "endOffset": 88
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLr",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "c6dd9c56e44ba6cd8287cbc4439d0991",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 3,
+      "endOffset": 41
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 42,
+              "endLine": 42,
+              "startOffset": 16,
+              "endOffset": 54
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 49,
+              "endLine": 49,
+              "startOffset": 16,
+              "endOffset": 54
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 56,
+              "endLine": 56,
+              "startOffset": 16,
+              "endOffset": 54
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 79,
+              "endLine": 79,
+              "startOffset": 16,
+              "endOffset": 54
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 94,
+              "endLine": 94,
+              "startOffset": 16,
+              "endOffset": 54
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 101,
+              "endLine": 101,
+              "startOffset": 17,
+              "endOffset": 55
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 125,
+              "endLine": 125,
+              "startOffset": 16,
+              "endOffset": 54
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 8 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLu",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "c6dd9c56e44ba6cd8287cbc4439d0991",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 102,
+      "endOffset": 112
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 37,
+              "endLine": 37,
+              "startOffset": 83,
+              "endOffset": 93
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 44,
+              "endLine": 44,
+              "startOffset": 101,
+              "endOffset": 111
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 51,
+              "endLine": 51,
+              "startOffset": 93,
+              "endOffset": 103
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 135,
+              "endLine": 135,
+              "startOffset": 57,
+              "endOffset": 67
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 144,
+              "endLine": 144,
+              "startOffset": 60,
+              "endOffset": 70
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 171,
+              "endLine": 171,
+              "startOffset": 60,
+              "endOffset": 70
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 7 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLy",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "c6dd9c56e44ba6cd8287cbc4439d0991",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 74,
+      "endOffset": 87
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 135,
+              "endLine": 135,
+              "startOffset": 69,
+              "endOffset": 82
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 162,
+              "endLine": 162,
+              "startOffset": 69,
+              "endOffset": 82
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBL3",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "ff31f0c60329e083f959075a6ede6589",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 104,
+      "endOffset": 114
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 59,
+              "endLine": 59,
+              "startOffset": 82,
+              "endOffset": 92
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 66,
+              "endLine": 66,
+              "startOffset": 91,
+              "endOffset": 101
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 180,
+              "endLine": 180,
+              "startOffset": 57,
+              "endOffset": 67
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLo",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "ff31f0c60329e083f959075a6ede6589",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 3,
+      "endOffset": 41
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 64,
+              "endLine": 64,
+              "startOffset": 17,
+              "endOffset": 55
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 71,
+              "endLine": 71,
+              "startOffset": 17,
+              "endOffset": 55
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 86,
+              "endLine": 86,
+              "startOffset": 17,
+              "endOffset": 55
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 109,
+              "endLine": 109,
+              "startOffset": 17,
+              "endOffset": 55
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 117,
+              "endLine": 117,
+              "startOffset": 17,
+              "endOffset": 55
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 6 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLx",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "ff31f0c60329e083f959075a6ede6589",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 75,
+      "endOffset": 89
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 153,
+              "endLine": 153,
+              "startOffset": 59,
+              "endOffset": 73
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 180,
+              "endLine": 180,
+              "startOffset": 69,
+              "endOffset": 83
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLs",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 23,
+    "hash": "89b6fe151362e2aab4532a5de7dda5c5",
+    "textRange": {
+      "startLine": 23,
+      "endLine": 23,
+      "startOffset": 3,
+      "endOffset": 41
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 297,
+              "endLine": 297,
+              "startOffset": 4,
+              "endOffset": 42
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 302,
+              "endLine": 302,
+              "startOffset": 4,
+              "endOffset": 42
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLv",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 24,
+    "hash": "dc3f1b0962c6b2fb0dfa9ef0c04b615d",
+    "textRange": {
+      "startLine": 24,
+      "endLine": 24,
+      "startOffset": 3,
+      "endOffset": 41
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 298,
+              "endLine": 298,
+              "startOffset": 4,
+              "endOffset": 42
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 303,
+              "endLine": 303,
+              "startOffset": 4,
+              "endOffset": 42
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBL4",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 37,
+    "hash": "cfee317c1b4c4d4babca8fc7d3175e36",
+    "textRange": {
+      "startLine": 37,
+      "endLine": 37,
+      "startOffset": 95,
+      "endOffset": 103
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 44,
+              "endLine": 44,
+              "startOffset": 113,
+              "endOffset": 121
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 51,
+              "endLine": 51,
+              "startOffset": 105,
+              "endOffset": 113
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 59,
+              "endLine": 59,
+              "startOffset": 94,
+              "endOffset": 102
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 66,
+              "endLine": 66,
+              "startOffset": 103,
+              "endOffset": 111
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 74,
+              "endLine": 74,
+              "startOffset": 97,
+              "endOffset": 105
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 81,
+              "endLine": 81,
+              "startOffset": 105,
+              "endOffset": 113
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 96,
+              "endLine": 96,
+              "startOffset": 114,
+              "endOffset": 122
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 104,
+              "endLine": 104,
+              "startOffset": 105,
+              "endOffset": 113
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 112,
+              "endLine": 112,
+              "startOffset": 109,
+              "endOffset": 117
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 111,
+              "endOffset": 119
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 11 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLq",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 38,
+    "hash": "dfe9069643265638aa63ff82d51fbada",
+    "textRange": {
+      "startLine": 38,
+      "endLine": 38,
+      "startOffset": 39,
+      "endOffset": 50
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 75,
+              "endLine": 75,
+              "startOffset": 38,
+              "endOffset": 49
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 82,
+              "endLine": 82,
+              "startOffset": 39,
+              "endOffset": 50
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 90,
+              "endLine": 90,
+              "startOffset": 36,
+              "endOffset": 47
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 105,
+              "endLine": 105,
+              "startOffset": 36,
+              "endOffset": 47
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBL2",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 44,
+    "hash": "c8b5928741ca013c584d2d89a03bc9f6",
+    "textRange": {
+      "startLine": 44,
+      "endLine": 44,
+      "startOffset": 123,
+      "endOffset": 131
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 51,
+              "endLine": 51,
+              "startOffset": 115,
+              "endOffset": 123
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 66,
+              "endLine": 66,
+              "startOffset": 113,
+              "endOffset": 121
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 74,
+              "endLine": 74,
+              "startOffset": 107,
+              "endOffset": 115
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 96,
+              "endLine": 96,
+              "startOffset": 124,
+              "endOffset": 132
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 112,
+              "endLine": 112,
+              "startOffset": 119,
+              "endOffset": 127
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 121,
+              "endOffset": 129
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 7 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLm",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 45,
+    "hash": "f85f0e17f2b2d2d5e4f4fb1e42f1b34f",
+    "textRange": {
+      "startLine": 45,
+      "endLine": 45,
+      "startOffset": 40,
+      "endOffset": 51
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 52,
+              "endLine": 52,
+              "startOffset": 45,
+              "endOffset": 56
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 67,
+              "endLine": 67,
+              "startOffset": 42,
+              "endOffset": 53
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 97,
+              "endLine": 97,
+              "startOffset": 39,
+              "endOffset": 50
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 121,
+              "endLine": 121,
+              "startOffset": 42,
+              "endOffset": 53
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLl",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 74,
+    "hash": "9373256017ba7ecdfd3b67ebefe17356",
+    "textRange": {
+      "startLine": 74,
+      "endLine": 74,
+      "startOffset": 87,
+      "endOffset": 95
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 81,
+              "endLine": 81,
+              "startOffset": 95,
+              "endOffset": 103
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 162,
+              "endLine": 162,
+              "startOffset": 59,
+              "endOffset": 67
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLp",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 137,
+    "hash": "d3d11fd191fdb480c4b0734d23d758b2",
+    "textRange": {
+      "startLine": 137,
+      "endLine": 137,
+      "startOffset": 0,
+      "endOffset": 8
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 139,
+              "endLine": 139,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 210,
+              "endLine": 210,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 260,
+              "endLine": 260,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 262,
+              "endLine": 262,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLn",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 146,
+    "hash": "661b98a2e014cfd860c8dea768550147",
+    "textRange": {
+      "startLine": 146,
+      "endLine": 146,
+      "startOffset": 14,
+      "endOffset": 22
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 148,
+              "endLine": 148,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 231,
+              "endLine": 231,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 3 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBL0",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 164,
+    "hash": "16fb6ae008d651400c7b6f3583da3ab1",
+    "textRange": {
+      "startLine": 164,
+      "endLine": 164,
+      "startOffset": 14,
+      "endOffset": 22
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 166,
+              "endLine": 166,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 201,
+              "endLine": 201,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 261,
+              "endLine": 261,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLz",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 182,
+    "hash": "c6efdc7c24457483b33f70581a32a183",
+    "textRange": {
+      "startLine": 182,
+      "endLine": 182,
+      "startOffset": 14,
+      "endOffset": 22
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 184,
+              "endLine": 184,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 200,
+              "endLine": 200,
+              "startOffset": 0,
+              "endOffset": 8
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 202,
+              "endLine": 202,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 237,
+              "endLine": 237,
+              "startOffset": 14,
+              "endOffset": 22
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBL1",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 197,
+    "hash": "1b964cf48f25f95f3fc80b00cd3c486d",
+    "textRange": {
+      "startLine": 197,
+      "endLine": 197,
+      "startOffset": 4,
+      "endOffset": 13
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 206,
+              "endLine": 206,
+              "startOffset": 1,
+              "endOffset": 10
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 227,
+              "endLine": 227,
+              "startOffset": 1,
+              "endOffset": 10
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 242,
+              "endLine": 242,
+              "startOffset": 1,
+              "endOffset": 10
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 257,
+              "endLine": 257,
+              "startOffset": 1,
+              "endOffset": 10
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmQAo3DRkjyNBLt",
+    "rule": "plsql:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+    "project": "Univers42_mini-baas-infra",
+    "line": 209,
+    "hash": "6e1358bc9675c0f1a85a2dafe701dbc1",
+    "textRange": {
+      "startLine": 209,
+      "endLine": 209,
+      "startOffset": 14,
+      "endOffset": 21
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 211,
+              "endLine": 211,
+              "startOffset": 14,
+              "endOffset": 21
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 216,
+              "endLine": 216,
+              "startOffset": 14,
+              "endOffset": 21
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 238,
+              "endLine": 238,
+              "startOffset": 14,
+              "endOffset": 21
+            },
+            "msg": "Duplication."
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/003_zoo_seed.sql",
+            "textRange": {
+              "startLine": 284,
+              "endLine": 284,
+              "startOffset": 54,
+              "endOffset": 61
+            },
+            "msg": "Duplication."
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T13:47:55+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIo",
+    "rule": "python:S1192",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 77,
+    "hash": "a504ffc828036fc503e442341b48d203",
+    "textRange": {
+      "startLine": 77,
+      "endLine": 77,
+      "startOffset": 20,
+      "endOffset": 38
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+            "textRange": {
+              "startLine": 84,
+              "endLine": 84,
+              "startOffset": 20,
+              "endOffset": 38
+            },
+            "msg": "Duplication"
+          }
+        ]
+      },
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+            "textRange": {
+              "startLine": 91,
+              "endLine": 91,
+              "startOffset": 20,
+              "endOffset": 38
+            },
+            "msg": "Duplication"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Define a constant instead of duplicating this literal \"/mongo/v1/health\" 3 times.",
+    "effort": "6min",
+    "debt": "6min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIp",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 185,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 185,
+      "endLine": 185,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIq",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 197,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 197,
+      "endLine": 197,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIr",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 209,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 209,
+      "endLine": 209,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIs",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 222,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 222,
+      "endLine": 222,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIt",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 237,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 237,
+      "endLine": 237,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIu",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 250,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 250,
+      "endLine": 250,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIv",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 262,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 262,
+      "endLine": 262,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIw",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 276,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 276,
+      "endLine": 276,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIx",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 288,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 288,
+      "endLine": 288,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIy",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 304,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 304,
+      "endLine": 304,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBIz",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 316,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 316,
+      "endLine": 316,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbCAo3DRkjyNBI0",
+    "rule": "python:S5754",
+    "severity": "CRITICAL",
+    "component": "Univers42_mini-baas-infra:scripts/phase15-mongo-mvp-test.py",
+    "project": "Univers42_mini-baas-infra",
+    "line": 328,
+    "hash": "3e264f5fbab10735799511f21ca70842",
+    "textRange": {
+      "startLine": 328,
+      "endLine": 328,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify an exception class to catch or reraise the exception",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "bad-practice",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-03-31T10:11:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  }
+]

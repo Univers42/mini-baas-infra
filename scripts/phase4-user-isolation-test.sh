@@ -18,6 +18,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -35,6 +38,7 @@ test_case() {
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 test_contains() {
@@ -49,6 +53,7 @@ test_contains() {
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 create_test_user() {
@@ -56,16 +61,17 @@ create_test_user() {
     local password="$2"
     local tmpfile="$3"
 
-    SIGNUP_HTTP=$(curl -sS -o "$tmpfile" -w '%{http_code}' \
+    SIGNUP_HTTP=$(curl -sS -o "$tmpfile" -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/signup" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null || echo "000")
 
     if [[ "$SIGNUP_HTTP" == "200" ]]; then
         jq -r '.id // .user.id // empty' "$tmpfile" 2>/dev/null || true
     fi
+    return 0
 }
 
 get_jwt_token() {
@@ -73,16 +79,17 @@ get_jwt_token() {
     local password="$2"
     local tmpfile="$3"
 
-    LOGIN_HTTP=$(curl -sS -o "$tmpfile" -w '%{http_code}' \
+    LOGIN_HTTP=$(curl -sS -o "$tmpfile" -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null || echo "000")
 
     if [[ "$LOGIN_HTTP" == "200" ]]; then
         jq -r '.access_token // empty' "$tmpfile" 2>/dev/null || true
     fi
+    return 0
 }
 
 ui_banner "Phase 4 Test Suite" "User data isolation and access control"
@@ -145,10 +152,10 @@ if [[ -z "$JWT1" ]]; then
     echo -e "${YELLOW}  (Skipping - no JWT for User 1)${NC}"
 else
     # User 1 queries users table
-    USER1_QUERY_HTTP=$(curl -sS -o "$TMPDIR/user1_query.json" -w '%{http_code}' \
+    USER1_QUERY_HTTP=$(curl -sS -o "$TMPDIR/user1_query.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/rest/v1/users" \
         -H "Authorization: Bearer $JWT1" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
     test_case "User 1 can query users table" "200" "$USER1_QUERY_HTTP"
@@ -166,10 +173,10 @@ if [[ -z "$JWT1" ]] || [[ -z "$JWT2" ]]; then
 else
     # This test would require user-specific data to be created and protected
     # For now, we verify both users can authenticate
-    USER2_AUTH_HTTP=$(curl -sS -o "$TMPDIR/user2_auth_test.json" -w '%{http_code}' \
+    USER2_AUTH_HTTP=$(curl -sS -o "$TMPDIR/user2_auth_test.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/rest/v1/users" \
         -H "Authorization: Bearer $JWT2" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
     test_case "User 2 can authenticate and access data" "200" "$USER2_AUTH_HTTP"
@@ -177,13 +184,13 @@ fi
 
 ui_step "Step 5: Test access without valid JWT"
 
-NO_JWT_HTTP=$(curl -sS -o "$TMPDIR/no_jwt.json" -w '%{http_code}' \
+NO_JWT_HTTP=$(curl -sS -o "$TMPDIR/no_jwt.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
 if [[ "$NO_JWT_HTTP" != "200" ]]; then
-    echo -e "${GREEN}✓${NC} Request without JWT returns error ($NO_JWT_HTTP)"
+    echo -e "${GREEN}✓${NC} Request without JWT correctly rejected ($NO_JWT_HTTP)"
     ((TESTS_PASSED++))
 else
     echo -e "${YELLOW}  (Note: Request without JWT returned 200 - may be expected for public tables)${NC}"
@@ -194,10 +201,10 @@ ui_step "Step 6: Test malformed JWT rejection"
 
 MALFORMED_JWT="not-a-valid-jwt-token"
 
-MALFORMED_HTTP=$(curl -sS -o "$TMPDIR/malformed_jwt.json" -w '%{http_code}' \
+MALFORMED_HTTP=$(curl -sS -o "$TMPDIR/malformed_jwt.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
     -H "Authorization: Bearer $MALFORMED_JWT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
 if [[ "$MALFORMED_HTTP" != "200" ]]; then

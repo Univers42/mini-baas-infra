@@ -3,7 +3,7 @@ const pino = require('pino');
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
 const errorHandler = (err, req, res, _next) => {
-  if (err && err.type === 'entity.too.large') {
+  if (err?.type === 'entity.too.large') {
     return res.status(413).json({ success: false, error: { code: 'payload_too_large', message: 'Payload exceeds 256KB limit' } });
   }
   if (err && err instanceof SyntaxError && 'body' in err) {

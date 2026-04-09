@@ -16,6 +16,7 @@ fi
 
 b64url() {
   openssl base64 -A | tr '+/' '-_' | tr -d '='
+  return 0
 }
 
 gen_alnum() {
@@ -25,6 +26,7 @@ gen_alnum() {
     out+="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9')"
   done
   printf '%s' "${out:0:length}"
+  return 0
 }
 
 jwt_hs256() {
@@ -44,6 +46,7 @@ jwt_hs256() {
   sig="$(printf '%s' "$h.$p" | openssl dgst -sha256 -hmac "$secret" -binary | b64url)"
 
   printf '%s.%s.%s' "$h" "$p" "$sig"
+  return 0
 }
 
 POSTGRES_USER="postgres"

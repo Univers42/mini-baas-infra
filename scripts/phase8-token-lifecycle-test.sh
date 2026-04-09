@@ -18,6 +18,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -35,6 +38,7 @@ test_case() {
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 test_contains() {
@@ -49,6 +53,7 @@ test_contains() {
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 decode_jwt_part() {
@@ -59,6 +64,7 @@ decode_jwt_part() {
         jwt_part="${jwt_part}$(printf '%.0s=' $(seq 1 $((4 - padding))))"
     fi
     echo "$jwt_part" | base64 -d 2>/dev/null | jq . 2>/dev/null || echo "{}"
+    return 0
 }
 
 ui_banner "Phase 8 Test Suite" "Token Lifecycle & Refresh"
@@ -71,10 +77,10 @@ ui_step "Test 1: Access token generation on signup"
 SIGNUP_EMAIL="phase8_signup_$(date +%s)@example.com"
 SIGNUP_PASS="SecurePass123!"
 
-SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w '%{http_code}' \
+SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$SIGNUP_EMAIL\",\"password\":\"$SIGNUP_PASS\"}" 2>/dev/null)
 
@@ -153,10 +159,10 @@ fi
 
 # Test 8: Token login endpoint
 ui_step "Test 8: Login access token generation"
-LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
+LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$SIGNUP_EMAIL\",\"password\":\"$SIGNUP_PASS\"}" 2>/dev/null)
 
@@ -184,10 +190,10 @@ fi
 
 # Test 10: Using token in Authorization header
 ui_step "Test 10: Token authorization in REST API"
-AUTH_HTTP=$(curl -sS -o "$TMPDIR/auth_test.json" -w '%{http_code}' \
+AUTH_HTTP=$(curl -sS -o "$TMPDIR/auth_test.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users?limit=1" \
     -H "Authorization: Bearer $LOGIN_TOKEN" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 test_case "Authorized request returns 200" "200" "$AUTH_HTTP"
@@ -195,10 +201,10 @@ test_case "Authorized request returns 200" "200" "$AUTH_HTTP"
 # Test 11: Refresh token usage (if supported)
 ui_step "Test 11: Refresh token endpoint"
 if [[ -n "$REFRESH_TOKEN" ]] && [[ "$REFRESH_TOKEN" != "null" ]]; then
-    REFRESH_HTTP=$(curl -sS -o "$TMPDIR/refresh.json" -w '%{http_code}' \
+    REFRESH_HTTP=$(curl -sS -o "$TMPDIR/refresh.json" -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/token?grant_type=refresh_token" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"refresh_token\":\"$REFRESH_TOKEN\"}" 2>/dev/null)
     
@@ -225,10 +231,10 @@ fi
 
 # Test 12: Malformed Bearer token format
 ui_step "Test 12: Malformed Bearer token rejection"
-BAD_AUTH=$(curl -sS -o "$TMPDIR/bad_auth.json" -w '%{http_code}' \
+BAD_AUTH=$(curl -sS -o "$TMPDIR/bad_auth.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users?limit=1" \
     -H "Authorization: Bearer not.a.valid.jwt" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 if [[ "$BAD_AUTH" == "401" ]]; then
@@ -241,10 +247,10 @@ fi
 
 # Test 13: Wrong Bearer scheme
 ui_step "Test 13: Authorization scheme validation"
-WRONG_SCHEME=$(curl -sS -o "$TMPDIR/wrong_scheme.json" -w '%{http_code}' \
+WRONG_SCHEME=$(curl -sS -o "$TMPDIR/wrong_scheme.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users?limit=1" \
     -H "Authorization: Basic $LOGIN_TOKEN" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 if [[ "$WRONG_SCHEME" -gt 399 ]]; then

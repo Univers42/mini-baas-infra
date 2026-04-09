@@ -19,6 +19,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -36,6 +39,7 @@ test_case() {
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 test_contains() {
@@ -50,6 +54,7 @@ test_contains() {
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 ui_banner "Phase 3 Smoke Test Suite" "Authenticated database access"
@@ -64,10 +69,10 @@ PASS='TestPass123!'
 ui_step "Step 1: Create test user via GoTrue"
 
 # 1. Signup
-SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w '%{http_code}' \
+SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
@@ -90,10 +95,10 @@ sleep 0.5  # Rate limit spacing between signup and login
 ui_step "Step 2: Login and obtain JWT token"
 
 # 2. Login
-LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
+LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
@@ -120,14 +125,14 @@ if [[ -z "$JWT_TOKEN" ]]; then
     echo -e "${YELLOW}  (Skipping REST tests - no JWT token)${NC}"
 else
     # 3a. Test unauthorized access (no JWT)
-    UNAUTH_HTTP=$(curl -sS -o "$TMPDIR/unauth.json" -w '%{http_code}' \
+    UNAUTH_HTTP=$(curl -sS -o "$TMPDIR/unauth.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/rest/v1/users" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     
     # Should fail or return empty for unauthenticated
     if [[ "$UNAUTH_HTTP" != "200" ]]; then
-        echo -e "${GREEN}✓${NC} Unauthenticated access returns error"
+        echo -e "${GREEN}✓${NC} Unauthenticated access correctly rejected"
         ((TESTS_PASSED++))
     else
         echo -e "${YELLOW}  (Note: Unauthenticated access returned 200 - may be expected)${NC}"
@@ -135,10 +140,10 @@ else
     fi
 
     # 3b. Test authorized access (with JWT)
-    AUTH_HTTP=$(curl -sS -o "$TMPDIR/rest_auth.json" -w '%{http_code}' \
+    AUTH_HTTP=$(curl -sS -o "$TMPDIR/rest_auth.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/rest/v1/users" \
         -H "Authorization: Bearer $JWT_TOKEN" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
     test_case "Authenticated /rest/v1/users HTTP status" "200" "$AUTH_HTTP"
@@ -171,10 +176,10 @@ ui_step "Step 5: Test expired/invalid token rejection"
 
 INVALID_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.invalid-signature"
 
-INVALID_HTTP=$(curl -sS -o "$TMPDIR/invalid_token.json" -w '%{http_code}' \
+INVALID_HTTP=$(curl -sS -o "$TMPDIR/invalid_token.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
     -H "Authorization: Bearer $INVALID_TOKEN" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
 if [[ "$INVALID_HTTP" != "200" ]]; then

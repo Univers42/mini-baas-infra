@@ -16,6 +16,7 @@ spec:
         app: postgres
         component: database
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: postgres
         image: postgres:16-alpine
@@ -27,16 +28,21 @@ spec:
         - name: POSTGRES_USER
           value: "postgres"
         - name: POSTGRES_PASSWORD
-          value: "postgres"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: password
         - name: POSTGRES_DB
           value: "postgres"
         resources:
           requests:
             memory: "128Mi"
             cpu: "100m"
+            ephemeral-storage: "256Mi"
           limits:
             memory: "512Mi"
             cpu: "500m"
+            ephemeral-storage: "1Gi"
         livenessProbe:
           tcpSocket:
             port: 5432

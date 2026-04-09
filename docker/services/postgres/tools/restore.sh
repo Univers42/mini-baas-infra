@@ -12,7 +12,7 @@ fi
 BACKUP_FILE="$1"
 
 if [[ ! -f "${BACKUP_FILE}" ]]; then
-  echo "Error: file '${BACKUP_FILE}' not found"
+  echo "Error: file '${BACKUP_FILE}' not found" >&2
   exit 1
 fi
 

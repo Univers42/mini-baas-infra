@@ -18,6 +18,8 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -26,14 +28,16 @@ source "$SCRIPT_DIR/test-ui.sh"
 pass() {
     local name="$1"
     echo -e "${GREEN}✓${NC} $name"
-    ((TESTS_PASSED++))
+    ((TESTS_PASSED++)) || true
+    return 0
 }
 
 fail() {
     local name="$1"
     local details="$2"
     echo -e "${RED}✗${NC} $name${details:+ ($details)}"
-    ((TESTS_FAILED++))
+    ((TESTS_FAILED++)) || true
+    return 0
 }
 
 ui_banner "Phase 5 Test Suite" "REST metadata retrieval"
@@ -46,9 +50,9 @@ ui_step "Step 1: Retrieve database info from available gateway route"
 SELECTED_ENDPOINT="/rest/v1/"
 SELECTED_FILE="$TMPDIR/rest_openapi.json"
 
-REST_HTTP=$(curl -sS -o "$SELECTED_FILE" -w '%{http_code}' \
+REST_HTTP=$(curl -sS -o "$SELECTED_FILE" -w "$CURL_FMT" \
     -X GET "$BASE_URL$SELECTED_ENDPOINT" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
 if [[ "$REST_HTTP" == "200" ]]; then

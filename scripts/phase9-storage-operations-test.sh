@@ -14,8 +14,7 @@ TMPDIR="${TMPDIR:-$(mktemp -d /tmp/phase9_storage.XXXXXX)}"
 
 mkdir -p "$TMPDIR"
 
-if [[ -z "$MINIO_ACCESS_KEY" ]] || [[ -z "$MINIO_SECRET_KEY" ]]; then
-    if command -v docker >/dev/null 2>&1; then
+if { [[ -z "$MINIO_ACCESS_KEY" ]] || [[ -z "$MINIO_SECRET_KEY" ]]; } && command -v docker >/dev/null 2>&1; then
         detected_env=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' mini-baas-minio 2>/dev/null || true)
         if [[ -z "$MINIO_ACCESS_KEY" ]]; then
             MINIO_ACCESS_KEY=$(printf '%s\n' "$detected_env" | awk -F= '/^MINIO_ROOT_USER=/{print $2; exit}')
@@ -23,7 +22,6 @@ if [[ -z "$MINIO_ACCESS_KEY" ]] || [[ -z "$MINIO_SECRET_KEY" ]]; then
         if [[ -z "$MINIO_SECRET_KEY" ]]; then
             MINIO_SECRET_KEY=$(printf '%s\n' "$detected_env" | awk -F= '/^MINIO_ROOT_PASSWORD=/{print $2; exit}')
         fi
-    fi
 fi
 
 MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY:-minioadmin}"
@@ -35,6 +33,7 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -49,6 +48,7 @@ pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
     ((TESTS_PASSED++))
+    return 0
 }
 
 fail() {
@@ -56,6 +56,7 @@ fail() {
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
     ((TESTS_FAILED++))
+    return 0
 }
 
 assert_code_one_of() {
@@ -72,17 +73,20 @@ assert_code_one_of() {
     done
 
     fail "$name" "expected one of ${allowed[*]}, got $actual"
+    return 0
 }
 
 mc_cmd() {
     local cmd="$1"
     docker run -i --rm --network container:mini-baas-minio --entrypoint /bin/sh -e HOME=/tmp "$MC_IMAGE" \
     -ec "mc alias set local '$MINIO_ENDPOINT' '$MINIO_ACCESS_KEY' '$MINIO_SECRET_KEY' >/dev/null && $cmd"
+    return 0
 }
 
 cleanup_resources() {
     mc_cmd "mc rm --force local/$BUCKET_NAME/$OBJECT_KEY >/dev/null 2>&1 || true" >/dev/null 2>&1 || true
     mc_cmd "mc rb --force local/$BUCKET_NAME >/dev/null 2>&1 || true" >/dev/null 2>&1 || true
+    return 0
 }
 
 trap cleanup_resources EXIT
@@ -94,13 +98,13 @@ ui_kv "Bucket" "$BUCKET_NAME"
 ui_hr
 
 ui_step "Test 1: /storage/v1 rejects missing API key"
-MISSING_APIKEY_CODE=$(curl -sS -o "$TMPDIR/missing-apikey.out" -w '%{http_code}' \
+MISSING_APIKEY_CODE=$(curl -sS -o "$TMPDIR/missing-apikey.out" -w "$CURL_FMT" \
     -X GET "$BASE_URL/storage/v1/" \
     --max-time "$TIMEOUT" 2>/dev/null || echo '000')
 assert_code_one_of "Missing API key rejected" "$MISSING_APIKEY_CODE" "401"
 
 ui_step "Test 2: /storage/v1 accepts valid API key"
-VALID_APIKEY_CODE=$(curl -sS -o "$TMPDIR/valid-apikey.out" -w '%{http_code}' \
+VALID_APIKEY_CODE=$(curl -sS -o "$TMPDIR/valid-apikey.out" -w "$CURL_FMT" \
     -X GET "$BASE_URL/storage/v1/minio/health/live" \
     -H "apikey: $APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo '000')
@@ -168,7 +172,7 @@ if [[ ! -f "$LARGE_FILE" ]]; then
     dd if=/dev/zero of="$LARGE_FILE" bs=1M count=11 status=none
 fi
 
-LARGE_CODE=$(curl -sS -o "$TMPDIR/large-payload.out" -w '%{http_code}' \
+LARGE_CODE=$(curl -sS -o "$TMPDIR/large-payload.out" -w "$CURL_FMT" \
     -X POST "$BASE_URL/storage/v1/phase9-size-check" \
     -H "apikey: $APIKEY" \
     -H 'Content-Type: application/octet-stream' \

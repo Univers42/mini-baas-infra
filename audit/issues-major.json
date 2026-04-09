@@ -1,0 +1,6663 @@
+[
+  {
+    "key": "AZ1y4rjrAo3DRkjyNBKv",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminMessages.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 216,
+    "hash": "164955bae3b34156726cbb384c27623e",
+    "textRange": {
+      "startLine": 216,
+      "endLine": 216,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T15:30:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkIAo3DRkjyNBK3",
+    "rule": "javascript:S125",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminTickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 34,
+    "hash": "3030ed78c8a2842cf162feb5556cd995",
+    "textRange": {
+      "startLine": 34,
+      "endLine": 34,
+      "startOffset": 50,
+      "endOffset": 74
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this commented out code.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-04-07T14:14:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKo",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "6a5c8a52f2a40de8109362fbd7b417a8",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 20,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'icon' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKp",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "6a5c8a52f2a40de8109362fbd7b417a8",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 32,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'label' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKq",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "6a5c8a52f2a40de8109362fbd7b417a8",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 39,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'value' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKr",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "6a5c8a52f2a40de8109362fbd7b417a8",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 46,
+      "endOffset": 67
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'color' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKs",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "6a5c8a52f2a40de8109362fbd7b417a8",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 69,
+      "endOffset": 72
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'sub' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKt",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "6a5c8a52f2a40de8109362fbd7b417a8",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 74,
+      "endOffset": 83
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'delay' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rj-Ao3DRkjyNBKx",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Login.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 70,
+    "hash": "3fa205a052a247c62377739c66649e2c",
+    "textRange": {
+      "startLine": 70,
+      "endLine": 70,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:07:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rj-Ao3DRkjyNBKy",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Login.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 83,
+    "hash": "0f067d5a35574c6608eb895001c97c9a",
+    "textRange": {
+      "startLine": 83,
+      "endLine": 83,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T12:07:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkZAo3DRkjyNBK6",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Contact.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 81,
+    "hash": "5fbae62734786b570a11bfae0c419e30",
+    "textRange": {
+      "startLine": 81,
+      "endLine": 81,
+      "startOffset": 21,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T11:16:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkZAo3DRkjyNBK7",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Contact.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 92,
+    "hash": "71ca61ae46b2715c0358abc462bf82a1",
+    "textRange": {
+      "startLine": 92,
+      "endLine": 92,
+      "startOffset": 21,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T11:16:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkZAo3DRkjyNBK8",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Contact.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 105,
+    "hash": "2e82c754e27b9ddf4d9f0c1e1ea0ef54",
+    "textRange": {
+      "startLine": 105,
+      "endLine": 105,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T11:16:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkZAo3DRkjyNBK9",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Contact.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 117,
+    "hash": "f4ed7c347d0969001ca6789de628fa45",
+    "textRange": {
+      "startLine": 117,
+      "endLine": 117,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "react"
+    ],
+    "creationDate": "2026-04-07T11:16:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rktAo3DRkjyNBK_",
+    "rule": "javascript:S125",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Tickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 24,
+    "hash": "47ec070a4e49773c9aa824da1130c81b",
+    "textRange": {
+      "startLine": 24,
+      "endLine": 24,
+      "startOffset": 46,
+      "endOffset": 64
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this commented out code.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "unused"
+    ],
+    "creationDate": "2026-04-07T10:51:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkQAo3DRkjyNBK4",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/AnimalDetail.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 79,
+    "hash": "8ddf678081f8acc3802b247f03d8fe7b",
+    "textRange": {
+      "startLine": 79,
+      "endLine": 79,
+      "startOffset": 29,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "jsx",
+      "performance",
+      "react"
+    ],
+    "creationDate": "2026-04-07T10:00:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkQAo3DRkjyNBK5",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/AnimalDetail.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 105,
+    "hash": "35a843e1b93c5578561489c00d665c71",
+    "textRange": {
+      "startLine": 105,
+      "endLine": 105,
+      "startOffset": 33,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "jsx",
+      "performance",
+      "react"
+    ],
+    "creationDate": "2026-04-07T10:00:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rk2Ao3DRkjyNBLF",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Animals.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 99,
+    "hash": "689fb73ada1083c7b722c6b4de735261",
+    "textRange": {
+      "startLine": 99,
+      "endLine": 99,
+      "startOffset": 62,
+      "endOffset": 94
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-04-07T09:34:53+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkjAo3DRkjyNBK-",
+    "rule": "javascript:S6772",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Home.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "56233442376a664be47f757eec939367",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 0,
+      "endOffset": 55
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Ambiguous spacing before next element span",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T09:09:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "FORMATTED",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlvAo3DRkjyNBLh",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ZoneBadge.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "f0d79fcab3723648202737804f991315",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 36,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'zone' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T08:18:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlvAo3DRkjyNBLi",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ZoneBadge.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "f0d79fcab3723648202737804f991315",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 42,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'className' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T08:18:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rllAo3DRkjyNBLf",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConservationBadge.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "c057ac75c29912ef183615b0a37f7643",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 44,
+      "endOffset": 50
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'status' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:53:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rllAo3DRkjyNBLg",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConservationBadge.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "c057ac75c29912ef183615b0a37f7643",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 52,
+      "endOffset": 66
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'className' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:53:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlAAo3DRkjyNBLG",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/StatusBadge.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 9,
+    "hash": "a5da7f666ae3e3a6b5f9c1c7b846e673",
+    "textRange": {
+      "startLine": 9,
+      "endLine": 9,
+      "startOffset": 38,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'status' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:27:53+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlAAo3DRkjyNBLH",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/StatusBadge.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 9,
+    "hash": "a5da7f666ae3e3a6b5f9c1c7b846e673",
+    "textRange": {
+      "startLine": 9,
+      "endLine": 9,
+      "startOffset": 46,
+      "endOffset": 60
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'className' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:27:53+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLT",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "e0414eed6d87cba29f37e0490b530d94",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 2,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'open' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLU",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 14,
+    "hash": "cfdfb6fae23ede22ebca3d48dbf4000d",
+    "textRange": {
+      "startLine": 14,
+      "endLine": 14,
+      "startOffset": 2,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'onClose' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLV",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 15,
+    "hash": "cef407c9ac8a04e23786897cd2c3beec",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 2,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'title' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLW",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 16,
+    "hash": "33ad52af7a08c83355c0d3cd535fc218",
+    "textRange": {
+      "startLine": 16,
+      "endLine": 16,
+      "startOffset": 2,
+      "endOffset": 8
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'fields' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLX",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 17,
+    "hash": "aa57b1af935e727cab6add167580b6e5",
+    "textRange": {
+      "startLine": 17,
+      "endLine": 17,
+      "startOffset": 2,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'initialValues' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLY",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 18,
+    "hash": "328762f460e25580a6993ecfb6a939f6",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 18,
+      "startOffset": 2,
+      "endOffset": 10
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'onSubmit' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLZ",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 19,
+    "hash": "aac660d712c4a08650c741c42db03558",
+    "textRange": {
+      "startLine": 19,
+      "endLine": 19,
+      "startOffset": 2,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'saving' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLa",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 20,
+    "hash": "ef14757097d4aced27c7bb3b6692e34b",
+    "textRange": {
+      "startLine": 20,
+      "endLine": 20,
+      "startOffset": 2,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'columns' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLb",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 29,
+    "hash": "dc67b3088853da621d5ae2c81668984c",
+    "textRange": {
+      "startLine": 29,
+      "endLine": 29,
+      "startOffset": 13,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'fields.forEach' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLc",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 51,
+    "hash": "dc67b3088853da621d5ae2c81668984c",
+    "textRange": {
+      "startLine": 51,
+      "endLine": 51,
+      "startOffset": 11,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'fields.forEach' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLd",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 70,
+    "hash": "2636df02770accecc0007b37e5373e4d",
+    "textRange": {
+      "startLine": 70,
+      "endLine": 70,
+      "startOffset": 16,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'fields.map' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlbAo3DRkjyNBLe",
+    "rule": "javascript:S3923",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/FormModal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 77,
+    "hash": "645dfc15feec46f27ff903c17ea9a139",
+    "textRange": {
+      "startLine": 77,
+      "endLine": 77,
+      "startOffset": 67,
+      "endOffset": 90
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "This conditional operation returns the same value whether the condition is \"true\" or \"false\".",
+    "effort": "15min",
+    "debt": "15min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [],
+    "creationDate": "2026-04-07T07:02:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "BUG",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlRAo3DRkjyNBLN",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConfirmDialog.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b1c95d0bb8203ef6f51742f96bbfca5c",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 40,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'open' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T20:01:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlRAo3DRkjyNBLO",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConfirmDialog.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b1c95d0bb8203ef6f51742f96bbfca5c",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 46,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'onClose' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T20:01:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlRAo3DRkjyNBLP",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConfirmDialog.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b1c95d0bb8203ef6f51742f96bbfca5c",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 55,
+      "endOffset": 64
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'onConfirm' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T20:01:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlRAo3DRkjyNBLQ",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConfirmDialog.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b1c95d0bb8203ef6f51742f96bbfca5c",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 66,
+      "endOffset": 71
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'title' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T20:01:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlRAo3DRkjyNBLR",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConfirmDialog.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b1c95d0bb8203ef6f51742f96bbfca5c",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 73,
+      "endOffset": 80
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'message' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T20:01:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlRAo3DRkjyNBLS",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/ConfirmDialog.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b1c95d0bb8203ef6f51742f96bbfca5c",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 82,
+      "endOffset": 97
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'loading' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T20:01:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlIAo3DRkjyNBLI",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/Modal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "d9842a9ca02c0328b0326282663e05c8",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 32,
+      "endOffset": 36
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'open' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T19:35:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlIAo3DRkjyNBLJ",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/Modal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "d9842a9ca02c0328b0326282663e05c8",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 38,
+      "endOffset": 45
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'onClose' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T19:35:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlIAo3DRkjyNBLK",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/Modal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "d9842a9ca02c0328b0326282663e05c8",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 47,
+      "endOffset": 52
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'title' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T19:35:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlIAo3DRkjyNBLL",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/Modal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "d9842a9ca02c0328b0326282663e05c8",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 54,
+      "endOffset": 62
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'children' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T19:35:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rlIAo3DRkjyNBLM",
+    "rule": "javascript:S6774",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/components/ui/Modal.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "d9842a9ca02c0328b0326282663e05c8",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 64,
+      "endOffset": 76
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "'wide' is missing in props validation",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "react"
+    ],
+    "creationDate": "2026-04-06T19:35:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rnVAo3DRkjyNBMf",
+    "rule": "yaml:S2068",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker-compose.ci.yml",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "4407001d513cd14e2c1ffb27ce95937a",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 25,
+      "endOffset": 33
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "\"PASSWORD\" detected here, make sure this is not a hard-coded credential.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "cwe"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "VULNERABILITY",
+    "organization": "univers42",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdhAo3DRkjyNBJg",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 18,
+    "hash": "335a1e523fb98ed1fc0a0612ca0429ff",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 18,
+      "startOffset": 8,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdhAo3DRkjyNBJi",
+    "rule": "jssecurity:S7044",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 37,
+    "hash": "c4ce781dd488f2cc4c518748c79ce710",
+    "textRange": {
+      "startLine": 37,
+      "endLine": 37,
+      "startOffset": 30,
+      "endOffset": 35
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+            "textRange": {
+              "startLine": 37,
+              "endLine": 37,
+              "startOffset": 30,
+              "endOffset": 35
+            },
+            "msg": "Sink: this invocation is not safe; a malicious value can be used as argument"
+          },
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+            "textRange": {
+              "startLine": 37,
+              "endLine": 37,
+              "startOffset": 36,
+              "endOffset": 98
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+            "textRange": {
+              "startLine": 37,
+              "endLine": 37,
+              "startOffset": 84,
+              "endOffset": 88
+            },
+            "msg": "Source: a user can craft an HTTP request with malicious content"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Change this code to not construct the URL's path from user-controlled data.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "cwe"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "VULNERABILITY",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdhAo3DRkjyNBJh",
+    "rule": "jssecurity:S7044",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 65,
+    "hash": "c4ce781dd488f2cc4c518748c79ce710",
+    "textRange": {
+      "startLine": 65,
+      "endLine": 65,
+      "startOffset": 30,
+      "endOffset": 35
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+            "textRange": {
+              "startLine": 65,
+              "endLine": 65,
+              "startOffset": 30,
+              "endOffset": 35
+            },
+            "msg": "Sink: this invocation is not safe; a malicious value can be used as argument"
+          },
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+            "textRange": {
+              "startLine": 65,
+              "endLine": 65,
+              "startOffset": 36,
+              "endOffset": 98
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/query-router/src/routes/query.js",
+            "textRange": {
+              "startLine": 65,
+              "endLine": 65,
+              "startOffset": 84,
+              "endOffset": 88
+            },
+            "msg": "Source: a user can craft an HTTP request with malicious content"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Change this code to not construct the URL's path from user-controlled data.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "cwe"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "VULNERABILITY",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMR",
+    "rule": "javascript:S2301",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 86,
+    "hash": "273f3e3021b107bf1b4be0c92fc63a19",
+    "textRange": {
+      "startLine": 86,
+      "endLine": 86,
+      "startOffset": 9,
+      "endOffset": 11
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+            "textRange": {
+              "startLine": 85,
+              "endLine": 85,
+              "startOffset": 25,
+              "endOffset": 27
+            },
+            "msg": "Parameter \"ok\" was declared here"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Provide multiple methods instead of using \"ok\" to determine which action to take.",
+    "effort": "15min",
+    "debt": "15min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "FOCUSED",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMW",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 357,
+    "hash": "f6831a1682827b75a6d992a5ab401fa0",
+    "textRange": {
+      "startLine": 357,
+      "endLine": 357,
+      "startOffset": 50,
+      "endOffset": 85
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "confusing"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMX",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 434,
+    "hash": "301deed88d9323d6aea1d5be40e4b184",
+    "textRange": {
+      "startLine": 434,
+      "endLine": 434,
+      "startOffset": 8,
+      "endOffset": 71
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMY",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 486,
+    "hash": "301deed88d9323d6aea1d5be40e4b184",
+    "textRange": {
+      "startLine": 486,
+      "endLine": 486,
+      "startOffset": 8,
+      "endOffset": 71
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rnBAo3DRkjyNBMa",
+    "rule": "css:S7924",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/styles.css",
+    "project": "Univers42_mini-baas-infra",
+    "line": 95,
+    "hash": "132a74e0848e4c27148b6d65b7637620",
+    "textRange": {
+      "startLine": 95,
+      "endLine": 95,
+      "startOffset": 2,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Text does not meet the minimal contrast requirement with its background.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "accessibility",
+      "contrast",
+      "css",
+      "wcag"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH2",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "1f93c8b8baca02c2d60a0f0ef535baf7",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH3",
+    "rule": "shelldre:S7679",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "1f93c8b8baca02c2d60a0f0ef535baf7",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 19,
+      "endOffset": 21
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Assign this positional parameter to a local variable.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH4",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 14,
+    "hash": "a6260608689f5f81d6b148e51ca937fb",
+    "textRange": {
+      "startLine": 14,
+      "endLine": 14,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH5",
+    "rule": "shelldre:S7679",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 14,
+    "hash": "a6260608689f5f81d6b148e51ca937fb",
+    "textRange": {
+      "startLine": 14,
+      "endLine": 14,
+      "startOffset": 19,
+      "endOffset": 21
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Assign this positional parameter to a local variable.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH6",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 15,
+    "hash": "756df60232127c6e1b9e021748f3894a",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH7",
+    "rule": "shelldre:S7679",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 15,
+    "hash": "756df60232127c6e1b9e021748f3894a",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 19,
+      "endOffset": 21
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Assign this positional parameter to a local variable.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbsAo3DRkjyNBI9",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/resolve-ports.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 45,
+    "hash": "8b82794b320ad49bb5b6f59639762d79",
+    "textRange": {
+      "startLine": 45,
+      "endLine": 45,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rXkAo3DRkjyNBID",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/secrets/generate-secrets.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 11,
+    "hash": "64590681583c25106a7b94dc10608e3b",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 0,
+      "endOffset": 10
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rXkAo3DRkjyNBIE",
+    "rule": "shelldre:S7679",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/secrets/generate-secrets.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "3476e20248335777e09db7b99f0a1aba",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 24,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Assign this positional parameter to a local variable.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rXkAo3DRkjyNBIF",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/secrets/generate-secrets.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 15,
+    "hash": "e5e459d866093a7eedbd2a1c541f628f",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 0,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rXkAo3DRkjyNBIG",
+    "rule": "shelldre:S7679",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/secrets/generate-secrets.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 16,
+    "hash": "dd79a24c97aeaf85df9032b983113b4c",
+    "textRange": {
+      "startLine": 16,
+      "endLine": 16,
+      "startOffset": 21,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Assign this positional parameter to a local variable.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rXvAo3DRkjyNBIH",
+    "rule": "shelldre:S7677",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/secrets/rotate-jwt.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 19,
+    "hash": "e8e30a4c323c58823bac748af3a472c4",
+    "textRange": {
+      "startLine": 19,
+      "endLine": 19,
+      "startOffset": 2,
+      "endOffset": 64
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Redirect this error message to stderr (>&2).",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "output",
+      "posix",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rehAo3DRkjyNBJx",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/adapter-registry/src/lib/jwt.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 12,
+    "hash": "11eb1a5814d42cd613e67c2c917f0039",
+    "textRange": {
+      "startLine": 12,
+      "endLine": 12,
+      "startOffset": 8,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfiAo3DRkjyNBKC",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/middleware/errorHandler.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 6,
+    "hash": "84e9d9b18551b90847162181306ebbda",
+    "textRange": {
+      "startLine": 6,
+      "endLine": 6,
+      "startOffset": 6,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBJ7",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 70,
+    "hash": "4ab4a5095b7c5a3c5bf8970e99b644eb",
+    "textRange": {
+      "startLine": 70,
+      "endLine": 70,
+      "startOffset": 16,
+      "endOffset": 45
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBJ-",
+    "rule": "javascript:S6582",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 146,
+    "hash": "c3f8b39f6375ccfe7d98a04b570cf917",
+    "textRange": {
+      "startLine": 146,
+      "endLine": 146,
+      "startOffset": 16,
+      "endOffset": 42
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer using an optional chain expression instead, as it's more concise and easier to read.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJo",
+    "rule": "javascript:S4624",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 57,
+    "hash": "a5f800656f9c8078349a8eabd0d0a7a5",
+    "textRange": {
+      "startLine": 57,
+      "endLine": 57,
+      "startOffset": 61,
+      "endOffset": 69
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Refactor this code to not use nested template literals.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "brain-overload",
+      "confusing",
+      "es2015"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rh4Ao3DRkjyNBKY",
+    "rule": "kubernetes:S6865",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo/deployment.yaml",
+    "project": "Univers42_mini-baas-infra",
+    "line": 19,
+    "hash": "d9e939dad9db0fbf12a7e7ed37d92d0f",
+    "textRange": {
+      "startLine": 19,
+      "endLine": 19,
+      "startOffset": 6,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Bind this resource's automounted service account to RBAC or disable automounting.",
+    "effort": "1h",
+    "debt": "1h",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "VULNERABILITY",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rh4Ao3DRkjyNBKX",
+    "rule": "kubernetes:S6897",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo/deployment.yaml",
+    "project": "Univers42_mini-baas-infra",
+    "line": 20,
+    "hash": "eb6520d7e33dfb13d0f2c4d9a11519c7",
+    "textRange": {
+      "startLine": 20,
+      "endLine": 20,
+      "startOffset": 8,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify a storage request for this container.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rhQAo3DRkjyNBKT",
+    "rule": "kubernetes:S6865",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/postgres/deployment.yaml",
+    "project": "Univers42_mini-baas-infra",
+    "line": 19,
+    "hash": "d9e939dad9db0fbf12a7e7ed37d92d0f",
+    "textRange": {
+      "startLine": 19,
+      "endLine": 19,
+      "startOffset": 6,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Bind this resource's automounted service account to RBAC or disable automounting.",
+    "effort": "1h",
+    "debt": "1h",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "VULNERABILITY",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rhQAo3DRkjyNBKS",
+    "rule": "kubernetes:S6897",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/postgres/deployment.yaml",
+    "project": "Univers42_mini-baas-infra",
+    "line": 20,
+    "hash": "fe36e22994fdb5387d55f4b86a3b8f6d",
+    "textRange": {
+      "startLine": 20,
+      "endLine": 20,
+      "startOffset": 8,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Specify a storage request for this container.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rhQAo3DRkjyNBKU",
+    "rule": "kubernetes:S2068",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/postgres/deployment.yaml",
+    "project": "Univers42_mini-baas-infra",
+    "line": 30,
+    "hash": "2e751f3b4122b4f51ba344f7fb1587f4",
+    "textRange": {
+      "startLine": 30,
+      "endLine": 30,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "Univers42_mini-baas-infra:docker/services/postgres/deployment.yaml",
+            "textRange": {
+              "startLine": 29,
+              "endLine": 29,
+              "startOffset": 16,
+              "endOffset": 33
+            },
+            "msg": "\"PASSWORD\" detected here"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Make sure this is not a hard-coded credential.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "cwe"
+    ],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "VULNERABILITY",
+    "organization": "univers42",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rhsAo3DRkjyNBKW",
+    "rule": "shelldre:S7677",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/postgres/tools/restore.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 15,
+    "hash": "99552a5a870e1f86a379a10ccdb6ae5e",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 2,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Redirect this error message to stderr (>&2).",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "output",
+      "posix",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL5",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 22,
+    "hash": "c80fab3f2ea3064c7acf51282f2da13e",
+    "textRange": {
+      "startLine": 22,
+      "endLine": 22,
+      "startOffset": 3,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL6",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 41,
+    "hash": "c43bc3a8d99f5b0b2b3b316afc7c8ee1",
+    "textRange": {
+      "startLine": 41,
+      "endLine": 41,
+      "startOffset": 0,
+      "endOffset": 3
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL7",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 42,
+    "hash": "36deedc9253e87ff44bc0800ae639092",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 42,
+      "startOffset": 0,
+      "endOffset": 3
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL8",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 43,
+    "hash": "38237d504a4b0dd8b3551c39b4632ee7",
+    "textRange": {
+      "startLine": 43,
+      "endLine": 43,
+      "startOffset": 0,
+      "endOffset": 8
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL9",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 48,
+    "hash": "5e63d8d8e8cdc87f613b8d6d66bd942f",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 48,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL-",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 53,
+    "hash": "1be791a0473bb01fbfa8be6aa6ef59b5",
+    "textRange": {
+      "startLine": 53,
+      "endLine": 53,
+      "startOffset": 7,
+      "endOffset": 8
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBL_",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 61,
+    "hash": "057ab620e912bce6f11858e16daeae98",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMA",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 66,
+    "hash": "1be791a0473bb01fbfa8be6aa6ef59b5",
+    "textRange": {
+      "startLine": 66,
+      "endLine": 66,
+      "startOffset": 7,
+      "endOffset": 8
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMB",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 75,
+    "hash": "c00094693a88f47c9deddd0b3320c2eb",
+    "textRange": {
+      "startLine": 75,
+      "endLine": 75,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMC",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 76,
+    "hash": "f3066150307b42ba10f67acb093a9f3c",
+    "textRange": {
+      "startLine": 76,
+      "endLine": 76,
+      "startOffset": 5,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMD",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 96,
+    "hash": "fb489a2a2e9cecc8abbbfca8e53cd3da",
+    "textRange": {
+      "startLine": 96,
+      "endLine": 96,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBME",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 119,
+    "hash": "e6653a0a25a82b8002e51f20c0637a59",
+    "textRange": {
+      "startLine": 119,
+      "endLine": 119,
+      "startOffset": 0,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMF",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 127,
+    "hash": "c053e61c49519e618eeea86a72a5583c",
+    "textRange": {
+      "startLine": 127,
+      "endLine": 127,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMG",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 143,
+    "hash": "815adcd84bd2b8a76b8fbf683b396af9",
+    "textRange": {
+      "startLine": 143,
+      "endLine": 143,
+      "startOffset": 5,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMH",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 143,
+    "hash": "815adcd84bd2b8a76b8fbf683b396af9",
+    "textRange": {
+      "startLine": 143,
+      "endLine": 143,
+      "startOffset": 30,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMI",
+    "rule": "shelldre:S7688",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 143,
+    "hash": "815adcd84bd2b8a76b8fbf683b396af9",
+    "textRange": {
+      "startLine": 143,
+      "endLine": 143,
+      "startOffset": 55,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "bash",
+      "best-practices",
+      "scripting",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMJ",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 150,
+    "hash": "27e97a2ced74eb61fea678403427d521",
+    "textRange": {
+      "startLine": 150,
+      "endLine": 150,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMK",
+    "rule": "shelldre:S7684",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 153,
+    "hash": "d1102b3bc966233ba7bcfe6bce378e1d",
+    "textRange": {
+      "startLine": 153,
+      "endLine": 153,
+      "startOffset": 8,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Local variable 'ZOO_PASS' should use lower_case naming convention.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "naming"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBML",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 165,
+    "hash": "5ef8f88067f287a3cec540e06fd688d4",
+    "textRange": {
+      "startLine": 165,
+      "endLine": 165,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rgLAo3DRkjyNBKL",
+    "rule": "docker:S6596",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:docker/services/realtime/Dockerfile",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "a7a274a566a654176c7785555c95bd85",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 5,
+      "endOffset": 38
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use a specific version tag for the image.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [],
+    "creationDate": "2026-04-05T08:03:19+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIf",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 20,
+    "hash": "9a49d8768e14e79454c9060aa314048d",
+    "textRange": {
+      "startLine": 20,
+      "endLine": 20,
+      "startOffset": 0,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIg",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 25,
+    "hash": "cce019f91a3ef3608ce660291d1f7b35",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIh",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 33,
+    "hash": "111cb4174708fc0e242f2952b0ffa84a",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIi",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 39,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 39,
+      "endLine": 39,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIj",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 44,
+    "hash": "18d50bc53ddf2b0f45f3b8d95b7c2aee",
+    "textRange": {
+      "startLine": 44,
+      "endLine": 44,
+      "startOffset": 0,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIk",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 50,
+    "hash": "f587530355e67796fdc84b3ceb895fbd",
+    "textRange": {
+      "startLine": 50,
+      "endLine": 50,
+      "startOffset": 0,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIl",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 103,
+    "hash": "82aab9507abe7db0475cbff34c3564be",
+    "textRange": {
+      "startLine": 103,
+      "endLine": 103,
+      "startOffset": 0,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIm",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 140,
+    "hash": "04645c8ff19f57719d18659505c6988c",
+    "textRange": {
+      "startLine": 140,
+      "endLine": 140,
+      "startOffset": 0,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rb7Ao3DRkjyNBI-",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase14-mongo-mvp-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 25,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T19:22:15+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rb7Ao3DRkjyNBI_",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase14-mongo-mvp-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 31,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T19:22:15+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rb7Ao3DRkjyNBJA",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase14-mongo-mvp-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 38,
+    "hash": "f9eccf92eb59eb44db36c55269364eba",
+    "textRange": {
+      "startLine": 38,
+      "endLine": 38,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T19:22:15+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rb7Ao3DRkjyNBJB",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase14-mongo-mvp-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 50,
+    "hash": "cce019f91a3ef3608ce660291d1f7b35",
+    "textRange": {
+      "startLine": 50,
+      "endLine": 50,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T19:22:15+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdKAo3DRkjyNBJV",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase11-realtime-websocket-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 25,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdKAo3DRkjyNBJW",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase11-realtime-websocket-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 31,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdKAo3DRkjyNBJX",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase11-realtime-websocket-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 38,
+    "hash": "f9eccf92eb59eb44db36c55269364eba",
+    "textRange": {
+      "startLine": 38,
+      "endLine": 38,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raRAo3DRkjyNBIW",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase12-rate-limiting-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 25,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raSAo3DRkjyNBIX",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase12-rate-limiting-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 31,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc-Ao3DRkjyNBJP",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase13-cors-preflight-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 27,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 27,
+      "endLine": 27,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc-Ao3DRkjyNBJQ",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase13-cors-preflight-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 33,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc-Ao3DRkjyNBJR",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase13-cors-preflight-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "46220d6ea4f1d6ad0f04d310fab377a7",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 0,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcNAo3DRkjyNBJE",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/run-ci-local.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 9,
+    "hash": "cce019f91a3ef3608ce660291d1f7b35",
+    "textRange": {
+      "startLine": 9,
+      "endLine": 9,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-29T07:55:20+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcNAo3DRkjyNBJF",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/run-ci-local.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 34,
+    "hash": "9a49d8768e14e79454c9060aa314048d",
+    "textRange": {
+      "startLine": 34,
+      "endLine": 34,
+      "startOffset": 0,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-29T07:55:20+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdVAo3DRkjyNBJb",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase10-data-mutation-complex-queries-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 36,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 36,
+      "endLine": 36,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:09:06+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdVAo3DRkjyNBJc",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase10-data-mutation-complex-queries-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 42,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 42,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:09:06+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdVAo3DRkjyNBJd",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase10-data-mutation-complex-queries-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 65,
+    "hash": "9a49d8768e14e79454c9060aa314048d",
+    "textRange": {
+      "startLine": 65,
+      "endLine": 65,
+      "startOffset": 0,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:09:06+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rX6Ao3DRkjyNBII",
+    "rule": "shelldre:S1066",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase9-storage-operations-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 18,
+    "hash": "7e69a5053c1115e9c7622ea937656110",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 18,
+      "startOffset": 4,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Merge this if statement with the enclosing one.",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "clumsy"
+    ],
+    "creationDate": "2026-03-28T18:04:39+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rX6Ao3DRkjyNBIJ",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase9-storage-operations-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 48,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 48,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:04:39+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rX6Ao3DRkjyNBIK",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase9-storage-operations-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 54,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:04:39+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rX6Ao3DRkjyNBIL",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase9-storage-operations-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 77,
+    "hash": "0b4678db05dce0bcbf9ea4c07e7181d1",
+    "textRange": {
+      "startLine": 77,
+      "endLine": 77,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:04:39+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rX6Ao3DRkjyNBIM",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase9-storage-operations-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 83,
+    "hash": "f5befc87e0dcfeda8f56868c1f69a15a",
+    "textRange": {
+      "startLine": 83,
+      "endLine": 83,
+      "startOffset": 0,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T18:04:39+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raJAo3DRkjyNBIS",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase6-http-methods-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 26,
+    "hash": "fc6bda0552df3432a9c283e847cfe166",
+    "textRange": {
+      "startLine": 26,
+      "endLine": 26,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raJAo3DRkjyNBIT",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase6-http-methods-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "de8b2741e861219a7413fa630f8adc65",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbjAo3DRkjyNBI5",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase7-error-handling-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 26,
+    "hash": "fc6bda0552df3432a9c283e847cfe166",
+    "textRange": {
+      "startLine": 26,
+      "endLine": 26,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbjAo3DRkjyNBI6",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase7-error-handling-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "5068d53d4e0d9faabaf661710633c679",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rYGAo3DRkjyNBIN",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase8-token-lifecycle-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 26,
+    "hash": "fc6bda0552df3432a9c283e847cfe166",
+    "textRange": {
+      "startLine": 26,
+      "endLine": 26,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rYGAo3DRkjyNBIO",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase8-token-lifecycle-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "de8b2741e861219a7413fa630f8adc65",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rYGAo3DRkjyNBIP",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase8-token-lifecycle-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 54,
+    "hash": "4780cbf63ab8df16e6866ebc87fdf464",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 0,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ralAo3DRkjyNBIa",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/test-ui.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 28,
+    "hash": "e969400e9cb456e70ba2b36e514a37d5",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 0,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:18:26+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ralAo3DRkjyNBIb",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/test-ui.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 32,
+    "hash": "bcfa187e53e7fa4c82a1ae1bf2a876d1",
+    "textRange": {
+      "startLine": 32,
+      "endLine": 32,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:18:26+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ralAo3DRkjyNBIc",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/test-ui.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 44,
+    "hash": "4b351512f043b46634cc34155ce7f5b2",
+    "textRange": {
+      "startLine": 44,
+      "endLine": 44,
+      "startOffset": 0,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:18:26+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ralAo3DRkjyNBId",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/test-ui.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 50,
+    "hash": "da149f52e72a620da98dff2415179382",
+    "textRange": {
+      "startLine": 50,
+      "endLine": 50,
+      "startOffset": 0,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:18:26+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ralAo3DRkjyNBIe",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/test-ui.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 55,
+    "hash": "1e5aaf40f2f89b0f8e590f3c96a4c0d4",
+    "textRange": {
+      "startLine": 55,
+      "endLine": 55,
+      "startOffset": 0,
+      "endOffset": 10
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T17:18:26+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcjAo3DRkjyNBJI",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase3-authenticated-db-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 27,
+    "hash": "fc6bda0552df3432a9c283e847cfe166",
+    "textRange": {
+      "startLine": 27,
+      "endLine": 27,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcjAo3DRkjyNBJJ",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase3-authenticated-db-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 41,
+    "hash": "de8b2741e861219a7413fa630f8adc65",
+    "textRange": {
+      "startLine": 41,
+      "endLine": 41,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcjAo3DRkjyNBJK",
+    "rule": "shelldre:S7677",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase3-authenticated-db-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 130,
+    "hash": "54a8756356810a6f7d64f8b4e3cdcb7b",
+    "textRange": {
+      "startLine": 130,
+      "endLine": 130,
+      "startOffset": 8,
+      "endOffset": 69
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Redirect this error message to stderr (>&2).",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "output",
+      "posix",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rUtAo3DRkjyNBH9",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase4-user-isolation-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 26,
+    "hash": "fc6bda0552df3432a9c283e847cfe166",
+    "textRange": {
+      "startLine": 26,
+      "endLine": 26,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rUtAo3DRkjyNBH-",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase4-user-isolation-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "de8b2741e861219a7413fa630f8adc65",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rUtAo3DRkjyNBH_",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase4-user-isolation-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 54,
+    "hash": "800da31598656bb38436eb9d77d7c68d",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 0,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rUtAo3DRkjyNBIA",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase4-user-isolation-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 71,
+    "hash": "d2c597a8d16813846218b802acd375fd",
+    "textRange": {
+      "startLine": 71,
+      "endLine": 71,
+      "startOffset": 0,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rUtAo3DRkjyNBIB",
+    "rule": "shelldre:S7677",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase4-user-isolation-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 186,
+    "hash": "4852d0345cd5125401dc1d7b76e76a7d",
+    "textRange": {
+      "startLine": 186,
+      "endLine": 186,
+      "startOffset": 4,
+      "endOffset": 77
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Redirect this error message to stderr (>&2).",
+    "effort": "5min",
+    "debt": "5min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "output",
+      "posix",
+      "shell"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbOAo3DRkjyNBI3",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase2-smoke-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 42,
+    "hash": "f9eccf92eb59eb44db36c55269364eba",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 42,
+      "startOffset": 0,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-27T14:51:38+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbOAo3DRkjyNBI1",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase2-smoke-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 29,
+    "hash": "7fb2c98f8997385501958c7bc1e651a0",
+    "textRange": {
+      "startLine": 29,
+      "endLine": 29,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-27T14:24:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbOAo3DRkjyNBI2",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase2-smoke-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 35,
+    "hash": "5c82753b62f90b80a1a6354172b3c85b",
+    "textRange": {
+      "startLine": 35,
+      "endLine": 35,
+      "startOffset": 0,
+      "endOffset": 4
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-27T14:24:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcYAo3DRkjyNBJG",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase1-smoke-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 25,
+    "hash": "fc6bda0552df3432a9c283e847cfe166",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-27T10:08:59+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc0Ao3DRkjyNBJM",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/generate-env.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 17,
+    "hash": "09f09f60c30378effe5dc521d66ccb7d",
+    "textRange": {
+      "startLine": 17,
+      "endLine": 17,
+      "startOffset": 0,
+      "endOffset": 6
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-23T12:38:46+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc0Ao3DRkjyNBJN",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/generate-env.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 21,
+    "hash": "530e7b2a292a9ec1d17e998c7ba67745",
+    "textRange": {
+      "startLine": 21,
+      "endLine": 21,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-23T12:38:46+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc0Ao3DRkjyNBJO",
+    "rule": "shelldre:S7682",
+    "severity": "MAJOR",
+    "component": "Univers42_mini-baas-infra:scripts/generate-env.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 30,
+    "hash": "71557963d5ba1531dddecdba818e437d",
+    "textRange": {
+      "startLine": 30,
+      "endLine": 30,
+      "startOffset": 0,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Add an explicit return statement at the end of the function.",
+    "effort": "2min",
+    "debt": "2min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "best-practice",
+      "clarity",
+      "shell"
+    ],
+    "creationDate": "2026-03-23T12:38:46+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  }
+]

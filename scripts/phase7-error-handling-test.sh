@@ -18,6 +18,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -35,6 +38,7 @@ test_case() {
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 test_in_range() {
@@ -50,6 +54,7 @@ test_in_range() {
         echo -e "${RED}✗${NC} $name (expected range: $min-$max, got: $value)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 ui_banner "Phase 7 Test Suite" "Error Handling & Edge Cases"
@@ -59,7 +64,7 @@ ui_hr
 
 # Test 1: Missing required API key
 ui_step "Test 1: Missing API key rejection"
-NO_KEY=$(curl -sS -o "$TMPDIR/no_key.json" -w '%{http_code}' \
+NO_KEY=$(curl -sS -o "$TMPDIR/no_key.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
@@ -67,7 +72,7 @@ test_case "Missing API key returns 401/403" "1" "$(echo "$NO_KEY" | grep -E '^(4
 
 # Test 2: Invalid API key
 ui_step "Test 2: Invalid API key rejection"
-BAD_KEY=$(curl -sS -o "$TMPDIR/bad_key.json" -w '%{http_code}' \
+BAD_KEY=$(curl -sS -o "$TMPDIR/bad_key.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
     -H "apikey: invalid-key-12345" \
     --max-time "$TIMEOUT" 2>/dev/null)
@@ -76,20 +81,20 @@ test_case "Invalid API key returns 401/403" "1" "$(echo "$BAD_KEY" | grep -E '^(
 
 # Test 3: Invalid JWT token
 ui_step "Test 3: Invalid JWT token rejection"
-INVALID_JWT=$(curl -sS -o "$TMPDIR/invalid_jwt.json" -w '%{http_code}' \
+INVALID_JWT=$(curl -sS -o "$TMPDIR/invalid_jwt.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users" \
     -H "Authorization: Bearer invalid.jwt.token" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 test_case "Invalid JWT returns 401" "401" "$INVALID_JWT"
 
 # Test 4: Malformed JSON body
 ui_step "Test 4: Malformed JSON rejection"
-BAD_JSON=$(curl -sS -o "$TMPDIR/bad_json.json" -w '%{http_code}' \
+BAD_JSON=$(curl -sS -o "$TMPDIR/bad_json.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d '{invalid json}' 2>/dev/null)
 
@@ -97,10 +102,10 @@ test_in_range "Malformed JSON returns error" "$BAD_JSON" 400 422
 
 # Test 5: Missing required fields in request
 ui_step "Test 5: Missing required fields validation"
-MISSING_FIELD=$(curl -sS -o "$TMPDIR/missing_field.json" -w '%{http_code}' \
+MISSING_FIELD=$(curl -sS -o "$TMPDIR/missing_field.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d '{"email":"test@example.com"}' 2>/dev/null)
 
@@ -108,10 +113,10 @@ test_in_range "Missing required field returns error" "$MISSING_FIELD" 400 422
 
 # Test 6: Invalid email format
 ui_step "Test 6: Email format validation"
-BAD_EMAIL=$(curl -sS -o "$TMPDIR/bad_email.json" -w '%{http_code}' \
+BAD_EMAIL=$(curl -sS -o "$TMPDIR/bad_email.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d '{"email":"not-an-email","password":"Test123!"}' 2>/dev/null)
 
@@ -119,10 +124,10 @@ test_in_range "Invalid email format returns error" "$BAD_EMAIL" 400 422
 
 # Test 7: Weak password validation
 ui_step "Test 7: Weak password rejection"
-WEAK_PASS=$(curl -sS -o "$TMPDIR/weak_pass.json" -w '%{http_code}' \
+WEAK_PASS=$(curl -sS -o "$TMPDIR/weak_pass.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"phase7_weak_$(date +%s)@test.com\",\"password\":\"weak\"}" 2>/dev/null)
 
@@ -141,16 +146,16 @@ PASSWORD="SecurePass123!"
 
 # First signup should succeed
 curl -sS -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" >/dev/null 2>&1
 
 # Second signup with same email should fail
-DUP_EMAIL=$(curl -sS -o "$TMPDIR/dup_email.json" -w '%{http_code}' \
+DUP_EMAIL=$(curl -sS -o "$TMPDIR/dup_email.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" 2>/dev/null)
 
@@ -164,9 +169,9 @@ fi
 
 # Test 9: Invalid query parameters
 ui_step "Test 9: Invalid query parameter handling"
-BAD_QUERY=$(curl -sS -o "$TMPDIR/bad_query.json" -w '%{http_code}' \
+BAD_QUERY=$(curl -sS -o "$TMPDIR/bad_query.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users?invalid_filter=unknown_op.value" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 # Either succeeds with filter ignored or returns 400
@@ -180,19 +185,19 @@ fi
 
 # Test 10: Non-existent resource (404)
 ui_step "Test 10: Non-existent resource handling"
-NOT_FOUND=$(curl -sS -o "$TMPDIR/not_found.json" -w '%{http_code}' \
+NOT_FOUND=$(curl -sS -o "$TMPDIR/not_found.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/nonexistent_table" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null)
 
 test_in_range "Non-existent table returns error" "$NOT_FOUND" 400 404
 
 # Test 11: Empty request body on POST
 ui_step "Test 11: Empty POST body handling"
-EMPTY_BODY=$(curl -sS -o "$TMPDIR/empty_body.json" -w '%{http_code}' \
+EMPTY_BODY=$(curl -sS -o "$TMPDIR/empty_body.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d '' 2>/dev/null)
 
@@ -200,9 +205,9 @@ test_in_range "Empty POST body returns error" "$EMPTY_BODY" 400 422
 
 # Test 12: Request timeout (very large timeout set to bypass, just test connectivity)
 ui_step "Test 12: Service connectivity under normal load"
-TIMEOUT_TEST=$(curl -sS -o "$TMPDIR/timeout.json" -w '%{http_code}' \
+TIMEOUT_TEST=$(curl -sS -o "$TMPDIR/timeout.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/users?limit=1" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time 5 2>/dev/null)
 
 test_case "Service responds within timeout" "200" "$TIMEOUT_TEST"

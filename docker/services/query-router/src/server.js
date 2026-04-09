@@ -2,7 +2,7 @@
 const express = require('express');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const { register } = require('prom-client');
 const healthRoutes = require('./routes/health');
 const queryRoutes = require('./routes/query');

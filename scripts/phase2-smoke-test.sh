@@ -21,6 +21,8 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly HDR_APIKEY="apikey: $PUBLIC_APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -30,6 +32,7 @@ pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
     ((TESTS_PASSED++))
+    return 0
 }
 
 fail() {
@@ -37,6 +40,7 @@ fail() {
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
     ((TESTS_FAILED++))
+    return 0
 }
 
 assert_code() {
@@ -48,6 +52,7 @@ assert_code() {
     else
         fail "$name" "expected $expected, got $actual"
     fi
+    return 0
 }
 
 assert_one_of() {
@@ -64,6 +69,7 @@ assert_one_of() {
     done
 
     fail "$name" "expected one of: ${allowed[*]}, got $actual"
+    return 0
 }
 
 ui_banner "Phase 2 Smoke Test Suite" "Kong gateway security controls"
@@ -76,39 +82,39 @@ ui_hr
 ui_step "Test 1: key-auth on /auth/v1"
 
 # 1) key-auth on auth route
-MISSING_AUTH_CODE=$(curl -sS -o "$TMPDIR/no_apikey_auth.json" -w '%{http_code}' \
+MISSING_AUTH_CODE=$(curl -sS -o "$TMPDIR/no_apikey_auth.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/auth/v1/health" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Missing apikey rejected on /auth/v1" "401" "$MISSING_AUTH_CODE"
 
-INVALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/invalid_apikey_auth.json" -w '%{http_code}' \
+INVALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/invalid_apikey_auth.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/auth/v1/health" \
   -H "apikey: $INVALID_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Invalid apikey rejected on /auth/v1" "401" "$INVALID_AUTH_CODE"
 
-VALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_auth.json" -w '%{http_code}' \
+VALID_AUTH_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_auth.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/auth/v1/health" \
-  -H "apikey: $PUBLIC_APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Valid apikey accepted on /auth/v1" "200" "$VALID_AUTH_CODE"
 
 # 2) key-auth on rest route
 ui_step "Test 2: key-auth on /rest/v1"
-MISSING_REST_CODE=$(curl -sS -o "$TMPDIR/no_apikey_rest.json" -w '%{http_code}' \
+MISSING_REST_CODE=$(curl -sS -o "$TMPDIR/no_apikey_rest.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/rest/v1/" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Missing apikey rejected on /rest/v1" "401" "$MISSING_REST_CODE"
 
-VALID_REST_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_rest.json" -w '%{http_code}' \
+VALID_REST_CODE=$(curl -sS -o "$TMPDIR/valid_apikey_rest.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/rest/v1/" \
-  -H "apikey: $PUBLIC_APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_one_of "Valid apikey reaches /rest/v1 upstream" "$VALID_REST_CODE" "200" "401"
 
 # 3) key-auth on storage route
 ui_step "Test 3: key-auth and payload limits on /storage/v1"
-MISSING_STORAGE_CODE=$(curl -sS -o "$TMPDIR/no_apikey_storage.json" -w '%{http_code}' \
+MISSING_STORAGE_CODE=$(curl -sS -o "$TMPDIR/no_apikey_storage.json" -w "$CURL_FMT" \
   -X GET "$BASE_URL/storage/v1/" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Missing apikey rejected on /storage/v1" "401" "$MISSING_STORAGE_CODE"
@@ -125,17 +131,17 @@ if [[ ! -f "$SMALL_PAYLOAD" ]]; then
     dd if=/dev/zero of="$SMALL_PAYLOAD" bs=1K count=1 status=none
 fi
 
-SIZE_BLOCKED_CODE=$(curl -sS -o "$TMPDIR/storage_size_limit.json" -w '%{http_code}' \
+SIZE_BLOCKED_CODE=$(curl -sS -o "$TMPDIR/storage_size_limit.json" -w "$CURL_FMT" \
   -X POST "$BASE_URL/storage/v1/phase2-size-check" \
-  -H "apikey: $PUBLIC_APIKEY" \
+  -H "$HDR_APIKEY" \
   -H 'Content-Type: application/octet-stream' \
   --data-binary "@$LARGE_PAYLOAD" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Storage payload >10MB rejected with 413" "413" "$SIZE_BLOCKED_CODE"
 
-SIZE_ALLOWED_CODE=$(curl -sS -o "$TMPDIR/storage_small_payload.json" -w '%{http_code}' \
+SIZE_ALLOWED_CODE=$(curl -sS -o "$TMPDIR/storage_small_payload.json" -w "$CURL_FMT" \
   -X POST "$BASE_URL/storage/v1/phase2-size-check" \
-  -H "apikey: $PUBLIC_APIKEY" \
+  -H "$HDR_APIKEY" \
   -H 'Content-Type: application/octet-stream' \
   --data-binary "@$SMALL_PAYLOAD" \
   --max-time "$TIMEOUT" 2>/dev/null || echo "000")
@@ -152,7 +158,7 @@ CORS_HEADERS=$(curl -sS -D - -o /dev/null \
   -X OPTIONS "$BASE_URL/rest/v1/" \
     -H "Origin: $TEST_ORIGIN" \
   -H 'Access-Control-Request-Method: GET' \
-  -H "apikey: $PUBLIC_APIKEY" \
+  -H "$HDR_APIKEY" \
   --max-time "$TIMEOUT" 2>/dev/null || true)
 
 if echo "$CORS_HEADERS" | grep -qi '^access-control-allow-origin:'; then
@@ -168,9 +174,9 @@ if [[ "$RUN_RATE_LIMIT_TEST" == "true" ]]; then
     HIT_429=false
 
     for i in $(seq 1 "$RATE_LIMIT_BURST"); do
-        code=$(curl -sS -o /dev/null -w '%{http_code}' \
+        code=$(curl -sS -o /dev/null -w "$CURL_FMT" \
           -X GET "$BASE_URL/auth/v1/health" \
-          -H "apikey: $PUBLIC_APIKEY" \
+          -H "$HDR_APIKEY" \
           --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
         if [[ "$code" == "429" ]]; then
