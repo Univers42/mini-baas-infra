@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:33:41 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:33:42 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:52:07 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/adapter-registry/src/lib/crypto.js
 // AES-256-GCM encryption with scrypt key derivation for database connection strings
 const crypto = require('node:crypto');
 

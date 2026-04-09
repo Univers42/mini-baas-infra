@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:35:14 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:35:15 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:52:58 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/mongo-api/src/middleware/auth.js
 const { verifyToken } = require('../lib/jwt');
 
 const fail = (res, status, code, message) => {

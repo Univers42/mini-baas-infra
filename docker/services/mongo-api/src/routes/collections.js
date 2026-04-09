@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:35:26 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:35:27 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:53:14 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/mongo-api/src/routes/collections.js
 const { Router } = require('express');
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../lib/mongo');

@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:35:03 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:35:04 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:52:49 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/mongo-api/src/lib/jwt.js
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || '';
 

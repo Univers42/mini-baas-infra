@@ -6,12 +6,9 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:18 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/09 23:34:19 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/10 00:06:36 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
-
-# syntax=docker/dockerfile:1
-# File: docker/services/email-service/Dockerfile
 
 FROM node:20-alpine AS deps
 WORKDIR /app

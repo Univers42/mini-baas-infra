@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:36:28 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:36:29 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:53:37 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/query-router/src/routes/query.js
 const { Router } = require('express');
 const jwt = require('jsonwebtoken');
 const postgresqlEngine = require('../engines/postgresql');

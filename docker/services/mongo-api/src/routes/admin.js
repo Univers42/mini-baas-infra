@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:35:23 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:35:24 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:53:10 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/mongo-api/src/routes/admin.js
 const { Router } = require('express');
 const { getDb } = require('../lib/mongo');
 const { requireUser } = require('../middleware/auth');

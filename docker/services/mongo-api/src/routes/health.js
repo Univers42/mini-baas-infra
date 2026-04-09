@@ -6,11 +6,10 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:35:28 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:35:29 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/09 23:53:18 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// File: docker/services/mongo-api/src/routes/health.js
 const { Router } = require('express');
 const { getDb } = require('../lib/mongo');
 const router = Router();
