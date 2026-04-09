@@ -231,3 +231,39 @@ services:
               limit_by: ip
               minute: 300
               hour: 5000
+
+  - name: email
+    url: http://email-service:3030
+    routes:
+      - name: email-routes
+        paths: [/email/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 10
+              hour: 200
+
+  - name: storage-sign
+    url: http://storage-router:3040
+    routes:
+      - name: storage-sign-routes
+        paths: [/storage/v1/sign]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1500

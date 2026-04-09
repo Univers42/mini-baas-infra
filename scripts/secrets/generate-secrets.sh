@@ -9,11 +9,15 @@ OUTPUT_DIR="${1:-./secrets}"
 mkdir -p "$OUTPUT_DIR"
 
 gen_secret() {
-  openssl rand -base64 "$1" | tr -d '\n'
+  local length="$1"
+  openssl rand -base64 "$length" | tr -d '\n'
+  return 0
 }
 
 gen_hex() {
-  openssl rand -hex "$1"
+  local length="$1"
+  openssl rand -hex "$length"
+  return 0
 }
 
 echo "=== mini-BaaS Secret Generator ==="

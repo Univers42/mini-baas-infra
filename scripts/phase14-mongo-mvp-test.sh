@@ -17,6 +17,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -26,6 +29,7 @@ pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
     ((TESTS_PASSED++))
+    return 0
 }
 
 fail() {
@@ -33,6 +37,7 @@ fail() {
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
     ((TESTS_FAILED++))
+    return 0
 }
 
 assert_code() {
@@ -45,14 +50,16 @@ assert_code() {
     else
         fail "$name" "expected $expected, got $actual"
     fi
+    return 0
 }
 
 require_cmd() {
     local cmd="$1"
     if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo -e "${RED}[FAIL]${NC} Missing command: $cmd"
+        echo -e "${RED}[FAIL]${NC} Missing command: $cmd" >&2
         exit 1
     fi
+    return 0
 }
 
 signup_and_login() {
@@ -64,10 +71,10 @@ signup_and_login() {
     local login_file="$TMPDIR/login_${tag}.json"
 
     local signup_http
-    signup_http=$(curl -sS -o "$signup_file" -w '%{http_code}' \
+    signup_http=$(curl -sS -o "$signup_file" -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/signup" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null || echo "000")
 
@@ -79,10 +86,10 @@ signup_and_login() {
     sleep 0.5  # Rate limit spacing
 
     local login_http
-    login_http=$(curl -sS -o "$login_file" -w '%{http_code}' \
+    login_http=$(curl -sS -o "$login_file" -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$email\",\"password\":\"$password\"}" 2>/dev/null || echo "000")
 
@@ -92,6 +99,7 @@ signup_and_login() {
     fi
 
     jq -r '.access_token // empty' "$login_file" 2>/dev/null || true
+    return 0
 }
 
 ui_banner "Phase 14 MVP Test Suite" "Mongo API via Kong gateway"
@@ -103,20 +111,20 @@ require_cmd jq
 
 ui_step "Test 1: key-auth on /mongo/v1/health"
 
-MONGO_HEALTH_NO_KEY=$(curl -sS -o "$TMPDIR/mongo_health_nokey.json" -w '%{http_code}' \
+MONGO_HEALTH_NO_KEY=$(curl -sS -o "$TMPDIR/mongo_health_nokey.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/mongo/v1/health" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Missing apikey rejected on /mongo/v1/health" "401" "$MONGO_HEALTH_NO_KEY"
 
-MONGO_HEALTH_BAD_KEY=$(curl -sS -o "$TMPDIR/mongo_health_badkey.json" -w '%{http_code}' \
+MONGO_HEALTH_BAD_KEY=$(curl -sS -o "$TMPDIR/mongo_health_badkey.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/mongo/v1/health" \
     -H 'apikey: invalid-key' \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Invalid apikey rejected on /mongo/v1/health" "401" "$MONGO_HEALTH_BAD_KEY"
 
-MONGO_HEALTH_OK=$(curl -sS -o "$TMPDIR/mongo_health_ok.json" -w '%{http_code}' \
+MONGO_HEALTH_OK=$(curl -sS -o "$TMPDIR/mongo_health_ok.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/mongo/v1/health" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Valid apikey accepted on /mongo/v1/health" "200" "$MONGO_HEALTH_OK"
 
@@ -142,10 +150,10 @@ DOC_ID=""
 
 ui_step "Test 3: Mongo CRUD for User A"
 if [[ -n "$TOKEN_A" ]]; then
-    CREATE_HTTP=$(curl -sS -o "$TMPDIR/mongo_create_a.json" -w '%{http_code}' \
+    CREATE_HTTP=$(curl -sS -o "$TMPDIR/mongo_create_a.json" -w "$CURL_FMT" \
         -X POST "$BASE_URL/mongo/v1/collections/tasks/documents" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_A" \
         --max-time "$TIMEOUT" \
         -d '{"document":{"title":"phase14 task","status":"open"}}' 2>/dev/null || echo "000")
@@ -158,9 +166,9 @@ if [[ -n "$TOKEN_A" ]]; then
         fail "Created document has id" "missing data.id"
     fi
 
-    LIST_HTTP=$(curl -sS -o "$TMPDIR/mongo_list_a.json" -w '%{http_code}' \
+    LIST_HTTP=$(curl -sS -o "$TMPDIR/mongo_list_a.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/mongo/v1/collections/tasks/documents?limit=10&offset=0" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_A" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     assert_code "List Mongo documents as User A" "200" "$LIST_HTTP"
@@ -171,17 +179,17 @@ if [[ -n "$TOKEN_A" ]]; then
         fail "User A list includes created document" "id $DOC_ID not found"
     fi
 
-    GET_HTTP=$(curl -sS -o "$TMPDIR/mongo_get_a.json" -w '%{http_code}' \
+    GET_HTTP=$(curl -sS -o "$TMPDIR/mongo_get_a.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/mongo/v1/collections/tasks/documents/$DOC_ID" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_A" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     assert_code "Get Mongo document by id as User A" "200" "$GET_HTTP"
 
-    PATCH_HTTP=$(curl -sS -o "$TMPDIR/mongo_patch_a.json" -w '%{http_code}' \
+    PATCH_HTTP=$(curl -sS -o "$TMPDIR/mongo_patch_a.json" -w "$CURL_FMT" \
         -X PATCH "$BASE_URL/mongo/v1/collections/tasks/documents/$DOC_ID" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_A" \
         --max-time "$TIMEOUT" \
         -d '{"patch":{"status":"done"}}' 2>/dev/null || echo "000")
@@ -199,25 +207,25 @@ fi
 
 ui_step "Test 4: user isolation for Mongo documents"
 if [[ -n "$TOKEN_B" ]] && [[ -n "$DOC_ID" ]]; then
-    B_GET_HTTP=$(curl -sS -o "$TMPDIR/mongo_get_b.json" -w '%{http_code}' \
+    B_GET_HTTP=$(curl -sS -o "$TMPDIR/mongo_get_b.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/mongo/v1/collections/tasks/documents/$DOC_ID" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_B" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     assert_code "User B cannot read User A document" "404" "$B_GET_HTTP"
 
-    B_PATCH_HTTP=$(curl -sS -o "$TMPDIR/mongo_patch_b.json" -w '%{http_code}' \
+    B_PATCH_HTTP=$(curl -sS -o "$TMPDIR/mongo_patch_b.json" -w "$CURL_FMT" \
         -X PATCH "$BASE_URL/mongo/v1/collections/tasks/documents/$DOC_ID" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_B" \
         --max-time "$TIMEOUT" \
         -d '{"patch":{"status":"stolen"}}' 2>/dev/null || echo "000")
     assert_code "User B cannot patch User A document" "404" "$B_PATCH_HTTP"
 
-    B_DELETE_HTTP=$(curl -sS -o "$TMPDIR/mongo_delete_b.json" -w '%{http_code}' \
+    B_DELETE_HTTP=$(curl -sS -o "$TMPDIR/mongo_delete_b.json" -w "$CURL_FMT" \
         -X DELETE "$BASE_URL/mongo/v1/collections/tasks/documents/$DOC_ID" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_B" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     assert_code "User B cannot delete User A document" "404" "$B_DELETE_HTTP"
@@ -227,9 +235,9 @@ fi
 
 ui_step "Test 5: delete User A document"
 if [[ -n "$TOKEN_A" ]] && [[ -n "$DOC_ID" ]]; then
-    A_DELETE_HTTP=$(curl -sS -o "$TMPDIR/mongo_delete_a.json" -w '%{http_code}' \
+    A_DELETE_HTTP=$(curl -sS -o "$TMPDIR/mongo_delete_a.json" -w "$CURL_FMT" \
         -X DELETE "$BASE_URL/mongo/v1/collections/tasks/documents/$DOC_ID" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_A" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     assert_code "User A deletes own document" "200" "$A_DELETE_HTTP"

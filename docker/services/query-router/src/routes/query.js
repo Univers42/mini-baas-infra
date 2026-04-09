@@ -7,6 +7,11 @@ const mongodbEngine = require('../engines/mongodb');
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADAPTER_REGISTRY_URL = process.env.ADAPTER_REGISTRY_URL;
+const SERVICE_TOKEN = process.env.ADAPTER_REGISTRY_SERVICE_TOKEN;
+
+/** Validate that a path segment contains only safe characters. */
+const DB_ID_RE = /^[\w-]{1,128}$/;
+const validatePathParam = (value) => DB_ID_RE.test(value);
 
 const requireUser = (req, res, next) => {
   const auth = req.headers.authorization || '';
@@ -15,9 +20,8 @@ const requireUser = (req, res, next) => {
   }
   try {
     const claims = jwt.verify(auth.slice(7).trim(), JWT_SECRET, { algorithms: ['HS256'] });
-    if (!claims || !claims.sub) throw new Error('no sub');
+    if (!claims?.sub) throw new Error('no sub');
     req.user = { id: claims.sub, role: claims.role };
-    req.token = auth.slice(7).trim();
     next();
   } catch {
     res.status(401).json({ success: false, error: { code: 'invalid_token', message: 'Invalid JWT' } });
@@ -33,9 +37,15 @@ const ENGINES = {
 // POST /query/:dbId/tables/:table
 router.post('/:dbId/tables/:table', requireUser, async (req, res) => {
   try {
-    // Fetch connection info from adapter-registry
-    const regResponse = await fetch(`${ADAPTER_REGISTRY_URL}/databases/${req.params.dbId}/connect`, {
-      headers: { Authorization: `Bearer ${req.token}` },
+    if (!validatePathParam(req.params.dbId)) {
+      return res.status(400).json({ success: false, error: { code: 'invalid_param', message: 'Invalid database ID' } });
+    }
+    // Fetch connection info from adapter-registry using internal service token
+    const regResponse = await fetch(`${ADAPTER_REGISTRY_URL}/databases/${encodeURIComponent(req.params.dbId)}/connect`, {
+      headers: {
+        'X-Service-Token': SERVICE_TOKEN,
+        'X-Tenant-Id': req.user.id,
+      },
     });
 
     if (!regResponse.ok) {
@@ -62,8 +72,14 @@ router.post('/:dbId/tables/:table', requireUser, async (req, res) => {
 // GET /query/:dbId/tables
 router.get('/:dbId/tables', requireUser, async (req, res) => {
   try {
-    const regResponse = await fetch(`${ADAPTER_REGISTRY_URL}/databases/${req.params.dbId}/connect`, {
-      headers: { Authorization: `Bearer ${req.token}` },
+    if (!validatePathParam(req.params.dbId)) {
+      return res.status(400).json({ success: false, error: { code: 'invalid_param', message: 'Invalid database ID' } });
+    }
+    const regResponse = await fetch(`${ADAPTER_REGISTRY_URL}/databases/${encodeURIComponent(req.params.dbId)}/connect`, {
+      headers: {
+        'X-Service-Token': SERVICE_TOKEN,
+        'X-Tenant-Id': req.user.id,
+      },
     });
 
     if (!regResponse.ok) {

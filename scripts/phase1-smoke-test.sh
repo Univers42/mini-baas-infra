@@ -17,6 +17,9 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -34,6 +37,7 @@ test_case() {
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
         ((TESTS_FAILED++))
     fi
+    return 0
 }
 
 test_one_of() {
@@ -52,6 +56,7 @@ test_one_of() {
 
     echo -e "${RED}✗${NC} $name (expected one of: ${allowed[*]}, got: $actual)"
     ((TESTS_FAILED++))
+    return 0
 }
 
 ui_banner "Phase 1 Smoke Test Suite" "Kong routing + Auth + REST access"
@@ -61,9 +66,9 @@ ui_hr
 
 # 1. Gateway health with API key
 ui_step "Test 1: Kong -> GoTrue health"
-HEALTH_HTTP=$(curl -sS -o "$TMPDIR/health.json" -w '%{http_code}' \
+HEALTH_HTTP=$(curl -sS -o "$TMPDIR/health.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/auth/v1/health" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 test_case "Auth health HTTP status" "200" "$HEALTH_HTTP"
 
@@ -72,10 +77,10 @@ ui_step "Test 2: Signup via Kong /auth/v1/signup"
 EMAIL="phase1_$(date +%s)@example.com"
 PASS='test1234!'
 
-SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w '%{http_code}' \
+SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/signup.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
@@ -95,10 +100,10 @@ fi
 # 3. LOGIN TEST
 ui_step "Test 3: Login via Kong /auth/v1/token"
 
-LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w '%{http_code}' \
+LOGIN_HTTP=$(curl -sS -o "$TMPDIR/login.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
@@ -140,18 +145,18 @@ test_case "JWT role claim" "authenticated" "$ROLE"
 
 # 4. REST WITHOUT TOKEN TEST
 ui_step "Test 4: PostgREST access without token (anon behavior)"
-REST_NO_AUTH=$(curl -sS -o "$TMPDIR/rest_no_auth.json" -w '%{http_code}' \
+REST_NO_AUTH=$(curl -sS -o "$TMPDIR/rest_no_auth.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 test_one_of "PostgREST no bearer token" "$REST_NO_AUTH" "200" "401"
 
 # 5. REST WITH TOKEN TEST (main validation)
 ui_step "Test 5: PostgREST access with JWT"
 if [[ -n "$TOKEN" ]]; then
-    REST_WITH_AUTH=$(curl -sS -o "$TMPDIR/rest_with_auth.json" -w '%{http_code}' \
+    REST_WITH_AUTH=$(curl -sS -o "$TMPDIR/rest_with_auth.json" -w "$CURL_FMT" \
         -X GET "$BASE_URL/rest/v1/" \
-        -H "apikey: $APIKEY" \
+        -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     test_case "JWT-authenticated access" "200" "$REST_WITH_AUTH"
@@ -161,9 +166,9 @@ fi
 
 # 6. NEGATIVE JWT TEST
 ui_step "Test 6: Invalid JWT is rejected"
-INVALID_REST_HTTP=$(curl -sS -o "$TMPDIR/rest_invalid_jwt.json" -w '%{http_code}' \
+INVALID_REST_HTTP=$(curl -sS -o "$TMPDIR/rest_invalid_jwt.json" -w "$CURL_FMT" \
     -X GET "$BASE_URL/rest/v1/" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     -H 'Authorization: Bearer invalid.jwt.token' \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 test_one_of "Invalid JWT rejected" "$INVALID_REST_HTTP" "401" "403"
@@ -171,7 +176,7 @@ test_one_of "Invalid JWT rejected" "$INVALID_REST_HTTP" "401" "403"
 # 7. KONG HEADERS TEST
 ui_step "Test 7: Verify Kong proxied request"
 HEADERS=$(curl -sS -i -X GET "$BASE_URL/auth/v1/health" \
-    -H "apikey: $APIKEY" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" 2>/dev/null | head -n 20 || true)
 
 if echo "$HEADERS" | grep -qi "kong\|x-kong"; then

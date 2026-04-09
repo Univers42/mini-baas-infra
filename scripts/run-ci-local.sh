@@ -12,6 +12,7 @@ require_cmd() {
     echo "[ci-local] Missing required command: $cmd" >&2
     exit 1
   fi
+  return 0
 }
 
 require_cmd bash
@@ -41,6 +42,7 @@ cleanup() {
   fi
   echo "[ci-local] Tearing down stack..."
   make compose-down-volumes || true
+  return 0
 }
 
 trap cleanup EXIT

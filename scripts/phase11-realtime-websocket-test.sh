@@ -17,6 +17,11 @@ NC='\033[0m'
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+readonly CURL_FMT='%{http_code}'
+readonly CT_JSON='Content-Type: application/json'
+readonly HDR_APIKEY="apikey: $APIKEY"
+readonly HDR_WS_UPGRADE='Upgrade: websocket'
+readonly HDR_WS_CONN='Connection: Upgrade'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./test-ui.sh
@@ -26,6 +31,7 @@ pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
     ((TESTS_PASSED++))
+    return 0
 }
 
 fail() {
@@ -33,6 +39,7 @@ fail() {
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
     ((TESTS_FAILED++))
+    return 0
 }
 
 assert_code() {
@@ -45,6 +52,7 @@ assert_code() {
     else
         fail "$name" "expected $expected, got $actual"
     fi
+    return 0
 }
 
 assert_not_codes() {
@@ -65,6 +73,7 @@ assert_not_codes() {
     else
         pass "$name"
     fi
+    return 0
 }
 
 ui_banner "Phase 11 Test Suite" "Realtime WebSocket Communication"
@@ -74,27 +83,27 @@ ui_hr
 
 ui_step "Test 1: WebSocket upgrade endpoint accessibility"
 # Test that the realtime endpoint responds to HTTP (upgrade path)
-WS_UPGRADE_CODE=$(curl -sS -o "$TMPDIR/ws-upgrade.txt" -w '%{http_code}' \
+WS_UPGRADE_CODE=$(curl -sS -o "$TMPDIR/ws-upgrade.txt" -w "$CURL_FMT" \
     -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY" \
-    -H "Upgrade: websocket" \
-    -H "Connection: Upgrade" \
+    -H "$HDR_WS_UPGRADE" \
+    -H "$HDR_WS_CONN" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 # Endpoint should not be missing/auth-failed/connection-failed.
 assert_not_codes "WebSocket endpoint exists" "$WS_UPGRADE_CODE" "000" "401" "404"
 
 ui_step "Test 2: WebSocket rejects missing API key"
-MISSING_KEY_CODE=$(curl -sS -o "$TMPDIR/ws-nokey.txt" -w '%{http_code}' \
+MISSING_KEY_CODE=$(curl -sS -o "$TMPDIR/ws-nokey.txt" -w "$CURL_FMT" \
     -X GET "$BASE_URL/realtime/v1" \
-    -H "Upgrade: websocket" \
-    -H "Connection: Upgrade" \
+    -H "$HDR_WS_UPGRADE" \
+    -H "$HDR_WS_CONN" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 assert_code "Missing API key rejected" "401" "$MISSING_KEY_CODE"
 
 ui_step "Test 3: WebSocket accepts valid API key parameter"
-VALID_KEY_CODE=$(curl -sS -o "$TMPDIR/ws-validkey.txt" -w '%{http_code}' \
+VALID_KEY_CODE=$(curl -sS -o "$TMPDIR/ws-validkey.txt" -w "$CURL_FMT" \
     -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY" \
-    -H "Upgrade: websocket" \
-    -H "Connection: Upgrade" \
+    -H "$HDR_WS_UPGRADE" \
+    -H "$HDR_WS_CONN" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 # Valid key should not be rejected or route-missing.
 assert_not_codes "Valid API key accepted" "$VALID_KEY_CODE" "000" "401" "404"
@@ -104,19 +113,19 @@ ui_step "Test 4: WebSocket with JWT token as query parameter"
 EMAIL="wstest_$(date +%s)@example.com"
 PASS='TestPass123!'
 
-SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/ws-signup.json" -w '%{http_code}' \
+SIGNUP_HTTP=$(curl -sS -o "$TMPDIR/ws-signup.json" -w "$CURL_FMT" \
     -X POST "$BASE_URL/auth/v1/signup" \
-    -H 'Content-Type: application/json' \
-    -H "apikey: $APIKEY" \
+    -H "$CT_JSON" \
+    -H "$HDR_APIKEY" \
     --max-time "$TIMEOUT" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
 
 JWT_TOKEN=""
 if [[ "$SIGNUP_HTTP" == "200" ]]; then
-    LOGIN_HTTP=$(curl -sS -o "$TMPDIR/ws-login.json" -w '%{http_code}' \
+    LOGIN_HTTP=$(curl -sS -o "$TMPDIR/ws-login.json" -w "$CURL_FMT" \
         -X POST "$BASE_URL/auth/v1/token?grant_type=password" \
-        -H 'Content-Type: application/json' \
-        -H "apikey: $APIKEY" \
+        -H "$CT_JSON" \
+        -H "$HDR_APIKEY" \
         --max-time "$TIMEOUT" \
         -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null || echo "000")
     
@@ -128,10 +137,10 @@ fi
 if [[ -n "$JWT_TOKEN" ]]; then
     # WebSocket with JWT as query parameter (common pattern for realtime)
     # Using URL-safe base64 encoding of JWT token for parameter
-    JWT_WS_CODE=$(curl -sS -o "$TMPDIR/ws-jwt.txt" -w '%{http_code}' \
+    JWT_WS_CODE=$(curl -sS -o "$TMPDIR/ws-jwt.txt" -w "$CURL_FMT" \
         -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY&jwt=$JWT_TOKEN" \
-        -H "Upgrade: websocket" \
-        -H "Connection: Upgrade" \
+        -H "$HDR_WS_UPGRADE" \
+        -H "$HDR_WS_CONN" \
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     
     if [[ "$JWT_WS_CODE" != "401" && "$JWT_WS_CODE" != "404" ]]; then
@@ -155,10 +164,10 @@ else
 fi
 
 ui_step "Test 6: Realtime with multiple query params"
-MULTIQUERY_CODE=$(curl -sS -o "$TMPDIR/ws-multiquery.txt" -w '%{http_code}' \
+MULTIQUERY_CODE=$(curl -sS -o "$TMPDIR/ws-multiquery.txt" -w "$CURL_FMT" \
     -X GET "$BASE_URL/realtime/v1?apikey=$APIKEY&channel=public&token=$JWT_TOKEN" \
-    -H "Upgrade: websocket" \
-    -H "Connection: Upgrade" \
+    -H "$HDR_WS_UPGRADE" \
+    -H "$HDR_WS_CONN" \
     --max-time "$TIMEOUT" 2>/dev/null || echo "000")
 
 assert_not_codes "WebSocket accepts multiple query parameters" "$MULTIQUERY_CODE" "000" "401" "404"

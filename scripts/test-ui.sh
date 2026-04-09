@@ -25,31 +25,38 @@ else
     UI_NC=''
 fi
 
+readonly UI_BOX_LINE='════════════════════════════════════════════════════════════'
+readonly FMT_LINE='%b\n'
+
 ui_hr() {
-    printf "%b\n" "${UI_DIM}------------------------------------------------------------${UI_NC}"
+    printf "$FMT_LINE" "${UI_DIM}------------------------------------------------------------${UI_NC}"
+    return 0
 }
 
 ui_banner() {
     local title="$1"
     local subtitle="${2:-}"
 
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}╔════════════════════════════════════════════════════════════╗${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_BOLD}${title}${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}╔${UI_BOX_LINE}╗${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_BOLD}${title}${UI_NC}"
     if [[ -n "$subtitle" ]]; then
-        printf "%b\n" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_DIM}${subtitle}${UI_NC}"
+        printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_DIM}${subtitle}${UI_NC}"
     fi
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}╚════════════════════════════════════════════════════════════╝${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}╚${UI_BOX_LINE}╝${UI_NC}"
+    return 0
 }
 
 ui_kv() {
     local key="$1"
     local value="$2"
-    printf "%b\n" "${UI_BLUE}${key}:${UI_NC} ${value}"
+    printf "$FMT_LINE" "${UI_BLUE}${key}:${UI_NC} ${value}"
+    return 0
 }
 
 ui_step() {
     local label="$1"
     printf "\n%b\n" "${UI_MAGENTA}${UI_BOLD}▶ ${label}${UI_NC}"
+    return 0
 }
 
 ui_summary() {
@@ -59,17 +66,18 @@ ui_summary() {
     local fail_msg="$4"
     local total=$((passed + failed))
 
-    printf "\n%b\n" "${UI_CYAN}${UI_BOLD}╔════════════════════════════════════════════════════════════╗${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}║ Test Summary${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}╠════════════════════════════════════════════════════════════╣${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_GREEN}${UI_BOLD}✔ Passed:${UI_NC} ${UI_GREEN}${UI_BOLD}${passed}${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_RED}${UI_BOLD}✖ Failed:${UI_NC} ${UI_RED}${UI_BOLD}${failed}${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_BLUE}${UI_BOLD}Total :${UI_NC} ${UI_BLUE}${UI_BOLD}${total}${UI_NC}"
-    printf "%b\n" "${UI_CYAN}${UI_BOLD}╚════════════════════════════════════════════════════════════╝${UI_NC}"
+    printf "\n%b\n" "${UI_CYAN}${UI_BOLD}╔${UI_BOX_LINE}╗${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}║ Test Summary${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}╠${UI_BOX_LINE}╣${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_GREEN}${UI_BOLD}✔ Passed:${UI_NC} ${UI_GREEN}${UI_BOLD}${passed}${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_RED}${UI_BOLD}✖ Failed:${UI_NC} ${UI_RED}${UI_BOLD}${failed}${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}║${UI_NC} ${UI_BLUE}${UI_BOLD}Total :${UI_NC} ${UI_BLUE}${UI_BOLD}${total}${UI_NC}"
+    printf "$FMT_LINE" "${UI_CYAN}${UI_BOLD}╚${UI_BOX_LINE}╝${UI_NC}"
 
     if [[ "$failed" -eq 0 ]]; then
-        printf "%b\n" "${UI_GREEN}${UI_BOLD}✔ ${success_msg}${UI_NC}"
+        printf "$FMT_LINE" "${UI_GREEN}${UI_BOLD}✔ ${success_msg}${UI_NC}"
     else
-        printf "%b\n" "${UI_RED}${UI_BOLD}✖ ${fail_msg}${UI_NC}"
+        printf "$FMT_LINE" "${UI_RED}${UI_BOLD}✖ ${fail_msg}${UI_NC}"
     fi
+    return 0
 }

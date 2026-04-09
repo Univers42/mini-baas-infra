@@ -15,7 +15,7 @@ router.get('/health/ready', async (req, res) => {
     const pool = getPool();
     await pool.query('SELECT 1');
     res.json({ status: 'ready', dependencies: { postgres: 'ok' } });
-  } catch (err) {
+  } catch (_err) {
     res.status(503).json({ status: 'not ready', dependencies: { postgres: 'error' } });
   }
 });

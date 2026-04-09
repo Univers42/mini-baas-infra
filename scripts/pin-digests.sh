@@ -8,13 +8,14 @@
 # in dockerfiles.pinned/
 
 set -euo pipefail
+readonly SEP_LINE='═══════════════════════════════════════════'
 
 PINNED_DIR="dockerfiles.pinned"
 mkdir -p "$PINNED_DIR"
 
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo " Pin Base Image Digests"
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo ""
 
 # Find all Dockerfiles
@@ -61,6 +62,7 @@ resolve_digest() {
   else
     echo ""
   fi
+  return 0
 }
 
 for df in "${DOCKERFILES[@]}"; do
@@ -91,8 +93,8 @@ for df in "${DOCKERFILES[@]}"; do
   echo ""
 done
 
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo " Pinned Dockerfiles written to $PINNED_DIR/"
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo ""
 echo "To use pinned versions, copy from $PINNED_DIR/ back to docker/services/"

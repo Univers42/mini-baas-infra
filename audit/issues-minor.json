@@ -1,0 +1,2861 @@
+[
+  {
+    "key": "AZ1y4rjrAo3DRkjyNBKu",
+    "rule": "javascript:S7735",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminMessages.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 20,
+    "hash": "cba5ba20a31c9e270834c9ff405214f5",
+    "textRange": {
+      "startLine": 20,
+      "endLine": 20,
+      "startOffset": 18,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Unexpected negated condition.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-04-07T15:30:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjzAo3DRkjyNBKw",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminFeeding.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "430228de1f3e49afe3cdc604b46fb771",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 9,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Utensils'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T14:39:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkIAo3DRkjyNBK0",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminTickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "7345fc58ae684102fa0c5633738d4676",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Search'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T14:14:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkIAo3DRkjyNBK1",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminTickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "7345fc58ae684102fa0c5633738d4676",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 25,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Filter'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T14:14:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkIAo3DRkjyNBKz",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminTickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "7345fc58ae684102fa0c5633738d4676",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 9,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Ticket'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T14:14:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rkIAo3DRkjyNBK2",
+    "rule": "javascript:S7735",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminTickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 18,
+    "hash": "d22ee1988568ac11d75fb6720776b4ca",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 18,
+      "startOffset": 18,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Unexpected negated condition.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-04-07T14:14:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjNAo3DRkjyNBKh",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminEvents.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "9c369b1a4ed6469d694bb20e26256172",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 9,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Calendar'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T13:23:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjXAo3DRkjyNBKi",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/AdminAnimals.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 6,
+    "hash": "ea63e0f94abc62e867cdcf5c1b642ab6",
+    "textRange": {
+      "startLine": 6,
+      "endLine": 6,
+      "startOffset": 20,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'ZONE_CONFIG'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T12:58:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKj",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 1,
+    "hash": "da020779f03c87c74614333869d1c135",
+    "textRange": {
+      "startLine": 1,
+      "endLine": 1,
+      "startOffset": 9,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'useEffect'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKk",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b9243dd599e406f1d234572105517399",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 12,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Ticket'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKl",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b9243dd599e406f1d234572105517399",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 30,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Users'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKm",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 4,
+    "hash": "b9243dd599e406f1d234572105517399",
+    "textRange": {
+      "startLine": 4,
+      "endLine": 4,
+      "startOffset": 37,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'TrendingUp'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjhAo3DRkjyNBKn",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/admin/Dashboard.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 5,
+    "hash": "5f5df78e27bc5f50445903c3bfabdc61",
+    "textRange": {
+      "startLine": 5,
+      "endLine": 5,
+      "startOffset": 14,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'Eye'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T12:32:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rktAo3DRkjyNBLA",
+    "rule": "javascript:S7773",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Tickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 31,
+    "hash": "6f11d025d4fbd132e4cef8723346c2ae",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 37,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `Number.parseFloat` over `parseFloat`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "es2015"
+    ],
+    "creationDate": "2026-04-07T10:51:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rktAo3DRkjyNBLB",
+    "rule": "javascript:S7773",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Tickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 55,
+    "hash": "495596a0edb4dd26994a47f08b1f5096",
+    "textRange": {
+      "startLine": 55,
+      "endLine": 55,
+      "startOffset": 36,
+      "endOffset": 46
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `Number.parseFloat` over `parseFloat`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "es2015"
+    ],
+    "creationDate": "2026-04-07T10:51:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rktAo3DRkjyNBLC",
+    "rule": "javascript:S7773",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Tickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 145,
+    "hash": "2f566e566d324d17c5fcb99b3eb05b34",
+    "textRange": {
+      "startLine": 145,
+      "endLine": 145,
+      "startOffset": 24,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `Number.parseFloat` over `parseFloat`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "es2015"
+    ],
+    "creationDate": "2026-04-07T10:51:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rktAo3DRkjyNBLD",
+    "rule": "javascript:S7773",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Tickets.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 184,
+    "hash": "5c893e68a6ac0134562b0ebbeb974ed2",
+    "textRange": {
+      "startLine": 184,
+      "endLine": 184,
+      "startOffset": 70,
+      "endOffset": 80
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `Number.parseFloat` over `parseFloat`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "es2015"
+    ],
+    "creationDate": "2026-04-07T10:51:05+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rjCAo3DRkjyNBKg",
+    "rule": "javascript:S1128",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Events.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 2,
+    "hash": "8e037f203e602b8ad33b75c2043868e2",
+    "textRange": {
+      "startLine": 2,
+      "endLine": 2,
+      "startOffset": 26,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Remove this unused import of 'MapPin'.",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2015",
+      "type-dependent",
+      "unused"
+    ],
+    "creationDate": "2026-04-07T10:25:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rk2Ao3DRkjyNBLE",
+    "rule": "javascript:S7735",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/src/pages/Animals.jsx",
+    "project": "Univers42_mini-baas-infra",
+    "line": 99,
+    "hash": "689fb73ada1083c7b722c6b4de735261",
+    "textRange": {
+      "startLine": 99,
+      "endLine": 99,
+      "startOffset": 62,
+      "endOffset": 83
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Unexpected negated condition.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "readability"
+    ],
+    "creationDate": "2026-04-07T09:34:53+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rl7Ao3DRkjyNBLj",
+    "rule": "javascript:S7772",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/front/vite.config.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "cd6b88f029ce01b43bc7d19446b3b5d3",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 24,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `node:path` over `path`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "import",
+      "nodejs"
+    ],
+    "creationDate": "2026-04-06T11:18:29+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4reLAo3DRkjyNBJr",
+    "rule": "javascript:S7772",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/server.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 5,
+    "hash": "c830f6c4155a5cbeef0f28771e61ed4d",
+    "textRange": {
+      "startLine": 5,
+      "endLine": 5,
+      "startOffset": 23,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `node:crypto` over `crypto`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "import",
+      "nodejs"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMO",
+    "rule": "javascript:S7764",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 58,
+    "hash": "1fb0bb4118e0b19d06a4be4e2f9bf779",
+    "textRange": {
+      "startLine": 58,
+      "endLine": 58,
+      "startOffset": 6,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `globalThis` over `window`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2020",
+      "portability"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMP",
+    "rule": "javascript:S7764",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 58,
+    "hash": "1fb0bb4118e0b19d06a4be4e2f9bf779",
+    "textRange": {
+      "startLine": 58,
+      "endLine": 58,
+      "startOffset": 30,
+      "endOffset": 36
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `globalThis` over `window`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2020",
+      "portability"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMQ",
+    "rule": "javascript:S7764",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 59,
+    "hash": "c83bb30848f965519903b379eb72e7c3",
+    "textRange": {
+      "startLine": 59,
+      "endLine": 59,
+      "startOffset": 11,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `globalThis` over `window`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2020",
+      "portability"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMS",
+    "rule": "javascript:S7764",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 128,
+    "hash": "c700db91fb98fd1dbd70c81b53b129e9",
+    "textRange": {
+      "startLine": 128,
+      "endLine": 128,
+      "startOffset": 43,
+      "endOffset": 49
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `globalThis` over `window`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2020",
+      "portability"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMT",
+    "rule": "javascript:S7764",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 140,
+    "hash": "5b33a89da1d757dfa796afd290f19e7b",
+    "textRange": {
+      "startLine": 140,
+      "endLine": 140,
+      "startOffset": 4,
+      "endOffset": 10
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `globalThis` over `window`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2020",
+      "portability"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMU",
+    "rule": "javascript:S7744",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 159,
+    "hash": "9b9056f754a3d8cf3764ca6490faf281",
+    "textRange": {
+      "startLine": 159,
+      "endLine": 159,
+      "startOffset": 71,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "The empty object is useless.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "spread-operator",
+      "unnecessary"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmsAo3DRkjyNBMV",
+    "rule": "javascript:S7764",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/playground/app.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 206,
+    "hash": "7baf317605bccca696e60a001dc33691",
+    "textRange": {
+      "startLine": 206,
+      "endLine": 206,
+      "startOffset": 52,
+      "endOffset": 58
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `globalThis` over `window`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2020",
+      "portability"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rYOAo3DRkjyNBIR",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/pin-digests.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 96,
+    "hash": "6f1416f79131d182d63c2767bdfb38f2",
+    "textRange": {
+      "startLine": 96,
+      "endLine": 96,
+      "startOffset": 6,
+      "endOffset": 49
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '═══════════════════════════════════════════' 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rQLAo3DRkjyNBH8",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/preflight-check.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 129,
+    "hash": "6f1416f79131d182d63c2767bdfb38f2",
+    "textRange": {
+      "startLine": 129,
+      "endLine": 129,
+      "startOffset": 6,
+      "endOffset": 49
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '═══════════════════════════════════════════' 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T21:42:41+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4reqAo3DRkjyNBJy",
+    "rule": "javascript:S7772",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/adapter-registry/src/lib/crypto.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 3,
+    "hash": "c830f6c4155a5cbeef0f28771e61ed4d",
+    "textRange": {
+      "startLine": 3,
+      "endLine": 3,
+      "startOffset": 23,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `node:crypto` over `crypto`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "import",
+      "nodejs"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rezAo3DRkjyNBJz",
+    "rule": "javascript:S2486",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/adapter-registry/src/routes/health.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 18,
+    "hash": "9dcd66fc3d98a347c205c43e822e7ebd",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 20,
+      "startOffset": 4,
+      "endOffset": 3
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Handle this exception or don't catch it at all.",
+    "effort": "1h",
+    "debt": "1h",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "cwe",
+      "error-handling",
+      "suspicious"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4re8Ao3DRkjyNBJ0",
+    "rule": "javascript:S7772",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/adapter-registry/src/server.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 5,
+    "hash": "c830f6c4155a5cbeef0f28771e61ed4d",
+    "textRange": {
+      "startLine": 5,
+      "endLine": 5,
+      "startOffset": 23,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `node:crypto` over `crypto`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "import",
+      "nodejs"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rf0Ao3DRkjyNBKF",
+    "rule": "javascript:S7773",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/lib/mongo.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 13,
+    "hash": "7cef916098a1e728e3a96553ede1448b",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `Number.parseInt` over `parseInt`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "es2015"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rf0Ao3DRkjyNBKG",
+    "rule": "javascript:S7773",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/lib/mongo.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 14,
+    "hash": "a8829f978548f4cd8f83331d50b01d6e",
+    "textRange": {
+      "startLine": 14,
+      "endLine": 14,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `Number.parseInt` over `parseInt`.",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "es2015"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      },
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfYAo3DRkjyNBKB",
+    "rule": "javascript:S7772",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/middleware/correlationId.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 2,
+    "hash": "c830f6c4155a5cbeef0f28771e61ed4d",
+    "textRange": {
+      "startLine": 2,
+      "endLine": 2,
+      "startOffset": 23,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `node:crypto` over `crypto`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "import",
+      "nodejs"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBJ6",
+    "rule": "javascript:S6353",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 47,
+    "hash": "7fd5e7812080cd33e2d451629cfb3b5a",
+    "textRange": {
+      "startLine": 47,
+      "endLine": 47,
+      "startOffset": 19,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use concise character class syntax '\\w' instead of '[a-zA-Z0-9_]'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBJ8",
+    "rule": "javascript:S6653",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 76,
+    "hash": "ffeba40cfa3e54ba7590e66c46f77596",
+    "textRange": {
+      "startLine": 76,
+      "endLine": 76,
+      "startOffset": 6,
+      "endOffset": 59
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use 'Object.hasOwn()' instead of 'Object.prototype.hasOwnProperty.call()'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2022"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBJ9",
+    "rule": "javascript:S6653",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 76,
+    "hash": "ffeba40cfa3e54ba7590e66c46f77596",
+    "textRange": {
+      "startLine": 76,
+      "endLine": 76,
+      "startOffset": 63,
+      "endOffset": 121
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use 'Object.hasOwn()' instead of 'Object.prototype.hasOwnProperty.call()'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2022"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBJ_",
+    "rule": "javascript:S6653",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 151,
+    "hash": "c3fe84c75b1c7609ba1c3857ffbb3b0b",
+    "textRange": {
+      "startLine": 151,
+      "endLine": 151,
+      "startOffset": 6,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use 'Object.hasOwn()' instead of 'Object.prototype.hasOwnProperty.call()'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2022"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfQAo3DRkjyNBKA",
+    "rule": "javascript:S6653",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/routes/collections.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 151,
+    "hash": "c3fe84c75b1c7609ba1c3857ffbb3b0b",
+    "textRange": {
+      "startLine": 151,
+      "endLine": 151,
+      "startOffset": 60,
+      "endOffset": 115
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use 'Object.hasOwn()' instead of 'Object.prototype.hasOwnProperty.call()'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "es2022"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJk",
+    "rule": "javascript:S6353",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 15,
+    "hash": "7e8bcc9b96ee6a3a9d03bc0e6b937a68",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 18,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use concise character class syntax '\\w' instead of '[a-zA-Z0-9_]'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJl",
+    "rule": "javascript:S6353",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 31,
+    "hash": "b731eed0149841eb3972e74a306bcae2",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 28,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use concise character class syntax '\\w' instead of '[a-zA-Z0-9_]'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJm",
+    "rule": "javascript:S6353",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 40,
+    "hash": "01fcefd161567fa400ef5f0327b6d70b",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 40,
+      "startOffset": 25,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use concise character class syntax '\\w' instead of '[a-zA-Z0-9_]'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJn",
+    "rule": "javascript:S6353",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 54,
+    "hash": "e08ca8d4c2cb67d27089efac5da63f9b",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 62,
+      "endOffset": 74
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use concise character class syntax '\\w' instead of '[a-zA-Z0-9_]'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdpAo3DRkjyNBJp",
+    "rule": "javascript:S6353",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/query-router/src/engines/postgresql.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 65,
+    "hash": "47f1d2a80d1ca5d07b7b67a9d064cc5d",
+    "textRange": {
+      "startLine": 65,
+      "endLine": 65,
+      "startOffset": 65,
+      "endOffset": 77
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Use concise character class syntax '\\w' instead of '[a-zA-Z0-9_]'.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "regex",
+      "type-dependent"
+    ],
+    "creationDate": "2026-04-05T21:42:40+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rfsAo3DRkjyNBKD",
+    "rule": "javascript:S7772",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:docker/services/mongo-api/src/server.js",
+    "project": "Univers42_mini-baas-infra",
+    "line": 5,
+    "hash": "c830f6c4155a5cbeef0f28771e61ed4d",
+    "textRange": {
+      "startLine": 5,
+      "endLine": 5,
+      "startOffset": 23,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Prefer `node:crypto` over `crypto`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "convention",
+      "import",
+      "nodejs"
+    ],
+    "creationDate": "2026-04-05T21:36:33+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "CONVENTIONAL",
+    "cleanCodeAttributeCategory": "CONSISTENT",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rmbAo3DRkjyNBMM",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:sandbox/apps/app2/infra/init.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 183,
+    "hash": "608a7babd1ce5bc3763564b71d20f26d",
+    "textRange": {
+      "startLine": 183,
+      "endLine": 183,
+      "startOffset": 7,
+      "endOffset": 54
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '═══════════════════════════════════════════════' 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "assignee": "LESdylan-PV1JM@github",
+    "author": "dev.pro.photo@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-04-05T14:37:04+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4ra1Ao3DRkjyNBIn",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/postgres-mvp-flow.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 234,
+    "hash": "d2016e99a61db902536153a89fc41207",
+    "textRange": {
+      "startLine": 234,
+      "endLine": 234,
+      "startOffset": 5,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Content-Type: application/json' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T20:07:56+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rb7Ao3DRkjyNBJD",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase14-mongo-mvp-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 211,
+    "hash": "d2016e99a61db902536153a89fc41207",
+    "textRange": {
+      "startLine": 211,
+      "endLine": 211,
+      "startOffset": 11,
+      "endOffset": 43
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Content-Type: application/json' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T19:22:15+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rb7Ao3DRkjyNBJC",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase14-mongo-mvp-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 230,
+    "hash": "22aef35a933ddf1fac86c2481452a4af",
+    "textRange": {
+      "startLine": 230,
+      "endLine": 230,
+      "startOffset": 65,
+      "endOffset": 79
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 13 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T19:22:15+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc-Ao3DRkjyNBJU",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase13-cors-preflight-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 173,
+    "hash": "b083ebbd0bf13ed50fa99a460e7a717c",
+    "textRange": {
+      "startLine": 173,
+      "endLine": 173,
+      "startOffset": 8,
+      "endOffset": 43
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Access-Control-Request-Method: POST' 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T18:24:19+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdKAo3DRkjyNBJY",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase11-realtime-websocket-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 158,
+    "hash": "c36fabe4981b3e4c9c331e8ab84b2b20",
+    "textRange": {
+      "startLine": 158,
+      "endLine": 158,
+      "startOffset": 61,
+      "endOffset": 75
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 7 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdKAo3DRkjyNBJa",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase11-realtime-websocket-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 160,
+    "hash": "da39b409f8099f96a59dddbe6b412cc9",
+    "textRange": {
+      "startLine": 160,
+      "endLine": 160,
+      "startOffset": 8,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Upgrade: websocket' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdKAo3DRkjyNBJZ",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase11-realtime-websocket-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 161,
+    "hash": "9e86bf3427ba6585b3ceea3900de4fe7",
+    "textRange": {
+      "startLine": 161,
+      "endLine": 161,
+      "startOffset": 8,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Connection: Upgrade' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raSAo3DRkjyNBIZ",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase12-rate-limiting-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 111,
+    "hash": "624f2de71ff8967400c5fb0de7355d3f",
+    "textRange": {
+      "startLine": 111,
+      "endLine": 111,
+      "startOffset": 10,
+      "endOffset": 48
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Storage route accepts initial requests' 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raSAo3DRkjyNBIY",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase12-rate-limiting-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 184,
+    "hash": "201e9d31bfa726a894ec2223bbde07cc",
+    "textRange": {
+      "startLine": 184,
+      "endLine": 184,
+      "startOffset": 33,
+      "endOffset": 47
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 7 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc-Ao3DRkjyNBJT",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase13-cors-preflight-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 190,
+    "hash": "c9c50e6badb1c4cc225fc0ff1d7ef2ba",
+    "textRange": {
+      "startLine": 190,
+      "endLine": 190,
+      "startOffset": 46,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Access-Control-Allow-Origin' 4 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rc-Ao3DRkjyNBJS",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase13-cors-preflight-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 196,
+    "hash": "246048f16852694cd5b9cfbbd422045c",
+    "textRange": {
+      "startLine": 196,
+      "endLine": 196,
+      "startOffset": 54,
+      "endOffset": 70
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'header not found' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-30T09:57:17+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdVAo3DRkjyNBJe",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase10-data-mutation-complex-queries-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 130,
+    "hash": "d2016e99a61db902536153a89fc41207",
+    "textRange": {
+      "startLine": 130,
+      "endLine": 130,
+      "startOffset": 5,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Content-Type: application/json' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T18:09:06+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rdVAo3DRkjyNBJf",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase10-data-mutation-complex-queries-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 209,
+    "hash": "9df853e84aec7c5cd70c558d95a353c5",
+    "textRange": {
+      "startLine": 209,
+      "endLine": 209,
+      "startOffset": 51,
+      "endOffset": 65
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 11 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T18:09:06+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raJAo3DRkjyNBIU",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase6-http-methods-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 231,
+    "hash": "d2016e99a61db902536153a89fc41207",
+    "textRange": {
+      "startLine": 231,
+      "endLine": 231,
+      "startOffset": 11,
+      "endOffset": 43
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Content-Type: application/json' 8 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4raJAo3DRkjyNBIV",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase6-http-methods-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 265,
+    "hash": "d832d0810e8df68abe83d2eea27bbdef",
+    "textRange": {
+      "startLine": 265,
+      "endLine": 265,
+      "startOffset": 56,
+      "endOffset": 70
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 8 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbjAo3DRkjyNBI8",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase7-error-handling-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 194,
+    "hash": "d2016e99a61db902536153a89fc41207",
+    "textRange": {
+      "startLine": 194,
+      "endLine": 194,
+      "startOffset": 7,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal 'Content-Type: application/json' 7 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbjAo3DRkjyNBI7",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase7-error-handling-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 203,
+    "hash": "635374acebb60b6bac5c0a060e281d21",
+    "textRange": {
+      "startLine": 203,
+      "endLine": 203,
+      "startOffset": 53,
+      "endOffset": 67
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 12 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rYGAo3DRkjyNBIQ",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase8-token-lifecycle-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 244,
+    "hash": "4ce5aac0a5cf7e7b6fca850fc3b220fc",
+    "textRange": {
+      "startLine": 244,
+      "endLine": 244,
+      "startOffset": 58,
+      "endOffset": 72
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 6 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T17:39:13+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcjAo3DRkjyNBJL",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase3-authenticated-db-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 174,
+    "hash": "2f0a456a11b0afda96c812883bc9bca1",
+    "textRange": {
+      "startLine": 174,
+      "endLine": 174,
+      "startOffset": 59,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 5 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rUtAo3DRkjyNBIC",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase4-user-isolation-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 197,
+    "hash": "7c20e2d0339492f654aa5adda4b46ad5",
+    "textRange": {
+      "startLine": 197,
+      "endLine": 197,
+      "startOffset": 61,
+      "endOffset": 75
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 6 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-28T08:39:34+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rcYAo3DRkjyNBJH",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase1-smoke-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 164,
+    "hash": "5224b097c9b1a1364c920d776ef7ebf5",
+    "textRange": {
+      "startLine": 164,
+      "endLine": 164,
+      "startOffset": 67,
+      "endOffset": 81
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 6 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-27T14:51:38+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  },
+  {
+    "key": "AZ1y4rbOAo3DRkjyNBI4",
+    "rule": "shelldre:S1192",
+    "severity": "MINOR",
+    "component": "Univers42_mini-baas-infra:scripts/phase2-smoke-test.sh",
+    "project": "Univers42_mini-baas-infra",
+    "line": 171,
+    "hash": "24209c3473de6fbdb2c46c101ac2b05f",
+    "textRange": {
+      "startLine": 171,
+      "endLine": 171,
+      "startOffset": 40,
+      "endOffset": 54
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Define a constant instead of using the literal '%{http_code}' 9 times.",
+    "effort": "4min",
+    "debt": "4min",
+    "author": "daniel17dev@gmail.com",
+    "tags": [
+      "design"
+    ],
+    "creationDate": "2026-03-27T14:24:48+0000",
+    "updateDate": "2026-04-09T15:35:03+0000",
+    "type": "CODE_SMELL",
+    "organization": "univers42",
+    "cleanCodeAttribute": "DISTINCT",
+    "cleanCodeAttributeCategory": "ADAPTABLE",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "mini-baas-infra",
+    "internalTags": []
+  }
+]

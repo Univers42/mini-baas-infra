@@ -14,7 +14,7 @@ check_file() {
   local path="$SECRETS_DIR/$file"
 
   if [[ ! -f "$path" ]]; then
-    echo "FAIL: $file is missing"
+    echo "FAIL: $file is missing" >&2
     ERRORS=$((ERRORS + 1))
     return
   fi
@@ -22,7 +22,7 @@ check_file() {
   local len
   len=$(wc -c < "$path" | tr -d ' ')
   if [[ "$len" -lt "$min_len" ]]; then
-    echo "FAIL: $file is too short ($len < $min_len bytes)"
+    echo "FAIL: $file is too short ($len < $min_len bytes)" >&2
     ERRORS=$((ERRORS + 1))
     return
   fi
@@ -34,6 +34,7 @@ check_file() {
   fi
 
   echo "  OK: $file ($len bytes)"
+  return 0
 }
 
 echo "=== mini-BaaS Secret Validator ==="
@@ -51,7 +52,7 @@ check_file "minio_secret_key.txt" 16
 
 echo ""
 if [[ "$ERRORS" -gt 0 ]]; then
-  echo "FAILED: $ERRORS secret(s) missing or invalid"
+  echo "FAILED: $ERRORS secret(s) missing or invalid" >&2
   echo "Run 'bash scripts/secrets/generate-secrets.sh' to fix."
   exit 1
 fi

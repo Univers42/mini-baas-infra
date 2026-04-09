@@ -1,33 +1,23 @@
 # File: docker-compose.yml
 name: mini-baas
 
-# Build Optimization Tips:
-# - All images use Alpine Linux to minimize size
-# - Services utilize multistage builds where possible
-# - .dockerignore files prevent unnecessary context copying
-# - Non-root users improve security
-
 services:
   # ─── API Gateway ─────────────────────────────────────────────────
   kong:
-    image: ${KONG_IMAGE:-kong:3.8}
+    image: kong:3.8
     container_name: mini-baas-kong
+    env_file: [.env]
     ports:
       - "${KONG_HTTP_PORT:-8000}:8000"
-      - "${KONG_ADMIN_PORT:-8001}:8001"
+      - "127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001"
     environment:
-      KONG_DATABASE: off
+      KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_PUBLIC_API_KEY: ${KONG_PUBLIC_API_KEY:-public-anon-key}
-      KONG_SERVICE_API_KEY: ${KONG_SERVICE_API_KEY:-service-role-key}
-      KONG_CORS_ORIGIN_APP: ${KONG_CORS_ORIGIN_APP:-http://localhost:3000}
-      KONG_CORS_ORIGIN_PLAYGROUND: ${KONG_CORS_ORIGIN_PLAYGROUND:-http://localhost:3100}
-      KONG_CORS_ORIGIN_STUDIO: ${KONG_CORS_ORIGIN_STUDIO:-http://localhost:3001}
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
     volumes:
       - ./docker/services/kong/conf/kong.yml:/etc/kong/kong.yml.tmpl:ro
     command: >
@@ -41,27 +31,35 @@ services:
           /etc/kong/kong.yml.tmpl > /tmp/kong.yml;
         exec /docker-entrypoint.sh kong docker-start
       '
+    healthcheck:
+      test: ["CMD-SHELL", "kong health"]
+      interval: 5s
+      timeout: 3s
+      start_period: 20s
+      retries: 10
     depends_on:
       gotrue:
-        condition: service_started
+        condition: service_healthy
       postgrest:
         condition: service_started
       mongo-api:
-        condition: service_started
+        condition: service_healthy
       realtime:
-        condition: service_started
-      trino:
-        condition: service_started
+        condition: service_healthy
+      email-service:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
 
-  # ─── SQL Federation ──────────────────────────────────────────────
+  # ─── SQL Federation (extras) ─────────────────────────────────────
   trino:
     image: trinodb/trino:467
     container_name: mini-baas-trino
-    ports:
-      - "${TRINO_PORT:-8080}:8080"
+    profiles: [extras]
+    env_file: [.env]
     volumes:
       - ./docker/services/trino/conf/config.properties:/etc/trino/config.properties:ro
     networks:
@@ -72,12 +70,15 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: mini-baas-postgres
+    env_file: [.env]
     ports:
       - "${PG_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -86,15 +87,19 @@ services:
           - db
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
       interval: 5s
-      timeout: 5s
-      retries: 20
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    mem_limit: 512m
+    cpus: 1.0
 
   # ─── Database Bootstrap ──────────────────────────────────────────
   db-bootstrap:
     image: postgres:16-alpine
     container_name: mini-baas-db-bootstrap
+    env_file: [.env]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -119,18 +124,25 @@ services:
   mongo:
     image: mongo:7
     container_name: mini-baas-mongo
+    env_file: [.env]
     ports:
       - "${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-mongo}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mongo}
     volumes:
       - mongo-data:/data/db
     networks:
       - mini-baas
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.runCommand({ ping: 1 }).ok\""]
       interval: 5s
-      timeout: 5s
-      retries: 20
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 0.5
 
   # ─── MongoDB REST API ───────────────────────────────────────────
   mongo-api:
@@ -138,9 +150,10 @@ services:
       context: ./docker/services/mongo-api
       dockerfile: Dockerfile
     container_name: mini-baas-mongo-api
+    env_file: [.env]
     environment:
       PORT: 3010
-      MONGO_URI: mongodb://mongo:27017
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
       MONGO_DB_NAME: ${MONGO_DB_NAME:-mini_baas}
       JWT_SECRET: ${JWT_SECRET}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -152,17 +165,18 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3010/health/live || exit 1"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
-      start_period: 5s
-      retries: 3
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── Authentication ──────────────────────────────────────────────
   gotrue:
     image: supabase/gotrue:v2.188.1
     container_name: mini-baas-gotrue
-    ports:
-      - "${GOTRUE_PORT:-9999}:9999"
+    env_file: [.env]
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
@@ -170,7 +184,14 @@ services:
       GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:3001}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
-      GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_MAILER_AUTOCONFIRM: ${GOTRUE_MAILER_AUTOCONFIRM:-true}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-mailpit}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-1025}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${EMAIL_FROM:-noreply@mini-baas.local}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 3600
@@ -182,13 +203,20 @@ services:
     networks:
       - mini-baas
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9999/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 8
+    mem_limit: 128m
+    cpus: 0.25
 
   # ─── PostgreSQL REST API ─────────────────────────────────────────
   postgrest:
     image: postgrest/postgrest:v12.2.3
     container_name: mini-baas-postgrest
-    ports:
-      - "${POSTGREST_PORT:-3002}:3000"
+    env_file: [.env]
     environment:
       PGRST_DB_URI: ${PGRST_DB_URI:-postgres://postgres:postgres@postgres:5432/postgres}
       PGRST_DB_SCHEMA: ${PGRST_DB_SCHEMA:-public}
@@ -206,18 +234,22 @@ services:
     networks:
       - mini-baas
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
 
-  # ─── PostgreSQL Metadata ─────────────────────────────────────────
+  # ─── PostgreSQL Metadata (extras) ────────────────────────────────
   pg-meta:
     image: supabase/postgres-meta:v0.91.0
     container_name: mini-baas-pg-meta
+    profiles: [extras]
+    env_file: [.env]
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: ${PG_META_DB_HOST:-postgres}
-      PG_META_DB_PORT: ${PG_META_DB_PORT:-${POSTGRES_PORT:-5432}}
-      PG_META_DB_NAME: ${PG_META_DB_NAME:-${POSTGRES_DB:-postgres}}
-      PG_META_DB_USER: ${PG_META_DB_USER:-${POSTGRES_USER:-postgres}}
-      PG_META_DB_PASSWORD: ${PG_META_DB_PASSWORD:-${POSTGRES_PASSWORD:-postgres}}
+      PG_META_DB_PORT: ${PG_META_DB_PORT:-5432}
+      PG_META_DB_NAME: ${PG_META_DB_NAME:-postgres}
+      PG_META_DB_USER: ${PG_META_DB_USER:-postgres}
+      PG_META_DB_PASSWORD: ${PG_META_DB_PASSWORD:-postgres}
     depends_on:
       postgres:
         condition: service_healthy
@@ -229,14 +261,13 @@ services:
   realtime:
     image: dlesieur/realtime-agnostic:latest
     container_name: mini-baas-realtime
-    ports:
-      - "${REALTIME_PORT:-4000}:4000"
+    env_file: [.env]
     environment:
       REALTIME_HOST: 0.0.0.0
       REALTIME_PORT: 4000
       REALTIME_JWT_SECRET: ${JWT_SECRET}
       REALTIME_PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
-      REALTIME_MONGO_URL: mongodb://mongo:27017
+      REALTIME_MONGO_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
       RUST_LOG: ${RUST_LOG:-info}
     depends_on:
       postgres:
@@ -248,16 +279,157 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:4000/v1/health > /dev/null || exit 1"]
+      interval: 5s
       timeout: 3s
-      interval: 10s
-      start_period: 5s
-      retries: 3
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
 
-  # ─── Object Storage ──────────────────────────────────────────────
+  # ─── In-Memory Cache ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: mini-baas-redis
+    env_file: [.env]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Adapter Registry (DB credential store) ─────────────────────
+  adapter-registry:
+    build:
+      context: ./docker/services/adapter-registry
+      dockerfile: Dockerfile
+    container_name: mini-baas-adapter-registry
+    env_file: [.env]
+    environment:
+      PORT: 3020
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      ADAPTER_REGISTRY_DB_USER: ${ADAPTER_REGISTRY_DB_USER:-adapter_registry_role}
+      ADAPTER_REGISTRY_DB_PASSWORD: ${ADAPTER_REGISTRY_DB_PASSWORD:-adapter_registry_pw}
+      JWT_SECRET: ${JWT_SECRET}
+      VAULT_ENC_KEY: ${VAULT_ENC_KEY:-0123456789abcdef0123456789abcdef}
+      ADAPTER_REGISTRY_SERVICE_TOKEN: ${ADAPTER_REGISTRY_SERVICE_TOKEN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3020/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Query Router (universal data plane) ─────────────────────────
+  query-router:
+    build:
+      context: ./docker/services/query-router
+      dockerfile: Dockerfile
+    container_name: mini-baas-query-router
+    env_file: [.env]
+    environment:
+      PORT: 4001
+      ADAPTER_REGISTRY_URL: http://adapter-registry:3020
+      JWT_SECRET: ${JWT_SECRET}
+      ADAPTER_REGISTRY_SERVICE_TOKEN: ${ADAPTER_REGISTRY_SERVICE_TOKEN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      adapter-registry:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4001/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Email Service ────────────────────────────────────────────────
+  email-service:
+    build:
+      context: ./docker/services/email-service
+      dockerfile: Dockerfile
+    container_name: mini-baas-email-service
+    env_file: [.env]
+    environment:
+      PORT: 3030
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@mini-baas.local}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3030/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Storage Router (presigned URLs) ─────────────────────────────
+  storage-router:
+    build:
+      context: ./docker/services/storage-router
+      dockerfile: Dockerfile
+    container_name: mini-baas-storage-router
+    env_file: [.env]
+    environment:
+      PORT: 3040
+      JWT_SECRET: ${JWT_SECRET}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      PRESIGN_EXPIRES_SECONDS: ${PRESIGN_EXPIRES_SECONDS:-3600}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      minio:
+        condition: service_started
+    profiles: [extras]
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3040/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Object Storage (extras) ─────────────────────────────────────
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     container_name: mini-baas-minio
     profiles: [extras]
+    env_file: [.env]
     command: server /data --console-address ":9001"
     ports:
       - "${MINIO_API_PORT:-9000}:9000"
@@ -271,26 +443,12 @@ services:
       - mini-baas
     restart: unless-stopped
 
-  # ─── In-Memory Cache ─────────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    container_name: mini-baas-redis
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    command: redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
-    networks:
-      - mini-baas
-    restart: unless-stopped
-
-  # ─── Connection Pooler ───────────────────────────────────────────
+  # ─── Connection Pooler (extras) ──────────────────────────────────
   supavisor:
     image: supabase/supavisor:2.7.4
     container_name: mini-baas-supavisor
     profiles: [extras]
-    ports:
-      - "${SUPAVISOR_PORT:-6543}:6543"
+    env_file: [.env]
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE:-super-secret-key-base}
@@ -304,13 +462,12 @@ services:
       - mini-baas
     restart: unless-stopped
 
-  # ─── Admin Dashboard ─────────────────────────────────────────────
+  # ─── Admin Dashboard (extras) ────────────────────────────────────
   studio:
     image: supabase/studio:2026.03.30-sha-12a43e5
     container_name: mini-baas-studio
     profiles: [extras]
-    ports:
-      - "${STUDIO_PORT:-3001}:3000"
+    env_file: [.env]
     environment:
       HOSTNAME: 0.0.0.0
       STUDIO_PG_META_URL: http://pg-meta:8080
@@ -332,55 +489,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-
-  # ─── Adapter Registry (DB credential store) ─────────────────────
-  adapter-registry:
-    build:
-      context: ./docker/services/adapter-registry
-      dockerfile: Dockerfile
-    container_name: mini-baas-adapter-registry
-    environment:
-      PORT: 3020
-      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
-      JWT_SECRET: ${JWT_SECRET}
-      VAULT_ENC_KEY: ${VAULT_ENC_KEY:-0123456789abcdef0123456789abcdef}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    depends_on:
-      db-bootstrap:
-        condition: service_completed_successfully
-    networks:
-      - mini-baas
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3020/health/live || exit 1"]
-      interval: 10s
-      timeout: 3s
-      start_period: 5s
-      retries: 3
-
-  # ─── Query Router (universal data plane) ─────────────────────────
-  query-router:
-    build:
-      context: ./docker/services/query-router
-      dockerfile: Dockerfile
-    container_name: mini-baas-query-router
-    environment:
-      PORT: 4001
-      ADAPTER_REGISTRY_URL: http://adapter-registry:3020
-      JWT_SECRET: ${JWT_SECRET}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    depends_on:
-      adapter-registry:
-        condition: service_healthy
-    networks:
-      - mini-baas
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4001/health/live || exit 1"]
-      interval: 10s
-      timeout: 3s
-      start_period: 5s
-      retries: 3
 
   # ─── Observability: Prometheus ───────────────────────────────────
   prometheus:
@@ -463,10 +571,10 @@ networks:
     driver: bridge
 
 volumes:
-  minio-data:
-  redis-data:
   postgres-data:
   mongo-data:
+  redis-data:
+  minio-data:
   prometheus-data:
   grafana-data:
   loki-data:

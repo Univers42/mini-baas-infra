@@ -1,22 +1,27 @@
 // File: docker/services/adapter-registry/src/lib/db.js
 const { Pool } = require('pg');
 
-let pool;
+/** Superuser pool – used ONLY for DDL / schema migrations at startup. */
+let adminPool;
+
+/** Limited-privilege pool – adapter_registry_role with RLS enforced. */
+let tenantPool;
 
 const initDb = async (logger) => {
-  pool = new Pool({
+  // ── Admin pool (superuser) for one-time DDL ──────────────────────
+  adminPool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 10,
-    idleTimeoutMillis: 30000,
+    max: 2,
+    idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000,
   });
 
-  pool.on('error', (err) => {
-    logger.error({ err }, 'Unexpected PG pool error');
+  adminPool.on('error', (err) => {
+    logger.error({ err }, 'Unexpected admin PG pool error');
   });
 
-  // Ensure adapter registry tables exist
-  const client = await pool.connect();
+  // Ensure adapter registry table exists (idempotent)
+  const client = await adminPool.connect();
   try {
     await client.query(`
       CREATE TABLE IF NOT EXISTS tenant_databases (
@@ -27,6 +32,7 @@ const initDb = async (logger) => {
         connection_enc   BYTEA NOT NULL,
         connection_iv    BYTEA NOT NULL,
         connection_tag   BYTEA NOT NULL,
+        connection_salt  BYTEA,
         created_at       TIMESTAMPTZ DEFAULT now(),
         last_healthy_at  TIMESTAMPTZ,
         UNIQUE(tenant_id, name)
@@ -36,9 +42,56 @@ const initDb = async (logger) => {
   } finally {
     client.release();
   }
+
+  // ── Tenant pool (limited role, RLS enforced) ─────────────────────
+  const dbUser = process.env.ADAPTER_REGISTRY_DB_USER || 'adapter_registry_role';
+  const dbPass = process.env.ADAPTER_REGISTRY_DB_PASSWORD || 'adapter_registry_pw';
+  // Build the limited-role connection string from DATABASE_URL
+  const baseUrl = new URL(process.env.DATABASE_URL);
+  baseUrl.username = dbUser;
+  baseUrl.password = dbPass;
+
+  tenantPool = new Pool({
+    connectionString: baseUrl.toString(),
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+
+  tenantPool.on('error', (err) => {
+    logger.error({ err }, 'Unexpected tenant PG pool error');
+  });
 };
 
-const query = (text, params) => pool.query(text, params);
-const getPool = () => pool;
+/**
+ * Execute a query scoped to a specific tenant via RLS.
+ *
+ * Acquires a client, opens a transaction, sets `app.current_user_id`
+ * to the caller's sub, runs the query, then commits.
+ * This ensures Postgres RLS policies filter every row by tenant.
+ */
+const tenantQuery = async (userId, text, params) => {
+  const client = await tenantPool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query("SELECT set_config('app.current_user_id', $1, true)", [String(userId)]);
+    const result = await client.query(text, params);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+};
 
-module.exports = { initDb, query, getPool };
+/**
+ * Execute a query as superuser (admin pool).
+ * Only use for operations that intentionally bypass RLS (e.g. admin delete).
+ */
+const adminQuery = (text, params) => adminPool.query(text, params);
+
+const getPool = () => tenantPool;
+
+module.exports = { initDb, tenantQuery, adminQuery, getPool };

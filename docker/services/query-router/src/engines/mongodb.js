@@ -2,6 +2,43 @@
 // MongoDB query engine for query-router
 const { MongoClient } = require('mongodb');
 
+const COLL_RE = /^[\w-]{1,64}$/;
+
+/** Parse a sort parameter into a MongoDB sort object. */
+function parseSort(sort) {
+  if (sort && typeof sort === 'object') return sort;
+  if (typeof sort === 'string') {
+    const [field, dir] = sort.split(':');
+    if (field) return { [field]: dir === 'desc' ? -1 : 1 };
+  }
+  return undefined;
+}
+
+/** Normalise a Mongo document: _id → id string. */
+function normalise(doc) {
+  return { ...doc, id: String(doc._id), _id: undefined };
+}
+
+/** Connect to the database described by a connection string. */
+function getDbFromUrl(client, connectionString) {
+  const url = new URL(connectionString);
+  const dbName = url.pathname.slice(1) || 'test';
+  return client.db(dbName);
+}
+
+/** Execute a find query. */
+async function execFind(coll, filter, sort, limit, offset) {
+  const safeFilter = { ...filter };
+  delete safeFilter.$where;
+
+  let cursor = coll.find(safeFilter);
+  const sortObj = parseSort(sort);
+  if (sortObj) cursor = cursor.sort(sortObj);
+  cursor = cursor.skip(Math.max(offset, 0)).limit(Math.min(limit, 100));
+  const items = await cursor.toArray();
+  return items.map(normalise);
+}
+
 /**
  * Execute a query against a MongoDB database
  * @param {string} connectionString - MongoDB connection URI
@@ -11,8 +48,7 @@ const { MongoClient } = require('mongodb');
 async function query(connectionString, collection, body = {}) {
   const { action = 'find', data, filter = {}, sort, limit = 20, offset = 0 } = body;
 
-  // Validate collection name
-  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(collection)) {
+  if (!COLL_RE.test(collection)) {
     throw new Error('Invalid collection name');
   }
 
@@ -24,35 +60,12 @@ async function query(connectionString, collection, body = {}) {
   await client.connect();
 
   try {
-    // Extract DB name from connection string or default
-    const url = new URL(connectionString);
-    const dbName = url.pathname.slice(1) || 'test';
-    const db = client.db(dbName);
+    const db = getDbFromUrl(client, connectionString);
     const coll = db.collection(collection);
 
     switch (action) {
-      case 'find': {
-        const safeFilter = { ...filter };
-        // Remove potentially dangerous operators
-        delete safeFilter.$where;
-
-        let cursor = coll.find(safeFilter);
-
-        if (sort && typeof sort === 'object') {
-          cursor = cursor.sort(sort);
-        } else if (typeof sort === 'string') {
-          const [field, dir] = sort.split(':');
-          if (field) cursor = cursor.sort({ [field]: dir === 'desc' ? -1 : 1 });
-        }
-
-        cursor = cursor.skip(Math.max(offset, 0)).limit(Math.min(limit, 100));
-        const items = await cursor.toArray();
-        return items.map(doc => ({
-          ...doc,
-          id: String(doc._id),
-          _id: undefined,
-        }));
-      }
+      case 'find':
+        return execFind(coll, filter, sort, limit, offset);
 
       case 'insertOne': {
         if (!data || typeof data !== 'object') throw new Error('data object required for insertOne');
@@ -81,4 +94,24 @@ async function query(connectionString, collection, body = {}) {
   }
 }
 
-module.exports = { query };
+/**
+ * List all collection names in the database
+ * @param {string} connectionString - MongoDB connection URI
+ * @returns {Promise<string[]>} Array of collection names
+ */
+async function listTables(connectionString) {
+  const client = new MongoClient(connectionString, {
+    serverSelectionTimeoutMS: 5000,
+    maxPoolSize: 5,
+  });
+  await client.connect();
+  try {
+    const db = getDbFromUrl(client, connectionString);
+    const collections = await db.listCollections({}, { nameOnly: true }).toArray();
+    return collections.map(c => c.name).sort();
+  } finally {
+    await client.close();
+  }
+}
+
+module.exports = { query, listTables };

@@ -5,18 +5,19 @@
 #        make preflight
 
 set -euo pipefail
+readonly SEP_LINE='═══════════════════════════════════════════'
 
 PASS=0
 FAIL=0
 WARN=0
 
-pass() { echo "  ✓ $1"; PASS=$((PASS + 1)); }
-fail() { echo "  ✗ $1"; FAIL=$((FAIL + 1)); }
-warn() { echo "  ⚠ $1"; WARN=$((WARN + 1)); }
+pass() { local msg="$1"; echo "  ✓ $msg"; PASS=$((PASS + 1)); return 0; }
+fail() { local msg="$1"; echo "  ✗ $msg"; FAIL=$((FAIL + 1)); return 0; }
+warn() { local msg="$1"; echo "  ⚠ $msg"; WARN=$((WARN + 1)); return 0; }
 
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo " mini-BaaS Preflight Check"
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo ""
 
 # ─── 1. Docker ────────────────────────────────────────────────────
@@ -124,9 +125,9 @@ done
 echo ""
 
 # ─── Summary ─────────────────────────────────────────────────────
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 echo " Results: ✓ $PASS passed | ⚠ $WARN warnings | ✗ $FAIL failed"
-echo "═══════════════════════════════════════════"
+echo "$SEP_LINE"
 
 if [[ $FAIL -gt 0 ]]; then
   echo ""

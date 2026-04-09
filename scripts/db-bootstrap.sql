@@ -159,3 +159,61 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.mock_orders TO authenticated;
 
 -- Grant SELECT on users to anon role (for public info)
 GRANT SELECT ON public.users TO anon;
+
+-- ─── Adapter-registry limited role ───────────────────────────────
+-- This role is used by the adapter-registry service. It can NOT
+-- bypass RLS, so every query against tenant_databases is filtered
+-- by the current_setting('app.current_user_id') set per-transaction.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'adapter_registry_role') THEN
+    CREATE ROLE adapter_registry_role LOGIN PASSWORD 'adapter_registry_pw';
+  END IF;
+END $$;
+
+-- Create the adapter-registry table early so GRANTs and RLS succeed
+CREATE TABLE IF NOT EXISTS public.tenant_databases (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id        TEXT NOT NULL,
+  engine           TEXT NOT NULL CHECK (engine IN ('postgresql','mongodb','mysql','redis','sqlite')),
+  name             TEXT NOT NULL,
+  connection_enc   BYTEA NOT NULL,
+  connection_iv    BYTEA NOT NULL,
+  connection_tag   BYTEA NOT NULL,
+  connection_salt  BYTEA,
+  created_at       TIMESTAMPTZ DEFAULT now(),
+  last_healthy_at  TIMESTAMPTZ,
+  UNIQUE(tenant_id, name)
+);
+
+GRANT CONNECT ON DATABASE postgres TO adapter_registry_role;
+GRANT USAGE ON SCHEMA public TO adapter_registry_role;
+GRANT SELECT, INSERT ON public.tenant_databases TO adapter_registry_role;
+
+-- Enable RLS on the adapter-registry table
+ALTER TABLE public.tenant_databases ENABLE ROW LEVEL SECURITY;
+-- Force RLS even for the table owner (superuser is still exempt)
+ALTER TABLE public.tenant_databases FORCE ROW LEVEL SECURITY;
+
+-- SELECT: tenant can only see own rows
+DROP POLICY IF EXISTS tenant_databases_select ON public.tenant_databases;
+CREATE POLICY tenant_databases_select ON public.tenant_databases
+  FOR SELECT USING (
+    tenant_id = current_setting('app.current_user_id', true)
+  );
+
+-- INSERT: tenant can only insert rows for themselves
+DROP POLICY IF EXISTS tenant_databases_insert ON public.tenant_databases;
+CREATE POLICY tenant_databases_insert ON public.tenant_databases
+  FOR INSERT WITH CHECK (
+    tenant_id = current_setting('app.current_user_id', true)
+  );
+
+-- UPDATE: only last_healthy_at may be touched, and only own rows
+DROP POLICY IF EXISTS tenant_databases_update ON public.tenant_databases;
+CREATE POLICY tenant_databases_update ON public.tenant_databases
+  FOR UPDATE USING (
+    tenant_id = current_setting('app.current_user_id', true)
+  ) WITH CHECK (
+    tenant_id = current_setting('app.current_user_id', true)
+  );
+GRANT UPDATE (last_healthy_at) ON public.tenant_databases TO adapter_registry_role;

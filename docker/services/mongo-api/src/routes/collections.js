@@ -3,10 +3,10 @@ const { Router } = require('express');
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../lib/mongo');
 const { requireUser } = require('../middleware/auth');
-const { httpRequestDuration, mongoOpsTotal } = require('../lib/metrics');
+const { httpRequestDuration, mongoOperations } = require('../lib/metrics');
 
 const router = Router();
-const COLLECTION_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
+const COLLECTION_NAME_PATTERN = /^[\w-]{1,64}$/;
 
 // ─── Helpers ─────────────────────────────────────────────────────
 const ok = (res, status, data, meta) => {
@@ -67,13 +67,13 @@ router.post('/:name/documents', requireUser, async (req, res) => {
   const collectionName = parseCollectionName(req, res);
   if (!collectionName) return;
 
-  const input = req.body && req.body.document;
+  const input = req.body?.document;
   if (!input || Array.isArray(input) || typeof input !== 'object') {
     return fail(res, 400, 'invalid_payload', 'Body must include a document object');
   }
 
   const document = { ...input };
-  if (Object.prototype.hasOwnProperty.call(document, '_id') || Object.prototype.hasOwnProperty.call(document, 'owner_id')) {
+  if (Object.hasOwn(document, '_id') || Object.hasOwn(document, 'owner_id')) {
     return fail(res, 400, 'forbidden_fields', 'document must not include _id or owner_id');
   }
 
@@ -84,7 +84,7 @@ router.post('/:name/documents', requireUser, async (req, res) => {
 
   const db = getDb();
   const result = await db.collection(collectionName).insertOne(document);
-  mongoOpsTotal.inc({ operation: 'insert', collection: collectionName });
+  mongoOperations.inc({ operation: 'insert', collection: collectionName });
 
   return ok(res, 201, { id: String(result.insertedId), ...document });
 });
@@ -106,7 +106,7 @@ router.get('/:name/documents', requireUser, async (req, res) => {
       collection.find(query).sort(sort).skip(offset).limit(limit).toArray(),
       collection.countDocuments(query),
     ]);
-    mongoOpsTotal.inc({ operation: 'find', collection: collectionName });
+    mongoOperations.inc({ operation: 'find', collection: collectionName });
 
     return ok(res, 200, items.map(normalize), { total, limit, offset });
   } catch (error) {
@@ -126,7 +126,7 @@ router.get('/:name/documents/:id', requireUser, async (req, res) => {
 
   const db = getDb();
   const item = await db.collection(collectionName).findOne({ _id: objectId, owner_id: req.user.id });
-  mongoOpsTotal.inc({ operation: 'findOne', collection: collectionName });
+  mongoOperations.inc({ operation: 'findOne', collection: collectionName });
   if (!item) {
     return fail(res, 404, 'not_found', 'Document not found');
   }
@@ -143,12 +143,12 @@ router.patch('/:name/documents/:id', requireUser, async (req, res) => {
     return fail(res, 400, 'invalid_id', 'Document id is not a valid ObjectId');
   }
 
-  const patch = req.body && req.body.patch;
+  const patch = req.body?.patch;
   if (!patch || Array.isArray(patch) || typeof patch !== 'object') {
     return fail(res, 400, 'invalid_payload', 'Body must include a patch object');
   }
 
-  if (Object.prototype.hasOwnProperty.call(patch, '_id') || Object.prototype.hasOwnProperty.call(patch, 'owner_id')) {
+  if (Object.hasOwn(patch, '_id') || Object.hasOwn(patch, 'owner_id')) {
     return fail(res, 400, 'forbidden_fields', 'patch must not include _id or owner_id');
   }
 
@@ -160,7 +160,7 @@ router.patch('/:name/documents/:id', requireUser, async (req, res) => {
     { $set: update },
     { returnDocument: 'after', includeResultMetadata: false }
   );
-  mongoOpsTotal.inc({ operation: 'update', collection: collectionName });
+  mongoOperations.inc({ operation: 'update', collection: collectionName });
 
   if (!result) {
     return fail(res, 404, 'not_found', 'Document not found');
@@ -180,7 +180,7 @@ router.delete('/:name/documents/:id', requireUser, async (req, res) => {
 
   const db = getDb();
   const result = await db.collection(collectionName).deleteOne({ _id: objectId, owner_id: req.user.id });
-  mongoOpsTotal.inc({ operation: 'delete', collection: collectionName });
+  mongoOperations.inc({ operation: 'delete', collection: collectionName });
 
   if (result.deletedCount !== 1) {
     return fail(res, 404, 'not_found', 'Document not found');

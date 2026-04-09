@@ -16,8 +16,8 @@ SECRETS_DIR="${1:-./secrets}"
 GRACE_SECONDS="${GRACE_SECONDS:-300}"
 
 if [[ ! -f "$SECRETS_DIR/jwt_secret.txt" ]]; then
-  echo "ERROR: No existing jwt_secret.txt found in $SECRETS_DIR"
-  echo "Run 'bash scripts/secrets/generate-secrets.sh' first."
+  echo "ERROR: No existing jwt_secret.txt found in $SECRETS_DIR" >&2
+  echo "Run 'bash scripts/secrets/generate-secrets.sh' first." >&2
   exit 1
 fi
 

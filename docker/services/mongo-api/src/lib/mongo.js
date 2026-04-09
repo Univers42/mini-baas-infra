@@ -10,8 +10,8 @@ let db;
 
 const connectMongo = async (logger) => {
   client = new MongoClient(MONGO_URI, {
-    maxPoolSize: parseInt(process.env.MONGO_MAX_POOL_SIZE || '10'),
-    minPoolSize: parseInt(process.env.MONGO_MIN_POOL_SIZE || '2'),
+    maxPoolSize: Number.parseInt(process.env.MONGO_MAX_POOL_SIZE || '10', 10),
+    minPoolSize: Number.parseInt(process.env.MONGO_MIN_POOL_SIZE || '2', 10),
     maxIdleTimeMS: 30000,
     serverSelectionTimeoutMS: 5000,
     monitorCommands: true,
