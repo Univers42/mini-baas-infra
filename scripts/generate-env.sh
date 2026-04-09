@@ -51,10 +51,7 @@ POSTGRES_PASSWORD="$(gen_alnum 24)"
 POSTGRES_DB="postgres"
 
 JWT_SECRET="$(openssl rand -hex 32)"
-METRICS_JWT_SECRET="$(openssl rand -hex 32)"
-SECRET_KEY_BASE="$(openssl rand -base64 48 | tr -d '\n')"
 VAULT_ENC_KEY="$(openssl rand -hex 16)"
-REALTIME_DASHBOARD_PASSWORD="$(gen_alnum 24)"
 MINIO_ROOT_PASSWORD="$(openssl rand -hex 16)"
 
 ANON_KEY="$(jwt_hs256 "$JWT_SECRET" "anon")"
@@ -90,17 +87,9 @@ JWT_SECRET=${JWT_SECRET}
 PGRST_DB_SCHEMA=public
 PGRST_DB_ANON_ROLE=postgres
 
-# Realtime
-REALTIME_DB_HOST=postgres
-REALTIME_DB_PORT=5432
-REALTIME_DB_USER=${POSTGRES_USER}
-REALTIME_DB_PASSWORD=${POSTGRES_PASSWORD}
-REALTIME_DB_NAME=${POSTGRES_DB}
-REALTIME_APP_NAME=realtime-dev
-REALTIME_DASHBOARD_USER=supabase
-REALTIME_DASHBOARD_PASSWORD=${REALTIME_DASHBOARD_PASSWORD}
-SECRET_KEY_BASE=${SECRET_KEY_BASE}
-METRICS_JWT_SECRET=${METRICS_JWT_SECRET}
+# Realtime (dlesieur/realtime-agnostic)
+REALTIME_PORT=4002
+RUST_LOG=info
 
 # Supabase API keys (legacy HS256 JWTs)
 ANON_KEY=${ANON_KEY}
@@ -117,6 +106,20 @@ VAULT_ENC_KEY=${VAULT_ENC_KEY}
 STUDIO_PG_META_URL=http://host.docker.internal:8080
 SUPABASE_URL=http://localhost:8000
 SUPABASE_PUBLIC_URL=http://localhost:8000
+
+# MongoDB
+MONGO_URI=mongodb://mongo:27017
+MONGO_DB_NAME=mini_baas
+
+# Adapter Registry
+ADAPTER_REGISTRY_DATABASE_URL=${DATABASE_URL}
+ADAPTER_REGISTRY_URL=http://adapter-registry:3020
+
+# Query Router
+QUERY_ROUTER_URL=http://query-router:4001
+
+# Logging
+LOG_LEVEL=info
 EOF
 
 chmod 600 "$ENV_FILE"

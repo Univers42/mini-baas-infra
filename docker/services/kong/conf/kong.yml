@@ -1,0 +1,233 @@
+# File: docker/services/kong/conf/kong.yml
+# Kong Declarative Configuration — mini-BaaS Gateway
+# Env vars are substituted at runtime via sed in the Kong entrypoint
+_format_version: "3.0"
+_transform: true
+
+# ─── Consumers ────────────────────────────────────────────────────
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: __KONG_PUBLIC_API_KEY__
+  - username: service_role
+    keyauth_credentials:
+      - key: __KONG_SERVICE_API_KEY__
+
+# ─── Global Plugins ──────────────────────────────────────────────
+plugins:
+  - name: cors
+    config:
+      origins:
+        - __KONG_CORS_ORIGIN_APP__
+        - __KONG_CORS_ORIGIN_PLAYGROUND__
+        - __KONG_CORS_ORIGIN_STUDIO__
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers:
+        [Authorization, Content-Type, apikey, x-client-info, X-Request-ID]
+      exposed_headers:
+        [X-Kong-Upstream-Latency, X-Kong-Proxy-Latency, X-Request-ID]
+      credentials: true
+      max_age: 3600
+
+  - name: correlation-id
+    config:
+      header_name: X-Request-ID
+      generator: uuid#counter
+      echo_downstream: true
+
+  - name: response-transformer
+    config:
+      add:
+        headers:
+          - Strict-Transport-Security:max-age=31536000; includeSubDomains
+          - X-Content-Type-Options:nosniff
+          - X-Frame-Options:DENY
+          - Referrer-Policy:strict-origin-when-cross-origin
+
+# ─── Services & Routes ───────────────────────────────────────────
+services:
+  - name: auth
+    url: http://gotrue:9999
+    routes:
+      - name: auth-routes
+        paths: [/auth/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 2000
+
+  - name: rest
+    url: http://postgrest:3000
+    routes:
+      - name: rest-routes
+        paths: [/rest/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 180
+              hour: 5000
+
+  - name: realtime
+    url: http://realtime:4000/v1
+    routes:
+      - name: realtime-routes
+        paths: [/realtime/v1]
+        strip_path: true
+        protocols: [http, https]
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: storage
+    url: http://minio:9000
+    routes:
+      - name: storage-routes
+        paths: [/storage/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1500
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 10
+              size_unit: megabytes
+
+  - name: admin-meta
+    url: http://pg-meta:8080
+    routes:
+      - name: meta-routes
+        paths: [/meta/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: mongo-api
+    url: http://mongo-api:3010
+    routes:
+      - name: mongo-api-routes
+        paths: [/mongo/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 180
+              hour: 5000
+
+  - name: adapter-registry
+    url: http://adapter-registry:3020
+    routes:
+      - name: admin-adapters
+        paths: [/admin/v1/databases]
+        strip_path: false
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1000
+
+  - name: query-router
+    url: http://query-router:4001
+    routes:
+      - name: query-routes
+        paths: [/query/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 300
+              hour: 8000
+
+  - name: trino
+    url: http://trino:8080
+    routes:
+      - name: trino-route
+        paths: [/sql]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: request-transformer
+            config:
+              remove:
+                headers:
+                  - x-forwarded-for
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1000
+
+  - name: admin-studio
+    url: http://studio:3000
+    routes:
+      - name: studio-routes
+        paths: [/studio]
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 300
+              hour: 5000
