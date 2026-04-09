@@ -99,8 +99,8 @@ wait_for_postgrest() {
       -H "apikey: $API_KEY" "$KONG_URL/rest/v1/" 2>/dev/null || echo "000")
     if [[ "$code" == "200" ]]; then break; fi
     i=$((i + 1))
-    if [[ $i -ge 30 ]]; then
-      err "PostgREST not reachable after 30s (last HTTP $code)"; exit 1
+    if [[ $i -ge 60 ]]; then
+      err "PostgREST not reachable after 60s (last HTTP $code)"; exit 1
     fi
     sleep 1
   done

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   errorHandler.js                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/09 23:35:20 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/04/09 23:35:21 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // File: docker/services/mongo-api/src/middleware/errorHandler.js
 const pino = require('pino');
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
