@@ -18,6 +18,8 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_NGINX_WORKER_PROCESSES: "1"
+      KONG_MEM_CACHE_SIZE: "64m"
     volumes:
       - ./docker/services/kong/conf/kong.yml:/etc/kong/kong.yml.tmpl:ro
     command: >
@@ -47,12 +49,12 @@ services:
       realtime:
         condition: service_healthy
       email-service:
-        condition: service_healthy
+        condition: service_started
     networks:
       - mini-baas
     restart: unless-stopped
-    mem_limit: 256m
-    cpus: 0.5
+    mem_limit: 1g
+    cpus: 1.0
 
   # ─── SQL Federation (extras) ─────────────────────────────────────
   trino:

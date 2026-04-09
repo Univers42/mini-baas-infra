@@ -29,7 +29,9 @@ PG_PORT     ?= 5432
 PG_USER     ?= $(or $(POSTGRES_USER),postgres)
 PG_PASS     ?= $(or $(POSTGRES_PASSWORD),postgres)
 PG_DB       ?= $(or $(POSTGRES_DB),postgres)
-KONG_URL    ?= http://localhost:8000
+# Auto-detect Kong host port (falls back to 8000)
+KONG_PORT   ?= $(shell docker port mini-baas-kong 8000/tcp 2>/dev/null | head -1 | sed 's/.*://' || echo 8000)
+KONG_URL    ?= http://localhost:$(KONG_PORT)
 API_KEY     ?= $(or $(KONG_PUBLIC_API_KEY),public-anon-key)
 ZOO_PASS    ?= zoo-admin-2024
 
@@ -69,6 +71,17 @@ baas-up:
 	@if grep -q 'KONG_CORS_ORIGIN_APP=' "$(ROOT_DIR)/.env"; then \
 		sed -i 's|KONG_CORS_ORIGIN_APP=.*|KONG_CORS_ORIGIN_APP=http://localhost:5173|' "$(ROOT_DIR)/.env"; \
 		sed -i 's|KONG_CORS_ORIGIN_PLAYGROUND=.*|KONG_CORS_ORIGIN_PLAYGROUND=http://localhost:5180|' "$(ROOT_DIR)/.env"; \
+	fi
+	@# Avoid port conflict: if 8000 is busy (e.g. kubectl), remap Kong to 8001
+	@if ss -tln | grep -q ':8000 '; then \
+		if ! docker ps --format '{{.Names}}' | grep -q 'mini-baas-kong'; then \
+			printf "$(Y)  Port 8000 in use — remapping Kong to 8001$(R)\n"; \
+			if grep -q '^KONG_HTTP_PORT=' "$(ROOT_DIR)/.env"; then \
+				sed -i 's|^KONG_HTTP_PORT=.*|KONG_HTTP_PORT=8001|' "$(ROOT_DIR)/.env"; \
+			else \
+				echo 'KONG_HTTP_PORT=8001' >> "$(ROOT_DIR)/.env"; \
+			fi; \
+		fi; \
 	fi
 	@# Avoid port conflict: if 4000 is busy, remap Realtime to 4002
 	@if ss -tln | grep -q ':4000 '; then \
