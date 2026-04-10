@@ -113,13 +113,43 @@ SUPABASE_PUBLIC_URL=http://localhost:8000
 # MongoDB
 MONGO_URI=mongodb://mongo:27017
 MONGO_DB_NAME=mini_baas
+MONGO_INITDB_ROOT_USERNAME=mongo
+MONGO_INITDB_ROOT_PASSWORD=mongo
 
 # Adapter Registry
 ADAPTER_REGISTRY_DATABASE_URL=${DATABASE_URL}
 ADAPTER_REGISTRY_URL=http://adapter-registry:3020
+ADAPTER_REGISTRY_SERVICE_TOKEN=$(gen_alnum 32)
 
 # Query Router
 QUERY_ROUTER_URL=http://query-router:4001
+
+# SMTP (local dev uses mailpit)
+SMTP_HOST=mailpit
+SMTP_PORT=1025
+SMTP_USER=
+SMTP_PASS=
+SMTP_SECURE=false
+EMAIL_FROM=noreply@mini-baas.local
+
+# OAuth: Google (set real values for production)
+GOOGLE_OAUTH_ENABLED=false
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# OAuth: GitHub
+GITHUB_OAUTH_ENABLED=false
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# OAuth: 42 School
+FORTYTWO_OAUTH_ENABLED=false
+FORTYTWO_CLIENT_ID=
+FORTYTWO_CLIENT_SECRET=
+
+# Vault (empty = disabled; services fall back to env vars)
+VAULT_ADDR=
+VAULT_PORT=8200
 
 # Logging
 LOG_LEVEL=info
