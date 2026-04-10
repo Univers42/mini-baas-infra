@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/11 20:12:36 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -153,9 +153,9 @@ services:
               hour: 5000
 
   - name: realtime
-    url: http://realtime:4000/v1
+    url: http://realtime:4000
     routes:
-      - name: realtime-routes
+      - name: realtime-api
         paths: [/realtime/v1]
         strip_path: true
         protocols: [http, https]
@@ -176,6 +176,10 @@ services:
               limit_by: ip
               minute: 120
               hour: 3000
+      - name: realtime-ws
+        paths: [/realtime/ws]
+        strip_path: true
+        protocols: [http, https]
 
   - name: storage
     url: http://minio:9000
@@ -416,3 +420,55 @@ services:
               limit_by: ip
               minute: 60
               hour: 1500
+
+  - name: permission-engine
+    url: http://permission-engine:3050
+    routes:
+      - name: permissions-routes
+        paths: [/permissions/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: schema-service
+    url: http://schema-service:3060
+    routes:
+      - name: schema-routes
+        paths: [/schemas/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 64
+              size_unit: kilobytes
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 60
+              hour: 1000
