@@ -106,7 +106,7 @@ bench-startup: _require-compose _rm-stale ## Time core stack startup until all h
 	@eval "$$(bash scripts/resolve-ports.sh)"; \
 	t0=$$(date +%s); \
 	$(DC) up -d; \
-	SERVICES="mini-baas-postgres mini-baas-mongo mini-baas-gotrue mini-baas-postgrest mini-baas-kong mini-baas-mongo-api mini-baas-realtime mini-baas-adapter-registry mini-baas-query-router"; \
+	SERVICES="mini-baas-postgres mini-baas-mongo mini-baas-gotrue mini-baas-postgrest mini-baas-kong mini-baas-mongo-api mini-baas-realtime mini-baas-adapter-registry mini-baas-query-router mini-baas-permission-engine mini-baas-schema-service mini-baas-waf"; \
 	for svc in $$SERVICES; do \
 		printf "  Waiting: %-30s" "$$svc"; \
 		timeout 120 sh -c "\
@@ -428,6 +428,147 @@ audit: audit-scan audit-fetch ## Full audit: scan + fetch issues
 	@echo -e "$(_G)✓ Audit complete — see audit/summary.txt$(_0)"
 
 # ========================================================================== #
+##@ NestJS Monorepo (src/)
+# ========================================================================== #
+
+nestjs-install: ## Install NestJS monorepo dependencies
+	@echo -e "$(_B)Installing NestJS dependencies…$(_0)"
+	@cd src && corepack enable && pnpm install
+	@echo -e "$(_G)✓ Dependencies installed$(_0)"
+
+nestjs-lint: ## Run ESLint on NestJS monorepo
+	@echo -e "$(_B)Linting NestJS monorepo…$(_0)"
+	@cd src && npx eslint 'apps/**/*.ts' 'libs/**/*.ts' --fix
+	@echo -e "$(_G)✓ Lint passed$(_0)"
+
+nestjs-typecheck: ## TypeScript strict type-check (no emit)
+	@echo -e "$(_B)Type-checking NestJS monorepo…$(_0)"
+	@cd src && npx tsc --noEmit
+	@echo -e "$(_G)✓ Type-check passed$(_0)"
+
+nestjs-format: ## Prettier format check
+	@cd src && npx prettier --check 'apps/**/*.ts' 'libs/**/*.ts'
+	@echo -e "$(_G)✓ Format OK$(_0)"
+
+nestjs-build: ## Build all NestJS apps
+	@echo -e "$(_B)Building all NestJS apps…$(_0)"
+	@cd src && npx nest build adapter-registry && \
+		npx nest build mongo-api && \
+		npx nest build query-router && \
+		npx nest build email-service && \
+		npx nest build storage-router && \
+		npx nest build permission-engine && \
+		npx nest build schema-service
+	@echo -e "$(_G)✓ All apps built$(_0)"
+
+nestjs-build-%: ## Build one NestJS app (e.g. make nestjs-build-mongo-api)
+	@echo -e "$(_B)Building $*…$(_0)"
+	@cd src && npx nest build $*
+	@echo -e "$(_G)✓ $* built$(_0)"
+
+nestjs-dev-%: ## Run one NestJS app locally in dev mode (e.g. make nestjs-dev-mongo-api)
+	@cd src && npx nest start $* --watch
+
+nestjs-test: ## Run all NestJS unit tests
+	@cd src && npx jest --passWithNoTests
+	@echo -e "$(_G)✓ Tests passed$(_0)"
+
+nestjs-ci: nestjs-install nestjs-typecheck nestjs-lint nestjs-test ## Full NestJS CI pipeline
+
+# ========================================================================== #
+##@ Vault
+# ========================================================================== #
+
+vault-init: _require-compose ## Run Vault init/unseal/seed manually
+	@echo -e "$(_B)Initializing Vault…$(_0)"
+	@$(DC) run --rm vault-init
+	@echo -e "$(_G)✓ Vault initialized$(_0)"
+
+vault-status: _require-compose ## Check Vault seal status
+	@docker exec mini-baas-vault vault status -address=http://127.0.0.1:8200 2>/dev/null \
+		|| echo -e "$(_R)Vault not running$(_0)"
+
+vault-unseal: _require-compose ## Unseal Vault with root key from .vault-keys
+	@key=$$(grep 'Unseal Key' .vault-keys 2>/dev/null | awk '{print $$NF}'); \
+	[ -n "$$key" ] && docker exec mini-baas-vault vault operator unseal -address=http://127.0.0.1:8200 "$$key" \
+		|| echo -e "$(_Y)No .vault-keys found — run make vault-init first$(_0)"
+
+# ========================================================================== #
+##@ WAF / Security
+# ========================================================================== #
+
+waf-logs: _require-compose ## Stream WAF (ModSecurity) logs
+	@$(DC) logs -f --tail=200 waf
+
+waf-test: ## Quick WAF attack test (should be blocked)
+	@echo -e "$(_B)Testing WAF blocks…$(_0)"
+	@status=$$(curl -s -o /dev/null -w '%{http_code}' "http://localhost/rest/v1/?id=1%20OR%201=1"); \
+	if [ "$$status" = "403" ]; then \
+		echo -e "  $(_G)✓$(_0) SQL injection blocked (HTTP 403)"; \
+	else \
+		echo -e "  $(_R)✗$(_0) Expected 403, got $$status"; \
+	fi
+	@status=$$(curl -s -o /dev/null -w '%{http_code}' "http://localhost/rest/v1/<script>alert(1)</script>"); \
+	if [ "$$status" = "403" ]; then \
+		echo -e "  $(_G)✓$(_0) XSS blocked (HTTP 403)"; \
+	else \
+		echo -e "  $(_R)✗$(_0) Expected 403, got $$status"; \
+	fi
+
+# ========================================================================== #
+##@ Observatory
+# ========================================================================== #
+
+watch: _require-compose _rm-stale ## Build, start stack & launch interactive observatory
+	@echo -e "$(_B)Stopping previous stack to ensure clean start…$(_0)"
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	$(DC) down --remove-orphans 2>/dev/null || true
+	@echo -e "$(_B)Building & starting stack…$(_0)"
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	$(DC) up -d --build 2>&1 | grep -v "^$$" || echo -e "$(_Y)⚠  Some containers may need time — observatory will show details$(_0)"
+	@echo -e "$(_G)▶ Starting mini-BaaS Observatory (interactive)…$(_0)"
+	cd src && npx ts-node -r tsconfig-paths/register tools/observatory.ts
+
+watch-logs: _require-compose _rm-stale ## Build, start stack & stream logs only (no interactive prompt)
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	$(DC) down --remove-orphans 2>/dev/null || true
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	$(DC) up -d --build 2>&1 | tail -5 || true
+	@echo -e "$(_G)▶ Starting log stream…$(_0)"
+	cd src && npx ts-node -r tsconfig-paths/register tools/observatory.ts --logs
+
+watch-headless: _require-compose _rm-stale ## Build, start stack & launch observatory in background
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	$(DC) down --remove-orphans 2>/dev/null || true
+	@eval "$$(bash scripts/resolve-ports.sh)"; \
+	$(DC) up -d --build 2>&1 | tail -5 || true
+	@echo -e "$(_G)▶ Starting headless observatory…$(_0)"
+	@cd src && nohup npx ts-node -r tsconfig-paths/register tools/observatory.ts --headless \
+		> ../observatory.log 2>&1 & echo "$$!" > ../.observatory.pid
+	@echo -e "$(_G)  PID: $$(cat .observatory.pid)  •  Log: observatory.log$(_0)"
+	@echo -e "$(_Y)  Use 'make kill-watch' to stop$(_0)"
+
+kill-watch: ## Stop a headless observatory process
+	@if [ -f .observatory.pid ]; then \
+		pid=$$(cat .observatory.pid); \
+		if kill -0 "$$pid" 2>/dev/null; then \
+			kill "$$pid" && echo -e "$(_G)✓ Observatory (PID $$pid) stopped$(_0)"; \
+		else \
+			echo -e "$(_Y)Observatory (PID $$pid) is not running$(_0)"; \
+		fi; \
+		rm -f .observatory.pid; \
+	else \
+		echo -e "$(_Y)No .observatory.pid file found$(_0)"; \
+	fi
+
+watch-attach: ## Attach interactive observatory to an already-running stack (no build)
+	@echo -e "$(_G)▶ Attaching mini-BaaS Observatory…$(_0)"
+	cd src && npx ts-node -r tsconfig-paths/register tools/observatory.ts
+
+watch-docker: ## Simple docker compose log tail (all services)
+	docker compose logs -f --tail=100
+
+# ========================================================================== #
 ##@ Help
 # ========================================================================== #
 
@@ -451,5 +592,10 @@ help: ## Show this help
 	adapter-add adapter-ls \
 	play play-css play-down play-logs \
 	audit audit-scan audit-fetch \
+	nestjs-install nestjs-lint nestjs-typecheck nestjs-format \
+	nestjs-build nestjs-build-% nestjs-dev-% nestjs-test nestjs-ci \
+	vault-init vault-status vault-unseal \
+	waf-logs waf-test \
+	watch watch-logs watch-headless kill-watch watch-attach watch-docker \
 	env preflight hooks update help \
 	_require-docker _require-compose _rm-stale
