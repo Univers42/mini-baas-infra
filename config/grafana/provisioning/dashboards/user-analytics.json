@@ -1,0 +1,203 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Total API Requests / min",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total[5m])) * 60",
+          "legendFormat": "req/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Unique Consumers",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "count(count by (consumer) (kong_http_requests_total))",
+          "legendFormat": "consumers",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Auth Signups / h (GoTrue)",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(kong_http_requests_total{service=\"auth\",code=\"200\"}[1h]))",
+          "legendFormat": "signups",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Storage Operations / min",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total{service=~\"storage|storage-sign\"}[5m])) * 60",
+          "legendFormat": "ops/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "API Requests by Route",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total[5m])) by (route) * 60",
+          "legendFormat": "{{route}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Response Time by Service (p95)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(kong_http_request_duration_ms_bucket[5m])) by (le, service))",
+          "legendFormat": "{{service}} p95",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "MongoDB Operations by Type",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(mongo_operations_total[5m])) by (operation) * 60",
+          "legendFormat": "{{operation}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Permission Checks / min",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total{service=\"permission-engine\"}[5m])) by (route) * 60",
+          "legendFormat": "{{route}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Request Errors (4xx vs 5xx)",
+      "type": "piechart",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(kong_http_requests_total{code=~\"4..\"}[1h]))",
+          "legendFormat": "4xx",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(increase(kong_http_requests_total{code=~\"5..\"}[1h]))",
+          "legendFormat": "5xx",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Bandwidth by Service",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 20
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_bandwidth_bytes[5m])) by (service, type) / 1024",
+          "legendFormat": "{{service}} {{type}} KB/s",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "mini-baas",
+    "analytics"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "mini-BaaS User Analytics",
+  "uid": "mini-baas-analytics"
+}
