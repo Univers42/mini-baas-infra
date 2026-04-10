@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "outDir": "../../dist/apps/mongo-api"
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
