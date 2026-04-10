@@ -2,13 +2,85 @@
 name: mini-baas
 
 services:
+  # ─── WAF (Nginx + ModSecurity + OWASP CRS) ──────────────────────
+  waf:
+    build:
+      context: ./docker/services/waf
+      dockerfile: Dockerfile
+    container_name: mini-baas-waf
+    ports:
+      - "${WAF_HTTP_PORT:-80}:80"
+    depends_on:
+      kong:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/waf-health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    mem_limit: 256m
+    cpus: 0.5
+
+  # ─── HashiCorp Vault (Secrets Management) ────────────────────────
+  vault:
+    build:
+      context: ./docker/services/vault
+      dockerfile: Dockerfile
+    container_name: mini-baas-vault
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/vault.hcl
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_API_ADDR: http://0.0.0.0:8200
+    ports:
+      - "127.0.0.1:${VAULT_PORT:-8200}:8200"
+    volumes:
+      - vault-data:/vault/data
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "vault status -address=http://127.0.0.1:8200 2>/dev/null | grep -q 'Sealed.*false' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 10
+    mem_limit: 256m
+    cpus: 0.5
+
+  # ─── Vault Bootstrap (one-shot init + unseal + seed) ─────────────
+  vault-init:
+    build:
+      context: ./docker/services/vault
+      dockerfile: Dockerfile
+    container_name: mini-baas-vault-init
+    env_file: [.env]
+    environment:
+      VAULT_ADDR: http://vault:8200
+    entrypoint: /vault/scripts/init-vault.sh
+    volumes:
+      - vault-data:/vault/data
+    depends_on:
+      vault:
+        condition: service_started
+    networks:
+      - mini-baas
+    restart: "no"
+
   # ─── API Gateway ─────────────────────────────────────────────────
   kong:
     image: kong:3.8
     container_name: mini-baas-kong
     env_file: [.env]
     ports:
-      - "${KONG_HTTP_PORT:-8000}:8000"
+      # Kong is now internal — WAF is the public entrypoint.
+      # Keep 8000 exposed on localhost for direct dev access.
+      - "127.0.0.1:${KONG_HTTP_PORT:-8000}:8000"
       - "127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001"
     environment:
       KONG_DATABASE: "off"
@@ -54,6 +126,10 @@ services:
         condition: service_healthy
       email-service:
         condition: service_started
+      permission-engine:
+        condition: service_healthy
+      schema-service:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
@@ -68,6 +144,13 @@ services:
     env_file: [.env]
     volumes:
       - ./docker/services/trino/conf/config.properties:/etc/trino/config.properties:ro
+      - ./docker/services/trino/conf/catalog/postgresql.properties:/etc/trino/catalog/postgresql.properties:ro
+      - ./docker/services/trino/conf/catalog/mongodb.properties:/etc/trino/catalog/mongodb.properties:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
@@ -131,6 +214,10 @@ services:
     image: mongo:7
     container_name: mini-baas-mongo
     env_file: [.env]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo/rs-keyfile"]
+    depends_on:
+      mongo-keyfile:
+        condition: service_completed_successfully
     ports:
       - "${MONGO_PORT:-27017}:27017"
     environment:
@@ -138,11 +225,12 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mongo}
     volumes:
       - mongo-data:/data/db
+      - mongo-keyfile:/etc/mongo
     networks:
       - mini-baas
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.runCommand({ ping: 1 }).ok\""]
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().myState === 1 ? quit(0) : quit(1) } catch(e) { db.runCommand({ ping: 1 }).ok ? quit(0) : quit(1) }\""]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -150,11 +238,71 @@ services:
     mem_limit: 512m
     cpus: 0.5
 
-  # ─── MongoDB REST API ───────────────────────────────────────────
+  # ─── MongoDB keyfile generator (runs once, exits) ────────────────
+  # Generates a shared keyfile for replica set internal auth.
+  mongo-keyfile:
+    image: mongo:7
+    container_name: mini-baas-mongo-keyfile
+    volumes:
+      - mongo-keyfile:/etc/mongo
+    networks:
+      - mini-baas
+    restart: "no"
+    entrypoint: >
+      bash -c '
+        if [ ! -f /etc/mongo/rs-keyfile ]; then
+          openssl rand -base64 756 > /etc/mongo/rs-keyfile;
+          chmod 400 /etc/mongo/rs-keyfile;
+          chown 999:999 /etc/mongo/rs-keyfile;
+          echo "KeyFile generated";
+        else
+          echo "KeyFile already exists";
+        fi
+      '
+
+  # ─── MongoDB Replica Set Initialisation ──────────────────────────
+  # Required for Change Streams (used by realtime CDC producer).
+  # Runs once and exits with code 0.
+  mongo-init:
+    image: mongo:7
+    container_name: mini-baas-mongo-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: "no"
+    environment:
+      MONGO_USER: ${MONGO_INITDB_ROOT_USERNAME:-mongo}
+      MONGO_PASS: ${MONGO_INITDB_ROOT_PASSWORD:-mongo}
+    entrypoint:
+      - bash
+      - -c
+      - |
+        mongosh --host mongo \
+          -u "$$MONGO_USER" -p "$$MONGO_PASS" \
+          --authenticationDatabase admin --quiet --eval '
+            try { rs.status(); print("Replica set already initialised"); }
+            catch(e) {
+              rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongo:27017" }] });
+              print("Replica set initiated — waiting for PRIMARY election…");
+            }
+            // Block until this node becomes PRIMARY (max ~30 s)
+            let attempts = 0;
+            while (!db.hello().isWritablePrimary && attempts < 30) {
+              sleep(1000); attempts++;
+            }
+            if (db.hello().isWritablePrimary) print("Node is PRIMARY — ready");
+            else { print("WARN: node not yet PRIMARY after 30 s"); quit(1); }
+          '
+
+  # ─── MongoDB REST API (NestJS) ──────────────────────────────────
   mongo-api:
     build:
-      context: ./docker/services/mongo-api
+      context: ./src
       dockerfile: Dockerfile
+      args:
+        APP: mongo-api
     container_name: mini-baas-mongo-api
     env_file: [.env]
     environment:
@@ -188,8 +336,10 @@ services:
       GOTRUE_API_PORT: 9999
       API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}
       GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:3001}
+      GOTRUE_URI_ALLOW_LIST: ${GOTRUE_URI_ALLOW_LIST:-http://localhost:3000,http://localhost:3001,http://localhost:3100}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      # Email
       GOTRUE_MAILER_AUTOCONFIRM: ${GOTRUE_MAILER_AUTOCONFIRM:-true}
       GOTRUE_SMTP_HOST: ${SMTP_HOST:-mailpit}
       GOTRUE_SMTP_PORT: ${SMTP_PORT:-1025}
@@ -198,9 +348,40 @@ services:
       GOTRUE_SMTP_ADMIN_EMAIL: ${EMAIL_FROM:-noreply@mini-baas.local}
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      # JWT
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 3600
+      # MFA / 2FA (TOTP)
+      GOTRUE_MFA_ENABLED: "true"
+      GOTRUE_SECURITY_MFA_MAX_ENROLLED_FACTORS: 5
+      GOTRUE_SECURITY_MFA_MAX_VERIFIED_FACTORS: 5
+      # Refresh token security
+      GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED: "true"
+      GOTRUE_SECURITY_REFRESH_TOKEN_REUSE_INTERVAL: 10
+      # Password policy
+      GOTRUE_PASSWORD_MIN_LENGTH: 8
+      # Rate limiting (per-IP)
+      GOTRUE_RATE_LIMIT_HEADER: X-Real-IP
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: 5
+      # OAuth: Google
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_OAUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}/callback
+      # OAuth: GitHub
+      GOTRUE_EXTERNAL_GITHUB_ENABLED: ${GITHUB_OAUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GITHUB_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GOTRUE_EXTERNAL_GITHUB_REDIRECT_URI: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}/callback
+      # OAuth: 42 School (custom OIDC)
+      GOTRUE_EXTERNAL_FORTYTWO_ENABLED: ${FORTYTWO_OAUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_FORTYTWO_CLIENT_ID: ${FORTYTWO_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_FORTYTWO_SECRET: ${FORTYTWO_CLIENT_SECRET:-}
+      GOTRUE_EXTERNAL_FORTYTWO_REDIRECT_URI: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}/callback
+      GOTRUE_EXTERNAL_FORTYTWO_URL: https://api.intra.42.fr/oauth/authorize
+      GOTRUE_EXTERNAL_FORTYTWO_API_URL: https://api.intra.42.fr
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -273,13 +454,15 @@ services:
       REALTIME_PORT: 4000
       REALTIME_JWT_SECRET: ${JWT_SECRET}
       REALTIME_PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
-      REALTIME_MONGO_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
+      REALTIME_PG_CHANNEL: realtime_events
+      REALTIME_MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017/?replicaSet=rs0&authSource=admin
+      REALTIME_MONGO_DB: ${MONGO_DB:-syncspace}
       RUST_LOG: ${RUST_LOG:-info}
     depends_on:
-      postgres:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
+      mongo-init:
+        condition: service_completed_successfully
     networks:
       - mini-baas
     restart: unless-stopped
@@ -308,11 +491,13 @@ services:
     mem_limit: 128m
     cpus: 0.25
 
-  # ─── Adapter Registry (DB credential store) ─────────────────────
+  # ─── Adapter Registry (NestJS — DB credential store) ─────────────
   adapter-registry:
     build:
-      context: ./docker/services/adapter-registry
+      context: ./src
       dockerfile: Dockerfile
+      args:
+        APP: adapter-registry
     container_name: mini-baas-adapter-registry
     env_file: [.env]
     environment:
@@ -339,11 +524,13 @@ services:
     mem_limit: 128m
     cpus: 0.25
 
-  # ─── Query Router (universal data plane) ─────────────────────────
+  # ─── Query Router (NestJS — universal data plane) ────────────────
   query-router:
     build:
-      context: ./docker/services/query-router
+      context: ./src
       dockerfile: Dockerfile
+      args:
+        APP: query-router
     container_name: mini-baas-query-router
     env_file: [.env]
     environment:
@@ -369,11 +556,13 @@ services:
     mem_limit: 128m
     cpus: 0.25
 
-  # ─── Email Service ────────────────────────────────────────────────
+  # ─── Email Service (NestJS) ───────────────────────────────────────
   email-service:
     build:
-      context: ./docker/services/email-service
+      context: ./src
       dockerfile: Dockerfile
+      args:
+        APP: email-service
     container_name: mini-baas-email-service
     env_file: [.env]
     environment:
@@ -398,11 +587,13 @@ services:
     mem_limit: 128m
     cpus: 0.25
 
-  # ─── Storage Router (presigned URLs) ─────────────────────────────
+  # ─── Storage Router (NestJS — presigned URLs) ───────────────────
   storage-router:
     build:
-      context: ./docker/services/storage-router
+      context: ./src
       dockerfile: Dockerfile
+      args:
+        APP: storage-router
     container_name: mini-baas-storage-router
     env_file: [.env]
     environment:
@@ -423,6 +614,66 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3040/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Permission Engine (NestJS — ABAC) ───────────────────────────
+  permission-engine:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: permission-engine
+    container_name: mini-baas-permission-engine
+    env_file: [.env]
+    environment:
+      PORT: 3050
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3050/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Schema Service (NestJS — DDL management) ────────────────────
+  schema-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: schema-service
+    container_name: mini-baas-schema-service
+    env_file: [.env]
+    environment:
+      PORT: 3060
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      ADAPTER_REGISTRY_URL: http://adapter-registry:3020
+      ADAPTER_REGISTRY_SERVICE_TOKEN: ${ADAPTER_REGISTRY_SERVICE_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      adapter-registry:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3060/health/live || exit 1"]
       interval: 5s
       timeout: 3s
       start_period: 8s
@@ -579,8 +830,10 @@ networks:
 volumes:
   postgres-data:
   mongo-data:
+  mongo-keyfile:
   redis-data:
   minio-data:
+  vault-data:
   prometheus-data:
   grafana-data:
   loki-data:
