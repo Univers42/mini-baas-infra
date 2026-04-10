@@ -1,0 +1,184 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "WAF Blocked Requests / min",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(nginx_http_requests_total{status=~\"403|406\"}[5m])) * 60",
+          "legendFormat": "blocked/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Kong 4xx / 5xx Rate",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total{code=~\"4..|5..\"}[5m])) * 60",
+          "legendFormat": "errors/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Auth Failures (GoTrue)",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total{service=\"auth\",code=~\"401|403\"}[5m])) * 60",
+          "legendFormat": "auth failures/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Rate-Limited Requests",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total{code=\"429\"}[5m])) * 60",
+          "legendFormat": "429s/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "WAF Request Rate by Status",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(nginx_http_requests_total[5m])) by (status)",
+          "legendFormat": "HTTP {{status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Kong Errors by Service",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(kong_http_requests_total{code=~\"4..|5..\"}[5m])) by (service)",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Security Logs (Loki — ModSecurity)",
+      "type": "logs",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "expr": "{container_name=\"mini-baas-waf\"} |= \"ModSecurity\"",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Vault Seal Status",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "expr": "vault_core_unsealed",
+          "legendFormat": "unsealed",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Vault Token Creations / min",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 22
+      },
+      "targets": [
+        {
+          "expr": "rate(vault_token_create_count[5m]) * 60",
+          "legendFormat": "tokens/min",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "mini-baas",
+    "security"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "mini-BaaS Security & WAF",
+  "uid": "mini-baas-security"
+}
