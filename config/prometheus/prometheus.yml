@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 00:34:26 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/11 15:01:59 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,6 +29,24 @@ scrape_configs:
 
   # adapter-registry and query-router no longer expose /metrics;
   # HTTP metrics are now collected by Kong's prometheus plugin.
+
+  - job_name: "permission-engine"
+    static_configs:
+      - targets: ["permission-engine:3050"]
+    metrics_path: /metrics
+
+  - job_name: "schema-service"
+    static_configs:
+      - targets: ["schema-service:3060"]
+    metrics_path: /metrics
+
+  - job_name: "vault"
+    metrics_path: /v1/sys/metrics
+    params:
+      format: ["prometheus"]
+    scheme: http
+    static_configs:
+      - targets: ["vault:8200"]
 
   - job_name: "postgres-exporter"
     static_configs:
