@@ -6,17 +6,15 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:36:28 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:53:37 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const { Router } = require('express');
-const jwt = require('jsonwebtoken');
 const postgresqlEngine = require('../engines/postgresql');
 const mongodbEngine = require('../engines/mongodb');
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET;
 const ADAPTER_REGISTRY_URL = process.env.ADAPTER_REGISTRY_URL;
 const SERVICE_TOKEN = process.env.ADAPTER_REGISTRY_SERVICE_TOKEN;
 
@@ -24,19 +22,14 @@ const SERVICE_TOKEN = process.env.ADAPTER_REGISTRY_SERVICE_TOKEN;
 const DB_ID_RE = /^[\w-]{1,128}$/;
 const validatePathParam = (value) => DB_ID_RE.test(value);
 
+// JWT verification is handled by Kong. We read trusted headers.
 const requireUser = (req, res, next) => {
-  const auth = req.headers.authorization || '';
-  if (!auth.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Bearer token required' } });
+  const id = req.headers['x-user-id'];
+  if (!id) {
+    return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Authenticated user required' } });
   }
-  try {
-    const claims = jwt.verify(auth.slice(7).trim(), JWT_SECRET, { algorithms: ['HS256'] });
-    if (!claims?.sub) throw new Error('no sub');
-    req.user = { id: claims.sub, role: claims.role };
-    next();
-  } catch {
-    res.status(401).json({ success: false, error: { code: 'invalid_token', message: 'Invalid JWT' } });
-  }
+  req.user = { id, role: req.headers['x-user-role'] || null };
+  next();
 };
 
 const ENGINES = {

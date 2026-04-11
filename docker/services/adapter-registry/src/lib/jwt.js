@@ -6,26 +6,27 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:33:47 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:52:01 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-const jwt = require('jsonwebtoken');
+// JWT signature verification is now handled by Kong's JWT plugin.
+// Services receive trusted headers set by Kong's pre-function plugin:
+//   X-User-Id, X-User-Email, X-User-Role
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const SERVICE_TOKEN = process.env.ADAPTER_REGISTRY_SERVICE_TOKEN;
 
-const verifyToken = (req) => {
-  const auth = req.headers.authorization || '';
-  if (!auth.startsWith('Bearer ')) return null;
-  const token = auth.slice(7).trim();
-  try {
-    const claims = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
-    if (!claims?.sub) return null;
-    return { id: claims.sub, email: claims.email || null, role: claims.role || null };
-  } catch {
-    return null;
-  }
+/**
+ * Read user identity from Kong-injected trusted headers.
+ */
+const readUserFromHeaders = (req) => {
+  const id = req.headers['x-user-id'];
+  if (!id) return null;
+  return {
+    id,
+    email: req.headers['x-user-email'] || null,
+    role: req.headers['x-user-role'] || null,
+  };
 };
 
 /**
@@ -41,7 +42,7 @@ const verifyServiceToken = (req) => {
 };
 
 const requireUser = (req, res, next) => {
-  const user = verifyToken(req);
+  const user = readUserFromHeaders(req);
   if (!user) {
     return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Valid JWT required' } });
   }
@@ -50,11 +51,11 @@ const requireUser = (req, res, next) => {
 };
 
 /**
- * Middleware that accepts either a valid user JWT or a service token.
+ * Middleware that accepts either a valid user JWT (via Kong headers) or a service token.
  * Service-to-service callers supply X-Service-Token + X-Tenant-Id headers.
  */
 const requireServiceOrUser = (req, res, next) => {
-  const user = verifyServiceToken(req) || verifyToken(req);
+  const user = verifyServiceToken(req) || readUserFromHeaders(req);
   if (!user) {
     return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Valid JWT or service token required' } });
   }
@@ -67,7 +68,7 @@ const requireServiceOrUser = (req, res, next) => {
  * Used for admin-only operations (e.g. deleting any tenant's data).
  */
 const requireServiceRole = (req, res, next) => {
-  const user = verifyToken(req);
+  const user = readUserFromHeaders(req);
   if (user?.role !== 'service_role') {
     return res.status(403).json({ success: false, error: { code: 'forbidden', message: 'Service-role JWT required' } });
   }
@@ -75,4 +76,4 @@ const requireServiceRole = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, requireUser, requireServiceOrUser, requireServiceRole };
+module.exports = { readUserFromHeaders, requireUser, requireServiceOrUser, requireServiceRole };

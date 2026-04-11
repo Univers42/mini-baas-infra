@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "express": "4.21.2",
-    "jsonwebtoken": "9.0.2",
     "mongodb": "6.15.0",
     "pino": "9.6.0",
     "pino-http": "10.4.0",

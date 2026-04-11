@@ -6,21 +6,19 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:37:00 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:53:58 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const express = require('express');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
-const crypto = require('node:crypto');
-const jwt = require('jsonwebtoken');
-const { register } = require('prom-client');
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 // ─── Environment validation ──────────────────────────────────────
-const required = ['JWT_SECRET', 'S3_ENDPOINT'];
+// JWT verification is handled by Kong; JWT_SECRET no longer required here.
+const required = ['S3_ENDPOINT'];
 const missing = required.filter((k) => !process.env[k]);
 if (missing.length > 0) {
   console.error(`Missing required environment variables: ${missing.join(', ')}`);
@@ -29,7 +27,6 @@ if (missing.length > 0) {
 
 const PORT = Number(process.env.PORT || 3040);
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
-const JWT_SECRET = process.env.JWT_SECRET;
 const DEFAULT_EXPIRES = Number(process.env.PRESIGN_EXPIRES_SECONDS || 3600);
 
 const logger = pino({
@@ -49,28 +46,23 @@ const s3 = new S3Client({
   forcePathStyle: true, // required for MinIO
 });
 
-// ─── JWT middleware ──────────────────────────────────────────────
+// ─── JWT middleware (reads trusted headers from Kong) ──────────
 const requireUser = (req, res, next) => {
-  const auth = req.headers.authorization || '';
-  if (!auth.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Bearer token required' } });
+  const id = req.headers['x-user-id'];
+  if (!id) {
+    return res.status(401).json({ success: false, error: { code: 'unauthorized', message: 'Authenticated user required' } });
   }
-  try {
-    const claims = jwt.verify(auth.slice(7).trim(), JWT_SECRET, { algorithms: ['HS256'] });
-    if (!claims?.sub) throw new Error('missing sub');
-    req.user = { id: claims.sub, email: claims.email || null, role: claims.role || null };
-    next();
-  } catch {
-    res.status(401).json({ success: false, error: { code: 'invalid_token', message: 'Invalid JWT' } });
-  }
+  req.user = { id, email: req.headers['x-user-email'] || null, role: req.headers['x-user-role'] || null };
+  next();
 };
 
 // ─── App ─────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json({ limit: '16kb' }));
 
+// Correlation ID is injected by Kong's correlation-id plugin (X-Request-ID).
 app.use((req, _res, next) => {
-  req.requestId = req.headers['x-request-id'] || crypto.randomUUID();
+  req.requestId = req.headers['x-request-id'] || 'no-request-id';
   next();
 });
 
@@ -124,11 +116,7 @@ app.post('/sign/:bucket/*', requireUser, async (req, res) => {
   }
 });
 
-// ─── Prometheus metrics ──────────────────────────────────────────
-app.get('/metrics', async (_req, res) => {
-  res.set('Content-Type', register.contentType);
-  res.send(await register.metrics());
-});
+// Prometheus metrics are now exposed by Kong's prometheus plugin on :8001/metrics.
 
 // ─── Error handler ───────────────────────────────────────────────
 app.use((err, req, res, _next) => {

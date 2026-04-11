@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/09 23:34:35 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,6 +24,13 @@ consumers:
   - username: service_role
     keyauth_credentials:
       - key: __KONG_SERVICE_API_KEY__
+  # JWT consumer — matches GoTrue-issued tokens via the "iss" claim.
+  # GoTrue sets iss = API_EXTERNAL_URL (default: http://localhost:8000/auth/v1)
+  - username: authenticated
+    jwt_secrets:
+      - key: __GOTRUE_JWT_ISS__
+        secret: __JWT_SECRET__
+        algorithm: HS256
 
 # ─── Global Plugins ──────────────────────────────────────────────
 plugins:
@@ -56,8 +63,53 @@ plugins:
           - X-Frame-Options:DENY
           - Referrer-Policy:strict-origin-when-cross-origin
 
+  # ── Prometheus metrics (replaces per-service prom-client) ───────
+  - name: prometheus
+    config:
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      upstream_health_metrics: true
+      per_consumer: true
+
+  # ── Pre-Function: decode verified JWT and forward claims as headers ──
+  # Kong's JWT plugin already verified the signature; we just base64-decode
+  # the payload and set trusted headers so upstreams can read user identity
+  # without importing jsonwebtoken themselves.
+  - name: pre-function
+    config:
+      access:
+        - |
+          local auth = kong.request.get_header("authorization")
+          if not auth then return end
+          local token = auth:match("^[Bb]earer%s+(.+)$")
+          if not token then return end
+          local parts = {}
+          for p in token:gmatch("[^%.]+") do parts[#parts + 1] = p end
+          if #parts < 2 then return end
+          -- base64url decode the payload
+          local b64 = parts[2]:gsub("-", "+"):gsub("_", "/")
+          local pad = 4 - #b64 % 4
+          if pad < 4 then b64 = b64 .. ("="):rep(pad) end
+          local ok, payload = pcall(ngx.decode_base64, b64)
+          if not ok or not payload then return end
+          local cjson = require("cjson.safe")
+          local claims, err = cjson.decode(payload)
+          if not claims then return end
+          if claims.sub then
+            kong.service.request.set_header("X-User-Id", claims.sub)
+          end
+          if claims.email then
+            kong.service.request.set_header("X-User-Email", claims.email)
+          end
+          if claims.role then
+            kong.service.request.set_header("X-User-Role", claims.role)
+          end
+
 # ─── Services & Routes ───────────────────────────────────────────
 services:
+  # Note: The auth service (GoTrue) does NOT get the jwt plugin — it
+  # issues JWTs; clients hit it to log in before they have a token.
   - name: auth
     url: http://gotrue:9999
     routes:
@@ -87,6 +139,12 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
           - name: rate-limiting
             config:
               policy: local
@@ -106,6 +164,12 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
           - name: rate-limiting
             config:
               policy: local
@@ -124,6 +188,12 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
           - name: rate-limiting
             config:
               policy: local
@@ -146,6 +216,15 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: ip-restriction
+            config:
+              allow: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1]
           - name: rate-limiting
             config:
               policy: local
@@ -164,6 +243,12 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
           - name: rate-limiting
             config:
               policy: local
@@ -182,6 +267,19 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: ip-restriction
+            config:
+              allow: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1]
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 64
+              size_unit: kilobytes
           - name: rate-limiting
             config:
               policy: local
@@ -200,6 +298,16 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 1
+              size_unit: megabytes
           - name: rate-limiting
             config:
               policy: local
@@ -218,6 +326,12 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
           - name: request-transformer
             config:
               remove:
@@ -237,6 +351,9 @@ services:
         paths: [/studio]
         strip_path: false
         plugins:
+          - name: ip-restriction
+            config:
+              allow: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1]
           - name: rate-limiting
             config:
               policy: local
@@ -255,6 +372,16 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 64
+              size_unit: kilobytes
           - name: rate-limiting
             config:
               policy: local
@@ -273,6 +400,16 @@ services:
             config:
               key_names: [apikey]
               hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 16
+              size_unit: kilobytes
           - name: rate-limiting
             config:
               policy: local

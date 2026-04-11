@@ -6,21 +6,20 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/09 23:33:59 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:51:57 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/04/11 12:30:00 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 const express = require('express');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
-const crypto = require('node:crypto');
-const { register } = require('prom-client');
 const healthRoutes = require('./routes/health');
 const databaseRoutes = require('./routes/databases');
 const { initDb } = require('./lib/db');
 
 // ─── Environment validation ──────────────────────────────────────
-const required = ['DATABASE_URL', 'JWT_SECRET', 'VAULT_ENC_KEY'];
+// JWT verification is handled by Kong; JWT_SECRET no longer required here.
+const required = ['DATABASE_URL', 'VAULT_ENC_KEY'];
 const missing = required.filter(k => !process.env[k]);
 if (missing.length > 0) {
   console.error(`Missing required environment variables: ${missing.join(', ')}`);
@@ -39,10 +38,9 @@ const logger = pino({
 const app = express();
 app.use(express.json({ limit: '64kb' }));
 
-// ─── Correlation ID ──────────────────────────────────────────────
-app.use((req, res, next) => {
-  req.requestId = req.headers['x-request-id'] || crypto.randomUUID();
-  res.setHeader('X-Request-ID', req.requestId);
+// Correlation ID is injected by Kong's correlation-id plugin (X-Request-ID).
+app.use((req, _res, next) => {
+  req.requestId = req.headers['x-request-id'] || 'no-request-id';
   next();
 });
 
@@ -52,11 +50,7 @@ app.use(pinoHttp({ logger, genReqId: (req) => req.requestId }));
 app.use('/', healthRoutes);
 app.use('/databases', databaseRoutes);
 
-// ─── Prometheus metrics ──────────────────────────────────────────
-app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', register.contentType);
-  res.send(await register.metrics());
-});
+// Prometheus metrics are now exposed by Kong's prometheus plugin on :8001/metrics.
 
 // ─── Error handler ───────────────────────────────────────────────
 app.use((err, req, res, _next) => {

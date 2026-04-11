@@ -1,4 +1,15 @@
-# File: config/loki/loki.yaml
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    loki.yaml                                          :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/04/10 00:34:17 by dlesieur          #+#    #+#              #
+#    Updated: 2026/04/10 00:34:21 by dlesieur         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 # Loki configuration for mini-BaaS log aggregation
 auth_enabled: false
 
