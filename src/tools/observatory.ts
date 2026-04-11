@@ -838,3 +838,105 @@ function main(): void {
 		activeStreams.forEach((sub) => sub.unsubscribe());
 		removePidFile();
 		process.exit(0);
+	};
+	process.on('SIGINT', shutdown);
+	process.on('SIGTERM', shutdown);
+
+	// ── Banner ──
+	if (mode !== 'headless') {
+		process.stdout.write(`
+${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║   ${WHITE}mini-BaaS Observatory${CYAN}                                   ║
+║   ${DIM}Real-time log stream${RESET}${BOLD}${CYAN}                                     ║
+║   ${DIM}Type ${WHITE}help${DIM} for commands    ${RESET}${BOLD}${CYAN}                               ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝${RESET}
+
+`);
+	}
+
+	// ── Show initial health matrix (once, on-demand only after this) ──
+	if (mode !== 'headless') {
+		process.stdout.write(renderHealthMatrix() + '\n');
+	}
+
+	// ── Log output function (respects filter) ──
+	function outputLog(entry: LogEntry): void {
+		const result = formatLogEntry(entry);
+		if (!result) return;
+		if (!matchesFilter(filterState, result.level, result.service, result.formatted)) return;
+		process.stdout.write(result.formatted + '\n');
+	}
+
+	// ── Attach / Detach containers ──
+	function attachContainer(containerId: string, service: string): void {
+		if (activeStreams.has(containerId)) return;
+
+		const log$ = containerLogs$(containerId, service).pipe(
+			catchError(() => EMPTY),
+			finalize(() => activeStreams.delete(containerId)),
+			takeUntil(destroy$),
+		);
+
+		const sub = log$.subscribe({
+			next: (entry) => outputLog(entry),
+		});
+
+		activeStreams.set(containerId, sub);
+	}
+
+	function detachContainer(containerId: string): void {
+		const sub = activeStreams.get(containerId);
+		if (sub) {
+			sub.unsubscribe();
+			activeStreams.delete(containerId);
+		}
+	}
+
+	// ── Attach to existing containers ──
+	const existing = listContainers().filter((c) => c.health !== 'exited' && c.health !== 'created');
+
+	if (existing.length === 0) {
+		process.stdout.write(
+			`${YELLOW}${BOLD}No running containers found.${RESET}\n` +
+			`${DIM}Listening for Docker events — containers will be attached when started…${RESET}\n\n`,
+		);
+	} else {
+		process.stdout.write(
+			`${GREEN}${BOLD}Attaching to ${existing.length} running containers…${RESET}\n\n`,
+		);
+		for (const c of existing) {
+			attachContainer(c.id, c.service);
+		}
+	}
+
+	// ── Docker Events (dynamic attach/detach) ──
+	const events$ = dockerEvents$().pipe(
+		catchError(() => EMPTY),
+		takeUntil(destroy$),
+	);
+
+	subscriptions.push(events$.subscribe({
+		next: (evt) => {
+			if (evt.type === 'start') {
+				process.stdout.write(
+					`\n${GREEN}${BOLD}▶ Container started: ${evt.service}${RESET}\n`,
+				);
+				setTimeout(() => attachContainer(evt.containerId, evt.service), 500);
+			} else if (evt.type === 'stop' || evt.type === 'die') {
+				process.stdout.write(
+					`\n${RED}${BOLD}■ Container stopped: ${evt.service}${RESET}\n`,
+				);
+				detachContainer(evt.containerId);
+			}
+		},
+	}));
+
+	// ── Interactive prompt (only in interactive mode) ──
+	if (mode === 'interactive') {
+		rl = startInteractivePrompt(filterState, shutdown);
+	}
+}
+
+main();
