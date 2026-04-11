@@ -578,3 +578,123 @@ function formatLogEntry(entry: LogEntry): { formatted: string; level: LogLevel; 
 	const levelColor = LEVEL_COLORS[parsed.level] ?? DIM;
 	const levelStr = `${levelColor}${BOLD}${pad(parsed.level, 5)}${RESET}`;
 
+	return {
+		formatted: `${ts}  ${svcLabel} ${levelStr}  ${parsed.message}`,
+		level: parsed.level,
+		service: entry.service,
+	};
+}
+
+// ─── Filter State (mutable, changed by interactive commands) ────────────────
+
+interface FilterState {
+	/** Only show these levels (empty = all) */
+	levels: Set<LogLevel>;
+	/** Only show these services (empty = all) */
+	services: Set<string>;
+	/** Pause output (buffer kept flowing, just not printed) */
+	paused: boolean;
+	/** Grep pattern */
+	grep: RegExp | null;
+}
+
+function defaultFilter(): FilterState {
+	return { levels: new Set(), services: new Set(), paused: false, grep: null };
+}
+
+function matchesFilter(f: FilterState, level: LogLevel, service: string, formatted: string): boolean {
+	if (f.paused) return false;
+	if (f.levels.size > 0 && !f.levels.has(level)) return false;
+	if (f.services.size > 0 && !f.services.has(service)) return false;
+	if (f.grep && !f.grep.test(stripAnsi(formatted))) return false;
+	return true;
+}
+
+// ─── Interactive REPL ───────────────────────────────────────────────────────
+
+const HELP_TEXT = `
+${BOLD}${CYAN}─── Observatory Commands ───────────────────────────────────────${RESET}
+
+  ${BOLD}${GREEN}status${RESET}  ${DIM}|${RESET} ${GREEN}health${RESET} ${DIM}|${RESET} ${GREEN}s${RESET}      Show the health matrix
+  ${BOLD}${GREEN}errors${RESET}  ${DIM}|${RESET} ${GREEN}e${RESET}                Filter: show only ERROR + FATAL
+  ${BOLD}${GREEN}warnings${RESET}  ${DIM}|${RESET} ${GREEN}w${RESET}              Filter: show only WARN + ERROR + FATAL
+  ${BOLD}${GREEN}info${RESET}  ${DIM}|${RESET} ${GREEN}i${RESET}                  Filter: show INFO and above
+  ${BOLD}${GREEN}all${RESET}  ${DIM}|${RESET} ${GREEN}a${RESET}                   Reset: show all log levels
+  ${BOLD}${GREEN}service${RESET} ${WHITE}<name,...>${RESET}       Filter: show only specific service(s)
+  ${BOLD}${GREEN}grep${RESET} ${WHITE}<pattern>${RESET}          Filter: show lines matching regex
+  ${BOLD}${GREEN}grep${RESET}                       Clear grep filter
+  ${BOLD}${GREEN}pause${RESET}  ${DIM}|${RESET} ${GREEN}p${RESET}                Pause log output
+  ${BOLD}${GREEN}resume${RESET}  ${DIM}|${RESET} ${GREEN}r${RESET}               Resume log output
+  ${BOLD}${GREEN}clear${RESET}  ${DIM}|${RESET} ${GREEN}c${RESET}                Clear the terminal
+  ${BOLD}${GREEN}filter${RESET}  ${DIM}|${RESET} ${GREEN}f${RESET}               Show current filter state
+  ${BOLD}${GREEN}services${RESET}                   List available services
+  ${BOLD}${GREEN}help${RESET}  ${DIM}|${RESET} ${GREEN}h${RESET}  ${DIM}|${RESET} ${GREEN}?${RESET}            Show this help
+  ${BOLD}${GREEN}quit${RESET}  ${DIM}|${RESET} ${GREEN}q${RESET}  ${DIM}|${RESET} ${GREEN}exit${RESET}         Stop the observatory
+
+${DIM}  Combine services: ${RESET}${BOLD}service kong,realtime${RESET}
+${CYAN}────────────────────────────────────────────────────────────────${RESET}
+`;
+
+const PROMPT = `${BOLD}${CYAN}observatory${RESET}${DIM}>${RESET} `;
+
+function startInteractivePrompt(
+	filterState: FilterState,
+	shutdownFn: () => void,
+): RLInterface {
+	const rl = createInterface({
+		input: process.stdin,
+		output: process.stdout,
+		prompt: PROMPT,
+		terminal: true,
+	});
+
+	// Show prompt after banner + initial health matrix
+	rl.prompt();
+
+	rl.on('line', (input) => {
+		const raw = input.trim();
+		if (!raw) { rl.prompt(); return; }
+
+		const [cmd = '', ...rest] = raw.split(/\s+/);
+		const arg = rest.join(' ');
+
+		switch (cmd.toLowerCase()) {
+			// ── Health ──
+			case 'status':
+			case 'health':
+			case 's':
+				process.stdout.write(renderHealthMatrix() + '\n');
+				break;
+
+			// ── Level filters ──
+			case 'errors':
+			case 'e':
+				filterState.levels = new Set<LogLevel>(['ERROR', 'FATAL']);
+				filterState.paused = false;
+				process.stdout.write(`${GREEN}Filter: ${BOLD}ERROR + FATAL${RESET}\n`);
+				break;
+
+			case 'warnings':
+			case 'w':
+				filterState.levels = new Set<LogLevel>(['WARN', 'ERROR', 'FATAL']);
+				filterState.paused = false;
+				process.stdout.write(`${GREEN}Filter: ${BOLD}WARN + ERROR + FATAL${RESET}\n`);
+				break;
+
+			case 'info':
+			case 'i':
+				filterState.levels = new Set<LogLevel>(['INFO', 'WARN', 'ERROR', 'FATAL']);
+				filterState.paused = false;
+				process.stdout.write(`${GREEN}Filter: ${BOLD}INFO and above${RESET}\n`);
+				break;
+
+			case 'all':
+			case 'a':
+				filterState.levels.clear();
+				filterState.services.clear();
+				filterState.grep = null;
+				filterState.paused = false;
+				process.stdout.write(`${GREEN}Filter reset: ${BOLD}showing all logs${RESET}\n`);
+				break;
+
+			// ── Service filter ──
