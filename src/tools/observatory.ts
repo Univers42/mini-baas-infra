@@ -308,3 +308,123 @@ function renderHealthMatrix(): string {
 		const c = serviceMap.get(svc);
 		const color = colorFor(svc);
 		let statusCol: string;
+		let uptimeCol: string;
+
+		if (!c) {
+			statusCol = `${DIM}○ —${RESET}`;
+			uptimeCol = `${DIM}—${RESET}`;
+		} else if (c.health === 'healthy') {
+			statusCol = `${GREEN}● healthy${RESET}`;
+			uptimeCol = c.startedAt;
+		} else if (c.health === 'running') {
+			statusCol = `${YELLOW}● running${RESET}`;
+			uptimeCol = c.startedAt;
+		} else if (c.health === 'starting') {
+			statusCol = `${YELLOW}◐ starting${RESET}`;
+			uptimeCol = c.startedAt;
+		} else if (c.health === 'unhealthy') {
+			statusCol = `${RED}● unhealthy${RESET}`;
+			uptimeCol = c.startedAt;
+		} else if (c.health === 'exited') {
+			const exitMatch = c.status.match(/Exited\s*\((\d+)\)/);
+			const exitCode = exitMatch ? parseInt(exitMatch[1]!, 10) : -1;
+			statusCol = exitCode === 0
+				? `${GREEN}✓ done${RESET}`
+				: `${RED}✗ exit(${exitCode})${RESET}`;
+			uptimeCol = `${DIM}${c.startedAt}${RESET}`;
+		} else {
+			statusCol = `${DIM}? ${c.health}${RESET}`;
+			uptimeCol = c.startedAt;
+		}
+
+		lines.push(colRow(`${color}${svc}${RESET}`, statusCol, uptimeCol));
+	}
+
+	for (const c of containers) {
+		if (isKnownService(c.service)) continue;
+		lines.push(colRow(
+			`${colorFor(c.service)}${c.service || c.name}${RESET}`,
+			`${YELLOW}● ${c.health}${RESET}`,
+			c.startedAt,
+		));
+	}
+
+	const total = containers.length;
+	const up = containers.filter((c) => ['healthy', 'running', 'starting'].includes(c.health)).length;
+	const unhealthy = containers.filter((c) => c.health === 'unhealthy').length;
+	const exited = containers.filter((c) => c.health === 'exited').length;
+
+	lines.push(hrCols('├', '┴', '┤'));
+	const summaryLeft = `${GREEN}● ${up} up${RESET}   ${unhealthy > 0 ? RED : DIM}● ${unhealthy} unhealthy${RESET}   ${DIM}✗ ${exited} exited${RESET}`;
+	const summaryRight = `${BOLD}${total}${RESET} ${DIM}total${RESET}`;
+	const sGap = INNER - 2 - stripAnsi(summaryLeft).length - stripAnsi(summaryRight).length;
+	lines.push(`${B} ${summaryLeft}${' '.repeat(Math.max(1, sGap))}${summaryRight} ${B}`);
+	lines.push(hrFull('└', '┘'));
+	lines.push('');
+
+	return lines.join('\n');
+}
+
+// ─── Smart Log Formatting ───────────────────────────────────────────────────
+
+type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
+
+interface ParsedLog {
+	level: LogLevel;
+	message: string;
+	skip?: boolean;
+}
+
+const LEVEL_COLORS: Record<LogLevel, string> = {
+	TRACE: DIM,
+	DEBUG: BLUE,
+	INFO: GREEN,
+	WARN: YELLOW,
+	ERROR: RED,
+	FATAL: BRIGHT_RED,
+};
+
+function pinoLevel(n: number | string): LogLevel {
+	const v = typeof n === 'string' ? parseInt(n, 10) : n;
+	if (v >= 60) return 'FATAL';
+	if (v >= 50) return 'ERROR';
+	if (v >= 40) return 'WARN';
+	if (v >= 30) return 'INFO';
+	if (v >= 20) return 'DEBUG';
+	return 'TRACE';
+}
+
+function strLevel(s: string): LogLevel {
+	const l = s.toLowerCase();
+	if (l === 'fatal' || l === 'crit' || l === 'critical') return 'FATAL';
+	if (l === 'error' || l === 'err') return 'ERROR';
+	if (l === 'warn' || l === 'warning') return 'WARN';
+	if (l === 'info' || l === 'notice' || l === 'log') return 'INFO';
+	if (l === 'debug') return 'DEBUG';
+	if (l === 'trace') return 'TRACE';
+	return 'INFO';
+}
+
+function mongoSeverity(s: string): LogLevel {
+	switch (s) {
+		case 'F': return 'FATAL';
+		case 'E': return 'ERROR';
+		case 'W': return 'WARN';
+		case 'D': case 'D1': case 'D2': case 'D3': case 'D4': case 'D5': return 'DEBUG';
+		default: return 'INFO';
+	}
+}
+
+function isHealthCheck(url: string): boolean {
+	return /\/health\/(live|ready|startup)/.test(url);
+}
+
+// ── Format Parsers ──────────────────────────────────────────────────────────
+
+function tryPino(raw: string): ParsedLog | null {
+	try {
+		const j = JSON.parse(raw) as Record<string, unknown>;
+		if (typeof j['level'] !== 'number' || j['time'] == null) return null;
+
+		const level = pinoLevel(j['level'] as number);
+		const msg = String(j['msg'] ?? j['message'] ?? '');
