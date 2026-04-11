@@ -213,3 +213,98 @@ function containerLogs$(containerId: string, service: string): Observable<LogEnt
 				subscriber.next({ service, stream, message: line, timestamp: timestamp() });
 			}
 		};
+
+		proc.stdout?.on('data', (d: Buffer) => processLine(d, 'stdout'));
+		proc.stderr?.on('data', (d: Buffer) => processLine(d, 'stderr'));
+		proc.on('close', () => subscriber.complete());
+		proc.on('error', (err) => subscriber.error(err));
+
+		return () => { proc.kill('SIGTERM'); };
+	});
+}
+
+// ─── Observable: Docker events ──────────────────────────────────────────────
+
+interface DockerEvent {
+	type: 'start' | 'stop' | 'die' | 'create';
+	containerId: string;
+	service: string;
+}
+
+function dockerEvents$(): Observable<DockerEvent> {
+	return new Observable<DockerEvent>((subscriber) => {
+		const proc = spawn(
+			'docker',
+			[
+				'events',
+				'--filter', `label=com.docker.compose.project=${COMPOSE_PROJECT}`,
+				'--filter', 'type=container',
+				'--filter', 'event=start',
+				'--filter', 'event=stop',
+				'--filter', 'event=die',
+				'--format', '{{.Status}}|{{.ID}}|{{.Actor.Attributes.com.docker.compose.service}}',
+			],
+			{ stdio: ['ignore', 'pipe', 'pipe'] },
+		);
+
+		proc.stdout?.on('data', (data: Buffer) => {
+			for (const raw of data.toString().split('\n')) {
+				const line = raw.trim();
+				if (!line) continue;
+				const [status = '', id = '', svc = ''] = line.split('|');
+				const type = status as DockerEvent['type'];
+				if (['start', 'stop', 'die'].includes(type)) {
+					subscriber.next({ type, containerId: id.substring(0, 12), service: svc });
+				}
+			}
+		});
+
+		proc.on('close', () => subscriber.complete());
+		proc.on('error', (err) => subscriber.error(err));
+		return () => proc.kill('SIGTERM');
+	});
+}
+
+// ─── Health Matrix ──────────────────────────────────────────────────────────
+
+function renderHealthMatrix(): string {
+	const containers = listContainers();
+	const serviceMap = new Map<string, ContainerInfo>();
+	for (const c of containers) serviceMap.set(c.service, c);
+
+	const C1 = 20;
+	const C2 = 14;
+	const C3 = 26;
+	const INNER = C1 + C2 + C3 + 8;
+
+	const B = `${CYAN}│${RESET}`;
+
+	const colRow = (a: string, b: string, c: string) =>
+		`${B} ${vpad(a, C1)} ${B} ${vpad(b, C2)} ${B} ${vpad(c, C3)} ${B}`;
+
+	const hrFull = (l: string, r: string) =>
+		`${CYAN}${l}${'─'.repeat(INNER)}${r}${RESET}`;
+
+	const hrCols = (l: string, x: string, r: string) =>
+		`${CYAN}${l}${'─'.repeat(C1 + 2)}${x}${'─'.repeat(C2 + 2)}${x}${'─'.repeat(C3 + 2)}${r}${RESET}`;
+
+	const lines: string[] = [''];
+
+	lines.push(hrFull('┌', '┐'));
+	const titleText = `${BOLD}${WHITE}mini-BaaS Health Matrix${RESET}`;
+	const tsText = `${DIM}${timestamp()}${RESET}`;
+	const titleGap = INNER - 2 - 22 - 8;
+	lines.push(`${B} ${titleText}${' '.repeat(Math.max(1, titleGap))}${tsText} ${B}`);
+
+	lines.push(hrCols('├', '┬', '┤'));
+	lines.push(colRow(
+		`${BOLD}Service${RESET}`,
+		`${BOLD}Status${RESET}`,
+		`${BOLD}Uptime${RESET}`,
+	));
+	lines.push(hrCols('├', '┼', '┤'));
+
+	for (const svc of SERVICES) {
+		const c = serviceMap.get(svc);
+		const color = colorFor(svc);
+		let statusCol: string;
