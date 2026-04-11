@@ -748,3 +748,329 @@ export class RealtimeService {
     await this.http.axiosRef.post(`${this.baseUrl}/v1/publish`, {
       topic,
       event_type: eventType,
+      payload,
+    });
+  }
+
+  /** Publish multiple events in one request (up to 1000). */
+  async publishBatch(
+    events: Array<{
+      topic: string;
+      event_type: string;
+      payload: any;
+    }>,
+  ): Promise<void> {
+    await this.http.axiosRef.post(`${this.baseUrl}/v1/publish/batch`, {
+      events,
+    });
+  }
+
+  /** Check realtime engine health. */
+  async health(): Promise<{
+    status: string;
+    connections: number;
+    subscriptions: number;
+  }> {
+    const { data } = await this.http.axiosRef.get(`${this.baseUrl}/v1/health`);
+    return data;
+  }
+}
+```
+
+### WebSocket Client from Node.js
+
+```typescript
+// src/realtime/realtime-ws.client.ts
+import WebSocket from "ws";
+
+export class RealtimeWsClient {
+  private ws: WebSocket | null = null;
+  private authenticated = false;
+  private handlers = new Map<string, (event: any) => void>();
+
+  constructor(
+    private readonly url: string,
+    private readonly token: string,
+  ) {}
+
+  connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.ws = new WebSocket(this.url);
+
+      this.ws.on("open", () => {
+        this.ws!.send(JSON.stringify({ type: "AUTH", token: this.token }));
+      });
+
+      this.ws.on("message", (data) => {
+        const msg = JSON.parse(data.toString());
+        if (msg.type === "AUTH_OK") {
+          this.authenticated = true;
+          resolve();
+        } else if (msg.type === "EVENT") {
+          this.handlers.get(msg.sub_id)?.(msg.event);
+        } else if (msg.type === "ERROR") {
+          console.error(`Realtime error: ${msg.code} — ${msg.message}`);
+          if (msg.code === "AUTH_FAILED") reject(new Error(msg.message));
+        }
+      });
+
+      this.ws.on("error", reject);
+    });
+  }
+
+  subscribe(subId: string, topic: string, handler: (event: any) => void) {
+    this.handlers.set(subId, handler);
+    this.ws?.send(
+      JSON.stringify({
+        type: "SUBSCRIBE",
+        sub_id: subId,
+        topic,
+      }),
+    );
+  }
+
+  publish(topic: string, eventType: string, payload: any) {
+    this.ws?.send(
+      JSON.stringify({
+        type: "PUBLISH",
+        topic,
+        event_type: eventType,
+        payload,
+      }),
+    );
+  }
+
+  close() {
+    this.ws?.close();
+  }
+}
+
+// Usage:
+const client = new RealtimeWsClient("ws://realtime:4000/ws", jwtToken);
+await client.connect();
+
+client.subscribe("pg-orders", "pg/public/orders/**", (event) => {
+  console.log("Order event:", event.event_type, event.payload);
+});
+```
+
+### NestJS Gateway (WebSocket Bridge)
+
+```typescript
+// src/realtime/realtime.gateway.ts
+import {
+  WebSocketGateway,
+  OnGatewayInit,
+  OnGatewayConnection,
+} from "@nestjs/websockets";
+import { RealtimeWsClient } from "./realtime-ws.client";
+
+@WebSocketGateway({ path: "/ws/relay" })
+export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection {
+  private rtClient: RealtimeWsClient;
+
+  async afterInit() {
+    // Connect to the Rust realtime engine as a backend subscriber
+    this.rtClient = new RealtimeWsClient(
+      "ws://realtime:4000/ws",
+      process.env.SERVICE_JWT_TOKEN!,
+    );
+    await this.rtClient.connect();
+
+    // Subscribe to all events and relay to NestJS WebSocket clients
+    this.rtClient.subscribe("all", "**", (event) => {
+      // Broadcast to connected NestJS WS clients
+      this.server.emit("realtime-event", event);
+    });
+  }
+}
+```
+
+---
+
+## REST API Reference
+
+### `GET /v1/health`
+
+Returns server health and telemetry.
+
+**Response** `200`:
+
+```json
+{
+  "status": "ok",
+  "connections": 12,
+  "subscriptions": 48,
+  "uptime_seconds": 3600,
+  "filter_index": {
+    "slots_active": 48,
+    "evaluations_total": 15230,
+    "matches_total": 8920,
+    "last_eval_us": 12,
+    "peak_eval_us": 45,
+    "circuit_trips": 0
+  }
+}
+```
+
+`status` is `"ok"` normally, `"degraded"` if the circuit breaker has tripped.
+
+### `POST /v1/publish`
+
+Publish a single event.
+
+**Request**:
+
+```json
+{
+  "topic": "orders/created",
+  "event_type": "order.created",
+  "payload": { "orderId": 42 },
+  "idempotency_key": "abc-123",
+  "ttl_ms": 60000
+}
+```
+
+**Response** `200`:
+
+```json
+{
+  "event_id": "01965abc-1234-7def-8901-234567890abc",
+  "sequence": 7,
+  "delivered_to_bus": true
+}
+```
+
+### `POST /v1/publish/batch`
+
+Publish up to 1000 events atomically.
+
+**Request**:
+
+```json
+{
+  "events": [
+    { "topic": "t1", "event_type": "e1", "payload": {} },
+    { "topic": "t2", "event_type": "e2", "payload": {} }
+  ]
+}
+```
+
+**Response** `200`:
+
+```json
+{
+  "results": [
+    { "event_id": "...", "sequence": 1, "delivered_to_bus": true },
+    { "event_id": "...", "sequence": 1, "delivered_to_bus": true }
+  ]
+}
+```
+
+---
+
+## Configuration Reference
+
+### Environment Variables
+
+| Variable                | Default           | Description                           |
+| ----------------------- | ----------------- | ------------------------------------- |
+| `REALTIME_HOST`         | `0.0.0.0`         | Bind address                          |
+| `REALTIME_PORT`         | `9090`            | Bind port (set to `4000` in compose)  |
+| `REALTIME_STATIC_DIR`   | `/app/static`     | Static file serving directory         |
+| `REALTIME_CONFIG`       | —                 | Path to TOML/JSON config file         |
+| `REALTIME_JWT_SECRET`   | —                 | HMAC-SHA256 secret (enables JWT auth) |
+| `REALTIME_JWT_ISSUER`   | —                 | Expected JWT issuer claim             |
+| `REALTIME_JWT_AUDIENCE` | —                 | Expected JWT audience claim           |
+| `REALTIME_PG_URL`       | —                 | PostgreSQL connection string          |
+| `REALTIME_PG_CHANNEL`   | `realtime_events` | LISTEN channel name                   |
+| `REALTIME_PG_PREFIX`    | `pg`              | Topic prefix for PG events            |
+| `REALTIME_MONGO_URI`    | —                 | MongoDB connection URI                |
+| `REALTIME_MONGO_DB`     | `syncspace`       | MongoDB database name                 |
+| `REALTIME_MONGO_PREFIX` | `mongo`           | Topic prefix for Mongo events         |
+| `RUST_LOG`              | `info`            | Log level filter                      |
+
+### TOML Configuration File
+
+```toml
+host       = "0.0.0.0"
+port       = 4000
+static_dir = "/app/static"
+
+[auth]
+type = "jwt"
+secret = "your-32-char-secret-here"
+# issuer = "mini-baas"
+# audience = "mini-baas"
+
+[event_bus]
+type = "InProcess"
+capacity = 65536
+
+[performance]
+send_queue_capacity = 256
+fanout_workers = 4
+dispatch_channel_capacity = 65536
+
+[engine.limits]
+max_patterns = 100000
+max_total_subscriptions = 500000
+max_subscriptions_per_connection = 1000
+```
+
+---
+
+## Troubleshooting
+
+### Container is healthy but no CDC events
+
+**Check**: Is `REALTIME_MONGO_URI` set (not `REALTIME_MONGO_URL`)?
+
+```bash
+docker exec mini-baas-realtime env | grep REALTIME_MONGO
+# Should show: REALTIME_MONGO_URI=mongodb://...
+```
+
+Look for `"MongoDB Change Streams configured from env"` in the logs:
+
+```bash
+docker logs mini-baas-realtime 2>&1 | grep -i "configured"
+```
+
+### PostgreSQL CDC not firing
+
+1. Ensure the `realtime_events` NOTIFY channel is being listened to:
+
+   ```bash
+   docker logs mini-baas-realtime 2>&1 | grep "CDC producer started"
+   ```
+
+2. Ensure triggers exist on your tables:
+   ```sql
+   SELECT tgname, tgrelid::regclass
+   FROM pg_trigger
+   WHERE tgfoid = 'realtime_notify'::regproc;
+   ```
+
+### WebSocket connection refused
+
+- Through Kong: `ws://localhost:8000/realtime/ws`
+- Direct (dev only): `ws://localhost:4000/ws` (requires port mapping)
+
+### AUTH_FAILED errors
+
+The JWT secret must match between GoTrue and realtime:
+
+```bash
+docker exec mini-baas-realtime env | grep JWT_SECRET
+docker exec mini-baas-gotrue env | grep JWT_SECRET
+```
+
+### "PostgreSQL connection error: db error" in logs
+
+This is a **transient** error that occurs when PostgreSQL restarts. The
+CDC producer automatically reconnects. Check if Postgres is healthy:
+
+```bash
+docker exec mini-baas-postgres pg_isready
+```
