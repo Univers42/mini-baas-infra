@@ -698,3 +698,143 @@ function startInteractivePrompt(
 				break;
 
 			// ── Service filter ──
+			case 'service':
+			case 'svc':
+				if (!arg) {
+					filterState.services.clear();
+					process.stdout.write(`${GREEN}Service filter cleared: ${BOLD}showing all services${RESET}\n`);
+				} else {
+					const svcs = arg.split(',').map((s) => s.trim()).filter(Boolean);
+					filterState.services = new Set(svcs);
+					process.stdout.write(`${GREEN}Filter: services = ${BOLD}${svcs.join(', ')}${RESET}\n`);
+				}
+				break;
+
+			// ── Grep ──
+			case 'grep':
+			case 'g':
+				if (!arg) {
+					filterState.grep = null;
+					process.stdout.write(`${GREEN}Grep filter cleared${RESET}\n`);
+				} else {
+					try {
+						filterState.grep = new RegExp(arg, 'i');
+						process.stdout.write(`${GREEN}Grep: ${BOLD}/${arg}/i${RESET}\n`);
+					} catch {
+						process.stdout.write(`${RED}Invalid regex: ${arg}${RESET}\n`);
+					}
+				}
+				break;
+
+			// ── Pause / Resume ──
+			case 'pause':
+			case 'p':
+				filterState.paused = true;
+				process.stdout.write(`${YELLOW}${BOLD}⏸  Log output paused${RESET} ${DIM}(type 'resume' to continue)${RESET}\n`);
+				break;
+
+			case 'resume':
+			case 'r':
+				filterState.paused = false;
+				process.stdout.write(`${GREEN}${BOLD}▶  Log output resumed${RESET}\n`);
+				break;
+
+			// ── Clear ──
+			case 'clear':
+			case 'c':
+				process.stdout.write('\x1Bc');
+				break;
+
+			// ── Show filter ──
+			case 'filter':
+			case 'f':
+				process.stdout.write(
+					`\n${BOLD}Current filter:${RESET}\n` +
+					`  Levels:   ${filterState.levels.size === 0 ? `${DIM}all${RESET}` : Array.from(filterState.levels).join(', ')}\n` +
+					`  Services: ${filterState.services.size === 0 ? `${DIM}all${RESET}` : Array.from(filterState.services).join(', ')}\n` +
+					`  Grep:     ${filterState.grep ? `/${filterState.grep.source}/${filterState.grep.flags}` : `${DIM}none${RESET}`}\n` +
+					`  Paused:   ${filterState.paused ? `${YELLOW}yes${RESET}` : `${GREEN}no${RESET}`}\n\n`,
+				);
+				break;
+
+			// ── Services list ──
+			case 'services':
+				process.stdout.write(`\n${BOLD}Available services:${RESET}\n`);
+				for (const svc of SERVICES) {
+					process.stdout.write(`  ${colorFor(svc)}${svc}${RESET}\n`);
+				}
+				process.stdout.write('\n');
+				break;
+
+			// ── Help ──
+			case 'help':
+			case 'h':
+			case '?':
+				process.stdout.write(HELP_TEXT);
+				break;
+
+			// ── Quit ──
+			case 'quit':
+			case 'q':
+			case 'exit':
+				shutdownFn();
+				return;
+
+			default:
+				process.stdout.write(`${DIM}Unknown command: ${cmd}. Type 'help' for available commands.${RESET}\n`);
+		}
+
+		rl.prompt();
+	});
+
+	rl.on('close', () => {
+		shutdownFn();
+	});
+
+	return rl;
+}
+
+// ─── PID File (headless mode) ───────────────────────────────────────────────
+
+function writePidFile(): void {
+	fs.writeFileSync(PID_FILE, String(process.pid), 'utf-8');
+}
+
+function removePidFile(): void {
+	try { fs.unlinkSync(PID_FILE); } catch { /* ignore */ }
+}
+
+// ─── Main ───────────────────────────────────────────────────────────────────
+
+function main(): void {
+	SERVICES = getActiveServices();
+	const mode = resolveMode();
+
+	const destroy$ = new Subject<void>();
+	const subscriptions: Subscription[] = [];
+	const activeStreams = new Map<string, Subscription>();
+	const filterState = defaultFilter();
+	let rl: RLInterface | null = null;
+	let shuttingDown = false;
+
+	// ── PID file for headless ──
+	if (mode === 'headless') {
+		writePidFile();
+		process.on('exit', removePidFile);
+	}
+
+	// ── Graceful shutdown ──
+	const shutdown = () => {
+		if (shuttingDown) return;
+		shuttingDown = true;
+		if (rl) {
+			rl.removeAllListeners();
+			rl.close();
+		}
+		process.stdout.write(`\n${YELLOW}${BOLD}Observatory shutting down…${RESET}\n`);
+		destroy$.next();
+		destroy$.complete();
+		for (const sub of subscriptions) sub.unsubscribe();
+		activeStreams.forEach((sub) => sub.unsubscribe());
+		removePidFile();
+		process.exit(0);
