@@ -448,3 +448,303 @@ ws.send(
 
 ## Database CDC (Change Data Capture)
 
+### PostgreSQL CDC
+
+The engine uses `LISTEN/NOTIFY` to capture changes. When a row is
+inserted, updated, or deleted in a watched table, a JSON notification
+is sent over the `realtime_events` channel.
+
+**Topic format**: `pg/<schema>/<table>/<event_type>`
+
+**Example events**:
+
+```
+pg/public/orders/INSERT
+pg/public/orders/UPDATE
+pg/public/users/DELETE
+```
+
+**Setup**: The PostgreSQL CDC producer automatically creates the
+`realtime_notify()` trigger function. For each table you want to watch,
+create a trigger:
+
+```sql
+-- Enable CDC for the 'orders' table
+CREATE OR REPLACE TRIGGER orders_realtime_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON orders
+  FOR EACH ROW
+  EXECUTE FUNCTION realtime_notify();
+```
+
+**Event payload** (delivered to subscribers):
+
+```json
+{
+  "event_id": "01965abc-...",
+  "topic": "pg/public/orders",
+  "event_type": "INSERT",
+  "sequence": 12,
+  "timestamp": "2026-04-11T15:30:00Z",
+  "payload": {
+    "schema": "public",
+    "table": "orders",
+    "old": null,
+    "new": { "id": 42, "customer": "alice", "total": 99.99 }
+  }
+}
+```
+
+### MongoDB CDC
+
+The engine uses MongoDB **Change Streams** (requires replica set) to
+capture insert/update/replace/delete operations.
+
+**Topic format**: `mongo/<database>/<collection>/<operation>`
+
+**Example events**:
+
+```
+mongo/syncspace/chat_messages/insert
+mongo/syncspace/users/update
+mongo/syncspace/orders/delete
+```
+
+**Event payload**:
+
+```json
+{
+  "event_id": "01965def-...",
+  "topic": "mongo/syncspace/chat_messages",
+  "event_type": "insert",
+  "sequence": 5,
+  "timestamp": "2026-04-11T15:31:00Z",
+  "payload": {
+    "operationType": "insert",
+    "ns": { "db": "syncspace", "coll": "chat_messages" },
+    "fullDocument": {
+      "_id": "663...",
+      "channelId": "ch-general",
+      "userId": "user-bob",
+      "content": "Hello from Mongo!",
+      "createdAt": "2026-04-11T15:31:00Z"
+    }
+  }
+}
+```
+
+**No setup needed** — MongoDB Change Streams watch all collections
+automatically. The MongoDB instance must be a replica set (the
+mini-BaaS `mongo` service is pre-configured as `rs0`).
+
+---
+
+## Frontend Integration (JavaScript)
+
+### Minimal WebSocket Client
+
+```javascript
+class RealtimeClient {
+  constructor(url, token) {
+    this.url = url;
+    this.token = token;
+    this.ws = null;
+    this.authenticated = false;
+    this.handlers = new Map(); // sub_id → callback
+    this.pendingSubs = [];
+    this.reconnectDelay = 1000;
+  }
+
+  connect() {
+    this.ws = new WebSocket(this.url);
+
+    this.ws.onopen = () => {
+      this.ws.send(JSON.stringify({ type: "AUTH", token: this.token }));
+    };
+
+    this.ws.onmessage = (evt) => {
+      const msg = JSON.parse(evt.data);
+      this._handleMessage(msg);
+    };
+
+    this.ws.onclose = () => {
+      this.authenticated = false;
+      // Auto-reconnect with exponential backoff
+      setTimeout(() => this.connect(), this.reconnectDelay);
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30000);
+    };
+
+    this.ws.onerror = () => this.ws.close();
+  }
+
+  subscribe(subId, topic, callback, filter = null) {
+    this.handlers.set(subId, callback);
+    const msg = { type: "SUBSCRIBE", sub_id: subId, topic };
+    if (filter) msg.filter = filter;
+
+    if (this.authenticated) {
+      this.ws.send(JSON.stringify(msg));
+    } else {
+      this.pendingSubs.push(msg);
+    }
+  }
+
+  unsubscribe(subId) {
+    this.handlers.delete(subId);
+    if (this.authenticated) {
+      this.ws.send(JSON.stringify({ type: "UNSUBSCRIBE", sub_id: subId }));
+    }
+  }
+
+  publish(topic, eventType, payload) {
+    if (this.authenticated) {
+      this.ws.send(
+        JSON.stringify({
+          type: "PUBLISH",
+          topic,
+          event_type: eventType,
+          payload,
+        }),
+      );
+    }
+  }
+
+  _handleMessage(msg) {
+    switch (msg.type) {
+      case "AUTH_OK":
+        this.authenticated = true;
+        this.reconnectDelay = 1000;
+        // Replay pending subscriptions
+        for (const sub of this.pendingSubs) {
+          this.ws.send(JSON.stringify(sub));
+        }
+        this.pendingSubs = [];
+        break;
+
+      case "EVENT":
+        const handler = this.handlers.get(msg.sub_id);
+        if (handler) handler(msg.event);
+        break;
+
+      case "ERROR":
+        console.error(`[Realtime] ${msg.code}: ${msg.message}`);
+        break;
+    }
+  }
+}
+```
+
+### Usage: React / Vanilla JS
+
+```javascript
+// 1. Create client (through Kong gateway)
+const rt = new RealtimeClient("ws://localhost:8000/realtime/ws", "<jwt-token>");
+rt.connect();
+
+// 2. Subscribe to PostgreSQL changes on the "orders" table
+rt.subscribe("orders", "pg/public/orders/*", (event) => {
+  console.log("Order changed:", event.event_type, event.payload);
+  // event.event_type = "INSERT" | "UPDATE" | "DELETE"
+  // event.payload = { old: {...}, new: {...} }
+});
+
+// 3. Subscribe to MongoDB changes with a filter
+rt.subscribe(
+  "chat-msgs",
+  "mongo/**",
+  (event) => {
+    console.log("New chat:", event.payload.fullDocument);
+  },
+  { event_type: { eq: "insert" } },
+);
+
+// 4. Subscribe to real-time presence
+rt.subscribe("presence", "presence/*", (event) => {
+  updatePresenceUI(event.payload);
+});
+
+// 5. Publish a cursor position (ephemeral, low-latency)
+document.addEventListener("mousemove", (e) => {
+  rt.publish("cursors/board-1", "cursor.move", {
+    x: e.clientX,
+    y: e.clientY,
+    userId: "me",
+  });
+});
+
+// 6. Unsubscribe when done
+rt.unsubscribe("orders");
+```
+
+### Usage: React Hook
+
+```typescript
+import { useEffect, useRef, useCallback } from 'react';
+
+function useRealtime(url: string, token: string) {
+  const clientRef = useRef<RealtimeClient | null>(null);
+
+  useEffect(() => {
+    const client = new RealtimeClient(url, token);
+    client.connect();
+    clientRef.current = client;
+    return () => client.ws?.close();
+  }, [url, token]);
+
+  const subscribe = useCallback((
+    subId: string,
+    topic: string,
+    callback: (event: any) => void,
+    filter?: object
+  ) => {
+    clientRef.current?.subscribe(subId, topic, callback, filter);
+    return () => clientRef.current?.unsubscribe(subId);
+  }, []);
+
+  const publish = useCallback((topic: string, eventType: string, payload: any) => {
+    clientRef.current?.publish(topic, eventType, payload);
+  }, []);
+
+  return { subscribe, publish };
+}
+
+// Usage in a component:
+function OrderList() {
+  const [orders, setOrders] = useState([]);
+  const { subscribe } = useRealtime(
+    'ws://localhost:8000/realtime/ws',
+    authToken
+  );
+
+  useEffect(() => {
+    return subscribe('orders', 'pg/public/orders/*', (event) => {
+      if (event.event_type === 'INSERT') {
+        setOrders(prev => [...prev, event.payload.new]);
+      }
+    });
+  }, [subscribe]);
+
+  return <ul>{orders.map(o => <li key={o.id}>{o.customer}</li>)}</ul>;
+}
+```
+
+---
+
+## Backend Integration (Node.js / NestJS)
+
+### Publishing Events from NestJS Services
+
+```typescript
+// src/realtime/realtime.service.ts
+import { Injectable, HttpService } from "@nestjs/common";
+
+@Injectable()
+export class RealtimeService {
+  private readonly baseUrl = "http://realtime:4000";
+
+  constructor(private readonly http: HttpService) {}
+
+  /** Publish a single event to the realtime bus. */
+  async publish(topic: string, eventType: string, payload: any): Promise<void> {
+    await this.http.axiosRef.post(`${this.baseUrl}/v1/publish`, {
+      topic,
+      event_type: eventType,
