@@ -153,3 +153,63 @@ interface ContainerInfo {
 	name: string;
 	service: string;
 	status: string;
+	health: string;
+	startedAt: string;
+}
+
+function listContainers(): ContainerInfo[] {
+	try {
+		const raw = execSync(
+			`docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" ` +
+			`--format '{{.ID}}|{{.Names}}|{{.Label "com.docker.compose.service"}}|{{.Status}}|{{.State}}'`,
+			{ encoding: 'utf-8', timeout: 10_000 },
+		).trim();
+
+		if (!raw) return [];
+
+		return raw.split('\n').map((line) => {
+			const [id = '', name = '', service = '', status = '', state = ''] = line.split('|');
+			let health = 'unknown';
+			if (status.includes('(healthy)')) health = 'healthy';
+			else if (status.includes('(unhealthy)')) health = 'unhealthy';
+			else if (status.includes('(health: starting)')) health = 'starting';
+			else if (state === 'running') health = 'running';
+			else if (state === 'exited') health = 'exited';
+			else if (state === 'created') health = 'created';
+
+			const startedAt = status.replace(/\s*\(.*\)/, '');
+			return {
+				id: id.trim(), name: name.trim(), service: service.trim(),
+				status: status.trim(), health, startedAt: startedAt.trim(),
+			};
+		});
+	} catch {
+		return [];
+	}
+}
+
+// ─── Log entry ──────────────────────────────────────────────────────────────
+
+interface LogEntry {
+	service: string;
+	stream: 'stdout' | 'stderr';
+	message: string;
+	timestamp: string;
+}
+
+// ─── Observable: Container log stream ───────────────────────────────────────
+
+function containerLogs$(containerId: string, service: string): Observable<LogEntry> {
+	return new Observable<LogEntry>((subscriber) => {
+		const proc = spawn('docker', ['logs', '--follow', '--tail', '50', containerId], {
+			stdio: ['ignore', 'pipe', 'pipe'],
+		});
+
+		const processLine = (data: Buffer, stream: 'stdout' | 'stderr') => {
+			const lines = data.toString('utf-8').split('\n');
+			for (const raw of lines) {
+				const line = raw.trim();
+				if (!line) continue;
+				subscriber.next({ service, stream, message: line, timestamp: timestamp() });
+			}
+		};
