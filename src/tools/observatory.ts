@@ -428,3 +428,153 @@ function tryPino(raw: string): ParsedLog | null {
 
 		const level = pinoLevel(j['level'] as number);
 		const msg = String(j['msg'] ?? j['message'] ?? '');
+		const req = j['req'] as Record<string, unknown> | undefined;
+		const res = j['res'] as Record<string, unknown> | undefined;
+
+		if (req && res) {
+			const method = String(req['method'] ?? '');
+			const url = String(req['url'] ?? '');
+			const sc = Number(res['statusCode'] ?? 0);
+			const rt = j['responseTime'] != null ? `${j['responseTime']}ms` : '';
+			if (isHealthCheck(url)) return { level, message: '', skip: true };
+			const scColor = sc >= 500 ? RED : sc >= 400 ? YELLOW : GREEN;
+			return {
+				level,
+				message: `${BOLD}${method}${RESET} ${url} ${scColor}${sc}${RESET} ${DIM}${rt}${RESET}`,
+			};
+		}
+
+		const ctx = j['context'] ? `${DIM}[${j['context']}]${RESET} ` : '';
+		return { level, message: `${ctx}${msg}` };
+	} catch {
+		return null;
+	}
+}
+
+function tryGotrue(raw: string): ParsedLog | null {
+	try {
+		const j = JSON.parse(raw) as Record<string, unknown>;
+		if (typeof j['level'] !== 'string' || typeof j['time'] !== 'string') return null;
+		if (j['msg'] == null) return null;
+		if (typeof j['level'] === 'number') return null;
+
+		const level = strLevel(j['level'] as string);
+		const component = j['component'] ? `${DIM}[${j['component']}]${RESET} ` : '';
+		const msg = String(j['msg'] ?? '')
+			.replace(/applying connection limits to db using the "(\w+)" strategy.*/, 'connection limits applied ($1 strategy)');
+
+		return { level, message: `${component}${msg}` };
+	} catch {
+		return null;
+	}
+}
+
+function tryMongo(raw: string): ParsedLog | null {
+	try {
+		const j = JSON.parse(raw) as Record<string, unknown>;
+		const t = j['t'] as Record<string, unknown> | undefined;
+		if (!t || !t['$date']) return null;
+
+		const level = mongoSeverity(String(j['s'] ?? 'I'));
+		const component = String(j['c'] ?? '');
+		const msg = String(j['msg'] ?? '');
+		const attr = j['attr'] as Record<string, unknown> | undefined;
+
+		const isConnChurn = component === 'NETWORK'
+			&& /^(Connection (accepted|ended)|client metadata|Received first command)/.test(msg);
+		const isAuthNoise = component === 'ACCESS'
+			&& /^(Connection not authenticating|Auth metrics report|Successfully authenticated)/.test(msg);
+		if (isConnChurn || isAuthNoise) return { level, message: '', skip: true };
+
+		const cmpTag = component ? `${DIM}[${component}]${RESET} ` : '';
+		let extra = '';
+		if (attr) {
+			if (attr['remote']) extra = ` ${DIM}${attr['remote']}${RESET}`;
+			if (attr['connectionCount'] != null) extra += ` ${DIM}conns:${attr['connectionCount']}${RESET}`;
+		}
+
+		return { level, message: `${cmpTag}${msg}${extra}` };
+	} catch {
+		return null;
+	}
+}
+
+// ── Regex parsers for non-JSON formats ──────────────────────────────────────
+
+const VAULT_RE = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s+\[(\w+)]\s+(.*)/;
+const VAULT_BANNER_RE = /^==>?\s*(.*)/;
+const POSTGREST_TS_RE = /^\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2}\s+[+-]\d{4}:\s*(.*)/;
+const POSTGREST_FATAL_RE = /^FATAL:\s*(.*)/;
+const POSTGRES_RE = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+\w+\s+\[\d+]\s+(\w+):\s*(.*)/;
+const REALTIME_RE = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z?\s+(\w+)\s+([\w_:]+)\s*(.*)/;
+const NGINX_RE = /^\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2}\s+\[(\w+)]\s+[\d#]+:\s*(.*)/;
+const GENERIC_LEVEL_RE = /^(?:nginx:\s*)?\[(\w+)]\s*(.*)/;
+
+function tryTextParsers(raw: string): ParsedLog | null {
+	let m: RegExpMatchArray | null;
+
+	if ((m = raw.match(VAULT_RE)))
+		return { level: strLevel(m[1]!), message: m[2]! };
+	if ((m = raw.match(VAULT_BANNER_RE)))
+		return { level: 'INFO', message: `${BOLD}${m[1]}${RESET}` };
+	if ((m = raw.match(POSTGREST_FATAL_RE)))
+		return { level: 'ERROR', message: m[1]! };
+	if ((m = raw.match(POSTGREST_TS_RE))) {
+		const msg = m[1]!;
+		const lvl: LogLevel = /failed|error|fatal/i.test(msg) ? 'ERROR' : 'INFO';
+		return { level: lvl, message: msg };
+	}
+	if ((m = raw.match(POSTGRES_RE))) {
+		const pgLevel = m[1]!.toUpperCase();
+		let lvl: LogLevel = 'INFO';
+		if (pgLevel === 'ERROR' || pgLevel === 'FATAL' || pgLevel === 'PANIC') lvl = 'ERROR';
+		else if (pgLevel === 'WARNING') lvl = 'WARN';
+		else if (pgLevel === 'DEBUG') lvl = 'DEBUG';
+		return { level: lvl, message: m[2]! };
+	}
+	if ((m = raw.match(REALTIME_RE))) {
+		const module = m[2]!.replace(/:$/, '');
+		const msg = m[3]!.trim();
+		return {
+			level: strLevel(m[1]!),
+			message: msg ? `${DIM}[${module}]${RESET} ${msg}` : `${DIM}[${module}]${RESET}`,
+		};
+	}
+	if ((m = raw.match(NGINX_RE)))
+		return { level: strLevel(m[1]!), message: m[2]! };
+	if ((m = raw.match(GENERIC_LEVEL_RE)))
+		return { level: strLevel(m[1]!), message: m[2]! };
+	return null;
+}
+
+function parseLogLine(raw: string, stream: 'stdout' | 'stderr'): ParsedLog {
+	// eslint-disable-next-line no-control-regex
+	const clean = raw.replace(/\x1b\[[0-9;]*m/g, '');
+
+	if (/^\d{4}-\d{2}-\d{2}T[\d:.]+Z?\s*$/.test(clean))
+		return { level: 'INFO', message: '', skip: true };
+
+	const pino = tryPino(clean);
+	if (pino) return pino;
+	const gotrue = tryGotrue(clean);
+	if (gotrue) return gotrue;
+	const mongo = tryMongo(clean);
+	if (mongo) return mongo;
+	const text = tryTextParsers(clean);
+	if (text) return text;
+	if (!clean.trim()) return { level: 'INFO', message: '', skip: true };
+	return { level: stream === 'stderr' ? 'WARN' : 'INFO', message: clean };
+}
+
+// ─── Format a log entry for terminal output ─────────────────────────────────
+
+function formatLogEntry(entry: LogEntry): { formatted: string; level: LogLevel; service: string } | null {
+	const parsed = parseLogLine(entry.message, entry.stream);
+	if (parsed.skip) return null;
+
+	const color = colorFor(entry.service);
+	const ts = `${DIM}${entry.timestamp}${RESET}`;
+	const svcLabel = `${color}${pad(entry.service, 20)}${RESET}`;
+	const levelColor = LEVEL_COLORS[parsed.level] ?? DIM;
+	const levelStr = `${levelColor}${BOLD}${pad(parsed.level, 5)}${RESET}`;
+
