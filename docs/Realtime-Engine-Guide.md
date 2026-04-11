@@ -198,3 +198,253 @@ Client                              Server
   "sub_id": "my-sub-1"
 }
 ```
+
+#### PING
+
+```json
+{ "type": "PING" }
+```
+
+### Server → Client Messages
+
+#### AUTH_OK
+
+```json
+{
+  "type": "AUTH_OK",
+  "conn_id": "42",
+  "server_time": "2026-04-11T15:30:00.000Z"
+}
+```
+
+#### SUBSCRIBED
+
+```json
+{
+  "type": "SUBSCRIBED",
+  "sub_id": "my-sub-1",
+  "seq": 0
+}
+```
+
+#### EVENT
+
+```json
+{
+  "type": "EVENT",
+  "sub_id": "pg-changes",
+  "event": {
+    "event_id": "01965abc-1234-7def-8901-234567890abc",
+    "topic": "pg/public/orders",
+    "event_type": "INSERT",
+    "sequence": 7,
+    "timestamp": "2026-04-11T15:30:01.123Z",
+    "payload": {
+      "id": 42,
+      "customer": "alice",
+      "total": 99.99
+    }
+  }
+}
+```
+
+#### ERROR
+
+```json
+{
+  "type": "ERROR",
+  "code": "AUTH_FAILED",
+  "message": "Invalid or expired token"
+}
+```
+
+Error codes: `AUTH_FAILED`, `CAPACITY_EXCEEDED`, `PAYLOAD_TOO_LARGE`
+
+---
+
+## Authentication
+
+The realtime server supports two auth modes:
+
+### JWT Mode (production — default in mini-BaaS)
+
+When `REALTIME_JWT_SECRET` is set, the server validates HMAC-SHA256 JWTs.
+
+1. Client opens WebSocket to `/ws`
+2. Client sends `AUTH` message with a valid JWT token
+3. Server verifies the signature, checks `exp` claim
+4. Server responds with `AUTH_OK` or `ERROR { code: "AUTH_FAILED" }`
+
+The JWT is the same one issued by GoTrue (`/auth/v1/token`).
+
+**Getting a token for the realtime server**:
+
+```bash
+# 1. Sign up / sign in via GoTrue
+TOKEN=$(curl -s http://localhost:8000/auth/v1/signup \
+  -H "Content-Type: application/json" \
+  -H "apikey: <ANON_KEY>" \
+  -d '{"email":"user@example.com","password":"secret123"}' \
+  | jq -r '.access_token')
+
+# 2. Use the token for WebSocket AUTH
+```
+
+### No-Auth Mode (development only)
+
+When `REALTIME_JWT_SECRET` is **not** set, the server accepts any token string.
+Useful for local development and testing.
+
+---
+
+## Subscribing to Events
+
+### Topic Patterns
+
+Topics are hierarchical paths separated by `/`:
+
+| Pattern          | Type                  | Matches                                |
+| ---------------- | --------------------- | -------------------------------------- |
+| `orders/created` | Exact                 | Only `orders/created`                  |
+| `orders/*`       | Prefix (single level) | `orders/created`, `orders/updated`     |
+| `orders/**`      | Prefix (recursive)    | `orders/created`, `orders/us/west/new` |
+| `pg/**`          | Prefix (recursive)    | All PostgreSQL CDC events              |
+| `mongo/**`       | Prefix (recursive)    | All MongoDB CDC events                 |
+
+### Common Subscription Patterns
+
+```javascript
+// PostgreSQL table changes (all tables)
+{ sub_id: "pg-all", topic: "pg/**" }
+
+// PostgreSQL specific table
+{ sub_id: "pg-orders", topic: "pg/public/orders/*" }
+
+// MongoDB collection changes (all collections)
+{ sub_id: "mongo-all", topic: "mongo/**" }
+
+// MongoDB specific collection
+{ sub_id: "mongo-users", topic: "mongo/syncspace/users/*" }
+
+// Custom application events
+{ sub_id: "chat-general", topic: "chat/general/*" }
+{ sub_id: "presence", topic: "presence/*" }
+```
+
+---
+
+## Publishing Events
+
+### Via WebSocket (low latency — ephemeral events)
+
+Best for cursor positions, typing indicators, presence updates:
+
+```javascript
+ws.send(
+  JSON.stringify({
+    type: "PUBLISH",
+    topic: "cursors/board-1",
+    event_type: "cursor.move",
+    payload: { x: 150, y: 320, userId: "user-123" },
+  }),
+);
+```
+
+### Via REST API (reliable — from backend services)
+
+Best for business events, notifications, data mutations:
+
+```bash
+# Single event
+curl -X POST http://localhost:8000/realtime/v1/publish \
+  -H "Content-Type: application/json" \
+  -H "apikey: <API_KEY>" \
+  -H "Authorization: Bearer <JWT>" \
+  -d '{
+    "topic": "notifications/user-123",
+    "event_type": "order.shipped",
+    "payload": { "orderId": 42, "trackingUrl": "https://..." }
+  }'
+
+# Response:
+# { "event_id": "01965abc-...", "sequence": 1, "delivered_to_bus": true }
+```
+
+```bash
+# Batch (up to 1000 events)
+curl -X POST http://localhost:8000/realtime/v1/publish/batch \
+  -H "Content-Type: application/json" \
+  -H "apikey: <API_KEY>" \
+  -H "Authorization: Bearer <JWT>" \
+  -d '{
+    "events": [
+      { "topic": "alerts/sys", "event_type": "cpu.high", "payload": { "pct": 95 } },
+      { "topic": "alerts/sys", "event_type": "mem.high", "payload": { "pct": 88 } }
+    ]
+  }'
+```
+
+---
+
+## Server-Side Filters
+
+Filters are evaluated on the server so only matching events are delivered,
+saving bandwidth and client CPU.
+
+### Supported Operators
+
+| Operator | Syntax                            | Description            |
+| -------- | --------------------------------- | ---------------------- |
+| `eq`     | `{ "field": { "eq": value } }`    | Field equals value     |
+| `ne`     | `{ "field": { "ne": value } }`    | Field not equal        |
+| `in`     | `{ "field": { "in": [v1, v2] } }` | Field is one of values |
+
+Multiple conditions are implicitly **ANDed**.
+
+### Filter Examples
+
+```javascript
+// Only INSERT events
+ws.send(
+  JSON.stringify({
+    type: "SUBSCRIBE",
+    sub_id: "pg-inserts",
+    topic: "pg/**",
+    filter: { event_type: { eq: "INSERT" } },
+  }),
+);
+
+// Only events for a specific user
+ws.send(
+  JSON.stringify({
+    type: "SUBSCRIBE",
+    sub_id: "my-orders",
+    topic: "pg/public/orders/*",
+    filter: { "payload.customer_id": { eq: "user-123" } },
+  }),
+);
+
+// Events matching multiple event types
+ws.send(
+  JSON.stringify({
+    type: "SUBSCRIBE",
+    sub_id: "mutations",
+    topic: "pg/**",
+    filter: { event_type: { in: ["INSERT", "UPDATE"] } },
+  }),
+);
+```
+
+### Filterable Fields
+
+| Field         | Type   | Description                                    |
+| ------------- | ------ | ---------------------------------------------- |
+| `event_type`  | string | Event type (e.g. `INSERT`, `UPDATE`, `DELETE`) |
+| `topic`       | string | Full topic path                                |
+| `source.kind` | string | Source kind (`cdc`, `api`, `websocket`)        |
+| `payload.*`   | any    | Any field inside the JSON payload              |
+
+---
+
+## Database CDC (Change Data Capture)
+
