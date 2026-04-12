@@ -83,12 +83,16 @@ all-full: ## Build/pull ALL images & start full stack
 
 clean: down ## Stop the stack (alias for down)
 
-fclean: _require-compose ## Full cleanup — containers, volumes and images
-	@$(DC) down -v 2>/dev/null || true
-	@docker rmi -f $$(docker images --filter=reference='$(PROJECT)/*' -q) 2>/dev/null || true
-	@echo -e "$(_G)✓ Full clean complete$(_0)"
+fclean: _require-compose ## Full cleanup — stop everything, prune containers, volumes, images and cache
+	@echo -e "$(_Y)$(_W)Running destructive Docker cleanup…$(_0)"
+	@$(DC) down --volumes --remove-orphans 2>/dev/null || true
+	@ids=$$(docker ps -aq); \
+	[ -z "$$ids" ] || { echo -e "$(_Y)Removing all Docker containers…$(_0)"; docker rm -f $$ids >/dev/null 2>&1 || true; }
+	@docker system prune -af --volumes >/dev/null 2>&1 || true
+	@docker builder prune -af >/dev/null 2>&1 || true
+	@echo -e "$(_G)✓ Full Docker clean complete$(_0)"
 
-re: ## fclean + all
+re: ## Fully reset Docker state via fclean, then rebuild and restart the stack
 	@$(MAKE) --no-print-directory fclean
 	@$(MAKE) --no-print-directory all
 
@@ -225,10 +229,6 @@ image-sizes: ## Show image sizes for the stack
 		|| docker images --filter=reference='$(PROJECT)*' \
 			--format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'
 
-# ========================================================================== #
-##@ Testing
-# ========================================================================== #
-
 tests: ## Run all smoke tests (phase 1→15)
 	@total_p=0; total_f=0; rc_all=0; \
 	for script in $$(ls -1 ./scripts/phase*-*.sh ./scripts/phase*-*.py 2>/dev/null | sort -t/ -k3 -V); do \
@@ -270,10 +270,6 @@ test-phase%: ## Run one phase (e.g. make test-phase3)
 test-postgres: ## Run PostgreSQL MVP happy-path flow
 	@FORCE_COLORS=1 bash ./scripts/postgres-mvp-flow.sh
 
-# ========================================================================== #
-##@ Migrations
-# ========================================================================== #
-
 migrate: ## Run all pending PostgreSQL migrations
 	@echo -e "$(_B)Running PostgreSQL migrations…$(_0)"
 	@for f in $$(ls -1 scripts/migrations/postgresql/*.sql 2>/dev/null | sort); do \
@@ -300,9 +296,6 @@ migrate-status: ## Show applied migration versions
 		-c "SELECT version, name, applied_at FROM schema_migrations ORDER BY version;" \
 		2>/dev/null || echo "  No migrations table — run make migrate first."
 
-# ========================================================================== #
-##@ Secrets
-# ========================================================================== #
 
 secrets: ## Generate all secrets → .env
 	@bash scripts/secrets/generate-secrets.sh
@@ -315,10 +308,6 @@ secrets-rotate: ## Rotate JWT secret (zero-downtime)
 
 check-secrets: ## Scan source code for hardcoded secrets
 	@bash scripts/check-secrets.sh
-
-# ========================================================================== #
-##@ Observability
-# ========================================================================== #
 
 observe: _require-compose ## Start Prometheus + Grafana + Loki
 	@$(DC) --profile observability up -d
@@ -340,10 +329,6 @@ prometheus: ## Open Prometheus in browser
 		|| open http://localhost:9090 2>/dev/null \
 		|| echo "http://localhost:9090"
 
-# ========================================================================== #
-##@ Adapter Registry
-# ========================================================================== #
-
 adapter-add: ## Register a database  (ENGINE= NAME= DSN=)
 	@curl -sS -X POST http://localhost:8000/admin/v1/databases \
 		-H "apikey: $$(grep KONG_SERVICE_API_KEY .env | cut -d= -f2)" \
@@ -354,10 +339,6 @@ adapter-add: ## Register a database  (ENGINE= NAME= DSN=)
 adapter-ls: ## List registered databases
 	@curl -sS http://localhost:8000/admin/v1/databases \
 		-H "apikey: $$(grep KONG_SERVICE_API_KEY .env | cut -d= -f2)" | jq .
-
-# ========================================================================== #
-##@ Playground
-# ========================================================================== #
 
 play-css: ## Build libcss CSS assets
 	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required to build CSS."; exit 1; }
@@ -376,10 +357,6 @@ play-down: _require-compose ## Stop playground
 
 play-logs: _require-compose ## Stream playground logs
 	@$(DC) logs -f --tail=100 playground
-
-# ========================================================================== #
-##@ Utilities
-# ========================================================================== #
 
 env: ## Generate .env from template
 	@bash scripts/generate-env.sh
@@ -407,10 +384,6 @@ update: ## Update git submodules
 	@git submodule update --remote --merge
 	@echo -e "$(_G)✓ Submodules updated$(_0)"
 
-# ========================================================================== #
-##@ Audit (SonarCloud)
-# ========================================================================== #
-
 audit-scan: ## Run SonarCloud scanner (requires TOK_SONARCLOUD in .env)
 	@echo -e "$(_B)Running SonarCloud scan…$(_0)"
 	@SONAR_TOKEN=$$(grep TOK_SONARCLOUD .env | cut -d= -f2); \
@@ -426,10 +399,6 @@ audit-fetch: ## Fetch SonarCloud issues → audit/*.json + audit/summary.txt
 
 audit: audit-scan audit-fetch ## Full audit: scan + fetch issues
 	@echo -e "$(_G)✓ Audit complete — see audit/summary.txt$(_0)"
-
-# ========================================================================== #
-##@ NestJS Monorepo (src/)
-# ========================================================================== #
 
 nestjs-install: ## Install NestJS monorepo dependencies
 	@echo -e "$(_B)Installing NestJS dependencies…$(_0)"
@@ -475,10 +444,6 @@ nestjs-test: ## Run all NestJS unit tests
 
 nestjs-ci: nestjs-install nestjs-typecheck nestjs-lint nestjs-test ## Full NestJS CI pipeline
 
-# ========================================================================== #
-##@ Vault
-# ========================================================================== #
-
 vault-init: _require-compose ## Run Vault init/unseal/seed manually
 	@echo -e "$(_B)Initializing Vault…$(_0)"
 	@$(DC) run --rm vault-init
@@ -492,10 +457,6 @@ vault-unseal: _require-compose ## Unseal Vault with root key from .vault-keys
 	@key=$$(grep 'Unseal Key' .vault-keys 2>/dev/null | awk '{print $$NF}'); \
 	[ -n "$$key" ] && docker exec mini-baas-vault vault operator unseal -address=http://127.0.0.1:8200 "$$key" \
 		|| echo -e "$(_Y)No .vault-keys found — run make vault-init first$(_0)"
-
-# ========================================================================== #
-##@ WAF / Security
-# ========================================================================== #
 
 waf-logs: _require-compose ## Stream WAF (ModSecurity) logs
 	@$(DC) logs -f --tail=200 waf
@@ -514,10 +475,6 @@ waf-test: ## Quick WAF attack test (should be blocked)
 	else \
 		echo -e "  $(_R)✗$(_0) Expected 403, got $$status"; \
 	fi
-
-# ========================================================================== #
-##@ Observatory
-# ========================================================================== #
 
 watch: _require-compose _rm-stale ## Build, start stack & launch interactive observatory
 	@echo -e "$(_B)Stopping previous stack to ensure clean start…$(_0)"
