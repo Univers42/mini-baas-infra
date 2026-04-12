@@ -33,6 +33,7 @@ export class MongodbEngine {
       sort?: Record<string, string>;
       limit?: number;
       offset?: number;
+      userId?: string;
     },
   ): Promise<MongoQueryResult> {
     this.validateCollection(collection);
@@ -53,6 +54,11 @@ export class MongodbEngine {
           const filter = { ...(opts.filter ?? {}) };
           delete filter['$where'];
 
+          // Enforce owner isolation — user can only see their own documents
+          if (opts.userId) {
+            filter['owner_id'] = opts.userId;
+          }
+
           const sort: Record<string, 1 | -1> = {};
           if (opts.sort) {
             for (const [field, dir] of Object.entries(opts.sort)) {
@@ -71,16 +77,35 @@ export class MongodbEngine {
 
         case 'insertOne': {
           if (!opts.data) throw new BadRequestException('data is required for insertOne');
-          const result = await col.insertOne(opts.data);
+          // Strip forbidden fields and auto-inject owner_id + timestamps
+          const { _id: _, owner_id: __, ...clean } = opts.data;
+          const doc: Record<string, unknown> = {
+            ...clean,
+            created_at: new Date(),
+            updated_at: new Date(),
+          };
+          if (opts.userId) {
+            doc['owner_id'] = opts.userId;
+          }
+          const result = await col.insertOne(doc);
           return {
-            rows: [{ id: result.insertedId.toString(), ...opts.data }],
+            rows: [{ id: result.insertedId.toString(), ...doc }],
             rowCount: 1,
           };
         }
 
         case 'updateMany': {
           if (!opts.data) throw new BadRequestException('data is required for updateMany');
-          const result = await col.updateMany(opts.filter ?? {}, { $set: opts.data });
+          // Strip forbidden fields from update payload
+          const { _id: _, owner_id: __, ...cleanData } = opts.data;
+          const updateFilter = { ...(opts.filter ?? {}) };
+          // Enforce owner isolation on updates
+          if (opts.userId) {
+            updateFilter['owner_id'] = opts.userId;
+          }
+          const result = await col.updateMany(updateFilter, {
+            $set: { ...cleanData, updated_at: new Date() },
+          });
           return {
             rows: [],
             rowCount: result.modifiedCount,
@@ -88,7 +113,12 @@ export class MongodbEngine {
         }
 
         case 'deleteMany': {
-          const result = await col.deleteMany(opts.filter ?? {});
+          const deleteFilter = { ...(opts.filter ?? {}) };
+          // Enforce owner isolation on deletes
+          if (opts.userId) {
+            deleteFilter['owner_id'] = opts.userId;
+          }
+          const result = await col.deleteMany(deleteFilter);
           return {
             rows: [],
             rowCount: result.deletedCount,

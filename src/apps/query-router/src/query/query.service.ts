@@ -49,6 +49,7 @@ export class QueryService {
         sort: dto.sort,
         limit: dto.limit,
         offset: dto.offset,
+        userId,
       });
     }
 
@@ -62,6 +63,7 @@ export class QueryService {
         sort: dto.sort,
         limit: dto.limit,
         offset: dto.offset,
+        userId,
       });
     }
 

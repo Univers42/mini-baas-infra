@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/11 20:12:36 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/12 01:07:12 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -264,8 +264,8 @@ services:
     url: http://adapter-registry:3020
     routes:
       - name: admin-adapters
-        paths: [/admin/v1/databases]
-        strip_path: false
+        paths: [/admin/v1]
+        strip_path: true
         plugins:
           - name: key-auth
             config:

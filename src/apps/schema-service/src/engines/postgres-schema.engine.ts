@@ -52,19 +52,40 @@ export class PostgresSchemaEngine {
       await client.query(ddl);
 
       if (enableRls) {
+        // Create a helper function on the external database for RLS evaluation.
+        // This matches the SET LOCAL app.current_user_id that query-router injects.
+        await client.query(`
+          CREATE OR REPLACE FUNCTION public.current_user_id() RETURNS TEXT AS $$
+            SELECT coalesce(
+              current_setting('app.current_user_id', true),
+              ''
+            );
+          $$ LANGUAGE SQL STABLE
+        `);
+
         await client.query(`ALTER TABLE public."${tableName}" ENABLE ROW LEVEL SECURITY`);
         await client.query(
           `DO $$ BEGIN
              IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = '${tableName}' AND policyname = 'owner_isolation') THEN
-               CREATE POLICY owner_isolation ON public."${tableName}" FOR ALL USING (owner_id = auth.uid());
+               CREATE POLICY owner_isolation ON public."${tableName}" FOR ALL
+                 USING (owner_id::text = current_user_id())
+                 WITH CHECK (owner_id::text = current_user_id());
              END IF;
            END $$`,
         );
       }
 
-      // Grant access
-      await client.query(`GRANT ALL ON public."${tableName}" TO authenticated`);
-      await client.query(`GRANT ALL ON public."${tableName}" TO service_role`);
+      // Grant access to common roles if they exist
+      await client.query(`
+        DO $$ BEGIN
+          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            EXECUTE format('GRANT ALL ON public.%I TO authenticated', '${tableName}');
+          END IF;
+          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+            EXECUTE format('GRANT ALL ON public.%I TO service_role', '${tableName}');
+          END IF;
+        END $$
+      `);
 
       this.logger.log(`Table created: ${tableName} (RLS=${enableRls})`);
       return { created: true, ddl };

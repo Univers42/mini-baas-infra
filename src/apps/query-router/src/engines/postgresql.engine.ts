@@ -34,6 +34,7 @@ export class PostgresqlEngine {
       sort?: Record<string, string>;
       limit?: number;
       offset?: number;
+      userId?: string;
     },
   ): Promise<QueryResult> {
     this.validateTable(table);
@@ -42,18 +43,40 @@ export class PostgresqlEngine {
     await client.connect();
 
     try {
+      // Set user context so RLS policies (owner_id = current_setting('app.current_user_id'))
+      // can enforce row-level isolation on user-registered databases.
+      if (opts.userId) {
+        await client.query('BEGIN');
+        await client.query(`SET LOCAL app.current_user_id = $1`, [opts.userId]);
+      }
+
+      let result: QueryResult;
       switch (action) {
         case 'select':
-          return await this.select(client, table, opts);
+          result = await this.select(client, table, opts);
+          break;
         case 'insert':
-          return await this.insert(client, table, opts.data ?? {});
+          result = await this.insert(client, table, opts.data ?? {}, opts.userId);
+          break;
         case 'update':
-          return await this.update(client, table, opts.data ?? {}, opts.filter ?? {});
+          result = await this.update(client, table, opts.data ?? {}, opts.filter ?? {});
+          break;
         case 'delete':
-          return await this.deleteRows(client, table, opts.filter ?? {});
+          result = await this.deleteRows(client, table, opts.filter ?? {});
+          break;
         default:
           throw new BadRequestException(`Unknown SQL action: ${action}`);
       }
+
+      if (opts.userId) {
+        await client.query('COMMIT');
+      }
+      return result;
+    } catch (err) {
+      if (opts.userId) {
+        await client.query('ROLLBACK').catch(() => {});
+      }
+      throw err;
     } finally {
       await client.end();
     }
@@ -108,15 +131,21 @@ export class PostgresqlEngine {
     return { rows: res.rows as Record<string, unknown>[], rowCount: res.rowCount ?? 0 };
   }
 
-  private async insert(client: Client, table: string, data: Record<string, unknown>): Promise<QueryResult> {
-    const cols = Object.keys(data);
+  private async insert(client: Client, table: string, data: Record<string, unknown>, userId?: string): Promise<QueryResult> {
+    // Auto-inject owner_id for tenant isolation (mirrors schema-service's auto-added column)
+    const enriched = { ...data };
+    if (userId && !enriched['owner_id']) {
+      enriched['owner_id'] = userId;
+    }
+
+    const cols = Object.keys(enriched);
     if (!cols.length) throw new BadRequestException('No data to insert');
     cols.forEach((c) => this.validateColumn(c));
 
     const placeholders = cols.map((_, i) => `$${i + 1}`);
     const sql = `INSERT INTO "${table}" (${cols.map((c) => `"${c}"`).join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`;
 
-    const res = await client.query(sql, Object.values(data));
+    const res = await client.query(sql, Object.values(enriched));
     return { rows: res.rows as Record<string, unknown>[], rowCount: res.rowCount ?? 0 };
   }
 

@@ -199,6 +199,23 @@ CREATE OR REPLACE FUNCTION public.current_tenant_id() RETURNS TEXT AS $$
   SELECT current_setting('app.current_user_id', true);
 $$ LANGUAGE SQL STABLE;
 
+-- ─── Schema Registry table (used by schema-service) ─────────────
+-- Tracks all tables/collections created via the schema-service DDL engine.
+CREATE TABLE IF NOT EXISTS public.schema_registry (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  database_id UUID NOT NULL,
+  name        TEXT NOT NULL,
+  engine      TEXT NOT NULL,
+  columns     JSONB NOT NULL DEFAULT '[]'::jsonb,
+  enable_rls  BOOLEAN DEFAULT true,
+  created_by  UUID NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  updated_at  TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (database_id, name)
+);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.schema_registry TO authenticated;
+
 -- SELECT: tenant can only see own rows
 DROP POLICY IF EXISTS tenant_databases_select ON public.tenant_databases;
 CREATE POLICY tenant_databases_select ON public.tenant_databases
