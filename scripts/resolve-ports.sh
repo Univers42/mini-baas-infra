@@ -11,6 +11,7 @@ set -euo pipefail
 
 # ── Port map: ENV_VAR=default_port ──────────────────────────────────
 PORTS=(
+  WAF_HTTP_PORT=8880
   KONG_HTTP_PORT=8000
   KONG_ADMIN_PORT=8001
   PG_PORT=5432

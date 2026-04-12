@@ -147,6 +147,9 @@ FORTYTWO_OAUTH_ENABLED=false
 FORTYTWO_CLIENT_ID=
 FORTYTWO_CLIENT_SECRET=
 
+# WAF (public HTTP entrypoint — non-privileged port to avoid bind conflicts)
+WAF_HTTP_PORT=8880
+
 # Vault (empty = disabled; services fall back to env vars)
 VAULT_ADDR=
 VAULT_PORT=8200
