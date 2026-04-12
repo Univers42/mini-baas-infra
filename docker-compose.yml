@@ -130,6 +130,18 @@ services:
         condition: service_healthy
       schema-service:
         condition: service_healthy
+      analytics-service:
+        condition: service_healthy
+      gdpr-service:
+        condition: service_healthy
+      newsletter-service:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+      log-service:
+        condition: service_healthy
+      session-service:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: unless-stopped
@@ -674,6 +686,194 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3060/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Analytics Service (NestJS — event tracking) ─────────────────
+  analytics-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: analytics-service
+    container_name: mini-baas-analytics-service
+    env_file: [.env]
+    environment:
+      PORT: 3070
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
+      MONGO_DB_NAME: ${ANALYTICS_MONGO_DB:-mini_baas_analytics}
+      ANALYTICS_RETENTION_DAYS: ${ANALYTICS_RETENTION_DAYS:-90}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3070/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── GDPR Service (NestJS — consent & data rights) ──────────────
+  gdpr-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: gdpr-service
+    container_name: mini-baas-gdpr-service
+    env_file: [.env]
+    environment:
+      PORT: 3080
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      GDPR_DELETION_WEBHOOK_URL: ${GDPR_DELETION_WEBHOOK_URL:-}
+      GDPR_EXPORT_WEBHOOK_URL: ${GDPR_EXPORT_WEBHOOK_URL:-}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3080/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Newsletter Service (NestJS — subscriptions & campaigns) ─────
+  newsletter-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: newsletter-service
+    container_name: mini-baas-newsletter-service
+    env_file: [.env]
+    environment:
+      PORT: 3090
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      EMAIL_SERVICE_URL: http://email-service:3030
+      NEWSLETTER_BATCH_SIZE: ${NEWSLETTER_BATCH_SIZE:-5}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+      email-service:
+        condition: service_started
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3090/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── AI Service (NestJS — LLM conversation engine) ──────────────
+  ai-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: ai-service
+    container_name: mini-baas-ai-service
+    env_file: [.env]
+    environment:
+      PORT: 3100
+      MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017
+      MONGO_DB_NAME: ${AI_MONGO_DB:-mini_baas_ai}
+      LLM_API_URL: ${LLM_API_URL:-https://api.groq.com/openai/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-llama-3.3-70b-versatile}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-2048}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.7}
+      AI_CONVERSATION_TTL_HOURS: ${AI_CONVERSATION_TTL_HOURS:-24}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 256m
+    cpus: 0.5
+
+  # ─── Log Service (NestJS — centralized log streaming) ────────────
+  log-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: log-service
+    container_name: mini-baas-log-service
+    env_file: [.env]
+    environment:
+      PORT: 3110
+      LOG_BUFFER_SIZE: ${LOG_BUFFER_SIZE:-1000}
+      LOG_STREAM_TOKEN: ${LOG_STREAM_TOKEN:-}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3110/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      start_period: 8s
+      retries: 5
+    mem_limit: 128m
+    cpus: 0.25
+
+  # ─── Session Service (NestJS — session lifecycle) ────────────────
+  session-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        APP: session-service
+    container_name: mini-baas-session-service
+    env_file: [.env]
+    environment:
+      PORT: 3120
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3120/health/live || exit 1"]
       interval: 5s
       timeout: 3s
       start_period: 8s

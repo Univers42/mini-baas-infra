@@ -417,6 +417,68 @@ The `db-bootstrap` container runs `scripts/db-bootstrap.sql` on first startup. I
 
 Used by the realtime service for subscription state and message brokering. Also available for any service that needs ephemeral key-value storage.
 
+### analytics-service — Event Tracking
+
+| Property | Value |
+|---|---|
+| Kong path | `/analytics/v1` |
+| Upstream | `analytics-service:3070` |
+| Storage | MongoDB (TTL auto-cleanup) |
+
+Tracks arbitrary events with optional user attribution. Provides aggregation stats and distinct event type listing. Events auto-expire after `ANALYTICS_RETENTION_DAYS` (default 90).
+
+### gdpr-service — Privacy & Compliance
+
+| Property | Value |
+|---|---|
+| Kong path | `/gdpr/v1` |
+| Upstream | `gdpr-service:3080` |
+| Storage | PostgreSQL (RLS-enforced) |
+
+Manages user consent records, data deletion requests (with status machine), and data export. Uses webhooks (`GDPR_DELETION_WEBHOOK_URL`, `GDPR_EXPORT_WEBHOOK_URL`) so consuming apps handle domain-specific logic.
+
+### newsletter-service — Email Subscriptions
+
+| Property | Value |
+|---|---|
+| Kong path | `/newsletter/v1` |
+| Upstream | `newsletter-service:3090` |
+| Storage | PostgreSQL |
+
+Double opt-in subscription management and batch campaign sending. Delegates email delivery to the existing `email-service` via internal HTTP.
+
+### ai-service — LLM Conversation Engine
+
+| Property | Value |
+|---|---|
+| Kong path | `/ai/v1` |
+| Upstream | `ai-service:3100` |
+| Storage | MongoDB (conversations with TTL) |
+
+Multi-turn chat with any OpenAI-compatible LLM (Groq, OpenAI, Ollama). **No hardcoded prompts** — consuming apps register prompt "modes" via admin API and inject domain context per-request.
+
+### log-service — Centralized Log Streaming
+
+| Property | Value |
+|---|---|
+| Kong path | `/logs/v1` |
+| Upstream | `log-service:3110` |
+| Storage | In-memory ring buffer |
+
+Accepts structured log ingestion from any service. Provides real-time SSE streaming for admin dashboards and queryable buffered logs.
+
+### session-service — Session Lifecycle
+
+| Property | Value |
+|---|---|
+| Kong path | `/sessions/v1` |
+| Upstream | `session-service:3120` |
+| Storage | PostgreSQL (RLS-enforced) |
+
+Token-based session management with create/validate/extend/revoke lifecycle. Admin endpoints for force-revocation, cleanup, and statistics.
+
+> **Full API reference** for all new services: see [`docs/NEW_SERVICES.md`](docs/NEW_SERVICES.md)
+
 ---
 
 ## 6. Auth and security model

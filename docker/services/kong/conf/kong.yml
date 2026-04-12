@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/12 01:07:12 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/13 00:05:13 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -472,3 +472,157 @@ services:
               limit_by: ip
               minute: 60
               hour: 1000
+
+  # ─── New BaaS Services ──────────────────────────────────────────
+
+  - name: analytics-service
+    url: http://analytics-service:3070
+    routes:
+      - name: analytics-routes
+        paths: [/analytics/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 64
+              size_unit: kilobytes
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 300
+              hour: 8000
+
+  - name: gdpr-service
+    url: http://gdpr-service:3080
+    routes:
+      - name: gdpr-routes
+        paths: [/gdpr/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 30
+              hour: 500
+
+  - name: newsletter-service
+    url: http://newsletter-service:3090
+    routes:
+      - name: newsletter-routes
+        paths: [/newsletter/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 30
+              hour: 500
+
+  - name: ai-service
+    url: http://ai-service:3100
+    routes:
+      - name: ai-routes
+        paths: [/ai/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 64
+              size_unit: kilobytes
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 30
+              hour: 500
+
+  - name: log-service
+    url: http://log-service:3110
+    routes:
+      - name: log-routes
+        paths: [/logs/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000
+
+  - name: session-service
+    url: http://session-service:3120
+    routes:
+      - name: session-routes
+        paths: [/sessions/v1]
+        strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names: [apikey]
+              hide_credentials: false
+          - name: jwt
+            config:
+              header_names: [authorization]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+          - name: rate-limiting
+            config:
+              policy: local
+              limit_by: ip
+              minute: 120
+              hour: 3000

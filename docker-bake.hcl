@@ -7,6 +7,8 @@ group "default" {
     "adapter-registry", "mongo-api", "query-router",
     "email-service", "storage-router",
     "permission-engine", "schema-service",
+    "analytics-service", "gdpr-service", "newsletter-service",
+    "ai-service", "log-service", "session-service",
     "waf", "vault"
   ]
 }
@@ -15,7 +17,9 @@ group "apps" {
   targets = [
     "adapter-registry", "mongo-api", "query-router",
     "email-service", "storage-router",
-    "permission-engine", "schema-service"
+    "permission-engine", "schema-service",
+    "analytics-service", "gdpr-service", "newsletter-service",
+    "ai-service", "log-service", "session-service"
   ]
 }
 
@@ -92,6 +96,54 @@ target "schema-service" {
   tags       = ["${REGISTRY}/schema-service:${TAG}"]
   cache-from = ["type=registry,ref=${REGISTRY}/cache:schema-service"]
   cache-to   = ["type=registry,ref=${REGISTRY}/cache:schema-service,mode=max"]
+}
+
+target "analytics-service" {
+  inherits   = ["nestjs-base"]
+  args       = { APP = "analytics-service" }
+  tags       = ["${REGISTRY}/analytics-service:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:analytics-service"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:analytics-service,mode=max"]
+}
+
+target "gdpr-service" {
+  inherits   = ["nestjs-base"]
+  args       = { APP = "gdpr-service" }
+  tags       = ["${REGISTRY}/gdpr-service:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:gdpr-service"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:gdpr-service,mode=max"]
+}
+
+target "newsletter-service" {
+  inherits   = ["nestjs-base"]
+  args       = { APP = "newsletter-service" }
+  tags       = ["${REGISTRY}/newsletter-service:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:newsletter-service"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:newsletter-service,mode=max"]
+}
+
+target "ai-service" {
+  inherits   = ["nestjs-base"]
+  args       = { APP = "ai-service" }
+  tags       = ["${REGISTRY}/ai-service:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:ai-service"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:ai-service,mode=max"]
+}
+
+target "log-service" {
+  inherits   = ["nestjs-base"]
+  args       = { APP = "log-service" }
+  tags       = ["${REGISTRY}/log-service:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:log-service"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:log-service,mode=max"]
+}
+
+target "session-service" {
+  inherits   = ["nestjs-base"]
+  args       = { APP = "session-service" }
+  tags       = ["${REGISTRY}/session-service:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:session-service"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:session-service,mode=max"]
 }
 
 # ─── Infrastructure images ───────────────────────────────────────

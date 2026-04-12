@@ -153,6 +153,33 @@ VAULT_PORT=8200
 
 # Logging
 LOG_LEVEL=info
+
+# Analytics Service
+ANALYTICS_MONGO_DB=mini_baas_analytics
+ANALYTICS_RETENTION_DAYS=90
+
+# GDPR Service
+GDPR_DELETION_WEBHOOK_URL=
+GDPR_EXPORT_WEBHOOK_URL=
+
+# Newsletter Service
+NEWSLETTER_BATCH_SIZE=5
+
+# AI Service
+AI_MONGO_DB=mini_baas_ai
+LLM_API_URL=https://api.groq.com/openai/v1
+LLM_API_KEY=
+LLM_MODEL=llama-3.3-70b-versatile
+LLM_MAX_TOKENS=2048
+LLM_TEMPERATURE=0.7
+AI_CONVERSATION_TTL_HOURS=24
+
+# Log Service
+LOG_BUFFER_SIZE=1000
+LOG_STREAM_TOKEN=$(gen_alnum 32)
+
+# Session Service
+SESSION_TTL_DAYS=7
 EOF
 
 chmod 600 "$ENV_FILE"

@@ -73,6 +73,60 @@
         "tsConfigPath": "apps/schema-service/tsconfig.app.json"
       }
     },
+    "analytics-service": {
+      "type": "application",
+      "root": "apps/analytics-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/analytics-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analytics-service/tsconfig.app.json"
+      }
+    },
+    "gdpr-service": {
+      "type": "application",
+      "root": "apps/gdpr-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/gdpr-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/gdpr-service/tsconfig.app.json"
+      }
+    },
+    "newsletter-service": {
+      "type": "application",
+      "root": "apps/newsletter-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/newsletter-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/newsletter-service/tsconfig.app.json"
+      }
+    },
+    "ai-service": {
+      "type": "application",
+      "root": "apps/ai-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/ai-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ai-service/tsconfig.app.json"
+      }
+    },
+    "log-service": {
+      "type": "application",
+      "root": "apps/log-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/log-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/log-service/tsconfig.app.json"
+      }
+    },
+    "session-service": {
+      "type": "application",
+      "root": "apps/session-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/session-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/session-service/tsconfig.app.json"
+      }
+    },
     "common": {
       "type": "library",
       "root": "libs/common",
