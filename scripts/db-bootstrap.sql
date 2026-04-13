@@ -54,9 +54,10 @@ CREATE OR REPLACE FUNCTION auth.uid() RETURNS UUID AS $$
   SELECT (current_setting('request.jwt.claims', true)::jsonb->>'sub')::uuid;
 $$ LANGUAGE SQL STABLE;
 
--- ─── Demo tables removed ─────────────────────────────────────────
--- Domain tables (profiles, menus, orders, etc.) are now managed by
--- the domain-bootstrap container via database/migrations/*.sql
+-- ─── Consumer app tables ─────────────────────────────────────────
+-- Application-specific tables (domain models) should be managed by
+-- an external bootstrap container provided by the consuming project.
+-- See docker-compose.override.yml for the domain-bootstrap service.
 -- ─────────────────────────────────────────────────────────────────
 
 -- ─── Adapter-registry limited role ───────────────────────────────
