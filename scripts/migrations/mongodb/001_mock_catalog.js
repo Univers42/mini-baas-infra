@@ -1,17 +1,7 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   001_mock_catalog.js                                :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/09 23:37:43 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/04/09 23:37:44 by dlesieur         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 // File: scripts/migrations/mongodb/001_mock_catalog.js
-// Migration: Create mock_catalog collection with JSON Schema validation
+// Migration: Create mock_catalog collection with a generic JSON Schema validator.
+// The schema is intentionally domain-agnostic — consuming apps should create
+// their own collections via the /mongo/v1/collections API.
 // Run with: mongosh <uri> scripts/migrations/mongodb/001_mock_catalog.js
 
 const DB_NAME = process.env.MONGO_DB_NAME || 'mini_baas';
@@ -19,27 +9,25 @@ const COLLECTION = 'mock_catalog';
 
 const db = db || connect(`mongodb://localhost:27017/${DB_NAME}`);
 
+const SCHEMA = {
+  bsonType: 'object',
+  required: ['owner_id', 'title', 'created_at', 'updated_at'],
+  additionalProperties: true,
+  properties: {
+    owner_id:   { bsonType: 'string', minLength: 1, description: 'UUID of the owning user' },
+    title:      { bsonType: 'string', minLength: 1, maxLength: 200, description: 'Human-readable title' },
+    body:       { bsonType: 'string', description: 'Optional free-form content' },
+    tags:       { bsonType: 'array', items: { bsonType: 'string' }, description: 'Optional tags' },
+    metadata:   { bsonType: 'object', description: 'Arbitrary key-value metadata' },
+    created_at: { bsonType: 'date' },
+    updated_at: { bsonType: 'date' },
+  },
+};
+
 const existing = db.getCollectionNames().filter(n => n === COLLECTION);
 if (existing.length === 0) {
   db.createCollection(COLLECTION, {
-    validator: {
-      $jsonSchema: {
-        bsonType: 'object',
-        required: ['owner_id', 'sku', 'name', 'price_cents', 'category', 'created_at', 'updated_at'],
-        additionalProperties: true,
-        properties: {
-          owner_id:    { bsonType: 'string', minLength: 1 },
-          sku:         { bsonType: 'string', minLength: 2, maxLength: 64 },
-          name:        { bsonType: 'string', minLength: 2, maxLength: 120 },
-          category:    { bsonType: 'string', minLength: 2, maxLength: 64 },
-          price_cents: { bsonType: 'int', minimum: 0 },
-          tags:        { bsonType: 'array', items: { bsonType: 'string' } },
-          in_stock:    { bsonType: 'bool' },
-          created_at:  { bsonType: 'date' },
-          updated_at:  { bsonType: 'date' },
-        },
-      },
-    },
+    validator: { $jsonSchema: SCHEMA },
     validationLevel: 'strict',
     validationAction: 'error',
   });
@@ -47,24 +35,7 @@ if (existing.length === 0) {
 } else {
   db.runCommand({
     collMod: COLLECTION,
-    validator: {
-      $jsonSchema: {
-        bsonType: 'object',
-        required: ['owner_id', 'sku', 'name', 'price_cents', 'category', 'created_at', 'updated_at'],
-        additionalProperties: true,
-        properties: {
-          owner_id:    { bsonType: 'string', minLength: 1 },
-          sku:         { bsonType: 'string', minLength: 2, maxLength: 64 },
-          name:        { bsonType: 'string', minLength: 2, maxLength: 120 },
-          category:    { bsonType: 'string', minLength: 2, maxLength: 64 },
-          price_cents: { bsonType: 'int', minimum: 0 },
-          tags:        { bsonType: 'array', items: { bsonType: 'string' } },
-          in_stock:    { bsonType: 'bool' },
-          created_at:  { bsonType: 'date' },
-          updated_at:  { bsonType: 'date' },
-        },
-      },
-    },
+    validator: { $jsonSchema: SCHEMA },
     validationLevel: 'strict',
     validationAction: 'error',
   });

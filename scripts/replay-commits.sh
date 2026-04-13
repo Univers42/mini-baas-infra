@@ -5,7 +5,7 @@
 # ============================================================================
 set -eo pipefail
 
-REPO="/home/dlesieur/mini-baas-infra"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BK="/tmp/mini-baas-replay-$$"
 SUBMODULE_URL="git@github.com:Univers42/realtime-agnostic.git"
 SUBMODULE_COMMIT="8b93a772a0e157c0b33db3eb7cdec46a05f649f3"

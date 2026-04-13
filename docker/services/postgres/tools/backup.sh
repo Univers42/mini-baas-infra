@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    backup.sh                                          :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/04/09 23:35:55 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/09 23:35:56 by dlesieur         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 #!/usr/bin/env bash
 # File: docker/services/postgres/tools/backup.sh
 # Description: Run pg_dump inside the postgres container and save a custom-format backup

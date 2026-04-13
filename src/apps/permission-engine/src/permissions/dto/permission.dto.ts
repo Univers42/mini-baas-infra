@@ -7,7 +7,7 @@ export class CheckPermissionDto {
   @IsNotEmpty()
   resource_type!: string;
 
-  @ApiProperty({ example: 'user_profiles', description: 'Resource name / identifier' })
+  @ApiProperty({ example: 'documents', description: 'Resource name / identifier' })
   @IsString()
   @IsNotEmpty()
   resource_name!: string;

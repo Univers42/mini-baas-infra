@@ -28,20 +28,22 @@ export class CollectionsService implements OnModuleInit {
     const mockCollection = this.config.get<string>('MONGO_MOCK_COLLECTION', 'mock_catalog');
     const db = this.mongo.getDb();
 
-    // Create mock_catalog with validator
+    // Bootstrap a demo collection with a generic schema.
+    // The collection name and validator are intentionally minimal and domain-agnostic.
+    // Consuming apps should create their own collections via the /collections API.
     const existing = await db.listCollections({ name: mockCollection }).toArray();
     if (!existing.length) {
       await db.createCollection(mockCollection, {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
-            required: ['owner_id', 'sku', 'name', 'price_cents', 'category', 'created_at', 'updated_at'],
+            required: ['owner_id', 'title', 'created_at', 'updated_at'],
             properties: {
-              owner_id: { bsonType: 'string' },
-              sku: { bsonType: 'string' },
-              name: { bsonType: 'string' },
-              price_cents: { bsonType: 'int' },
-              category: { bsonType: 'string' },
+              owner_id: { bsonType: 'string', description: 'UUID of the owning user' },
+              title:    { bsonType: 'string', description: 'Human-readable title' },
+              body:     { bsonType: 'string', description: 'Optional free-form content' },
+              tags:     { bsonType: 'array',  description: 'Optional string tags',
+                          items: { bsonType: 'string' } },
             },
           },
         },

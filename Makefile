@@ -286,6 +286,9 @@ migrate-mongo: ## Run all MongoDB migrations
 	done
 	@echo -e "$(_G)✓ MongoDB migrations applied$(_0)"
 
+seed-mongo: _require-compose ## Seed MongoDB with demo data
+	@bash scripts/seed-mongo.sh
+
 migrate-down: ## Show rollback hints (STEPS=1)
 	@echo -e "$(_Y)Manual rollback required.$(_0)"
 	@echo "Check DOWN comments in the last $(STEPS) migration(s):"
@@ -458,6 +461,14 @@ vault-unseal: _require-compose ## Unseal Vault with root key from .vault-keys
 	[ -n "$$key" ] && docker exec mini-baas-vault vault operator unseal -address=http://127.0.0.1:8200 "$$key" \
 		|| echo -e "$(_Y)No .vault-keys found — run make vault-init first$(_0)"
 
+vault-rotate: _require-compose ## Rotate all Vault secrets (GROUP=jwt|postgres|mongo|minio|kong|all)
+	@echo -e "$(_B)Rotating Vault secrets (group: $${GROUP:-all})…$(_0)"
+	@docker exec mini-baas-vault /vault/scripts/rotate-secrets.sh $${GROUP:-all}
+	@echo -e "$(_G)✓ Vault rotation complete$(_0)"
+
+vault-rotate-dry: _require-compose ## Dry-run secret rotation (preview without applying)
+	@docker exec -e DRY_RUN=1 mini-baas-vault /vault/scripts/rotate-secrets.sh $${GROUP:-all}
+
 waf-logs: _require-compose ## Stream WAF (ModSecurity) logs
 	@$(DC) logs -f --tail=200 waf
 
@@ -543,7 +554,7 @@ help: ## Show this help
 	up down restart ps logs pull health bench-startup \
 	build build-% build-optimized tag push push-bake images image-sizes \
 	tests test-phase% test-postgres \
-	migrate migrate-mongo migrate-down migrate-status \
+	migrate migrate-mongo migrate-down migrate-status seed-mongo \
 	secrets secrets-validate secrets-rotate check-secrets \
 	observe observe-down grafana prometheus \
 	adapter-add adapter-ls \
@@ -551,7 +562,7 @@ help: ## Show this help
 	audit audit-scan audit-fetch \
 	nestjs-install nestjs-lint nestjs-typecheck nestjs-format \
 	nestjs-build nestjs-build-% nestjs-dev-% nestjs-test nestjs-ci \
-	vault-init vault-status vault-unseal \
+	vault-init vault-status vault-unseal vault-rotate vault-rotate-dry \
 	waf-logs waf-test \
 	watch watch-logs watch-headless kill-watch watch-attach watch-docker \
 	env preflight hooks update help \

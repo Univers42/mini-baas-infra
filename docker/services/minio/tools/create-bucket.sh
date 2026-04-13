@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    create-bucket.sh                                   :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/04/09 23:34:43 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/09 23:34:44 by dlesieur         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 #!/usr/bin/env bash
 # File: docker/services/minio/tools/create-bucket.sh
 # Description: Create a new bucket in MinIO using the mc (MinIO Client) CLI

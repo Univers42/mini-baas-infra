@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Dockerfile                                         :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/04/09 23:36:05 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/13 19:23:49 by dlesieur         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 # syntax=docker/dockerfile:1
 # File: docker/services/postgres/Dockerfile
 # PostgreSQL 16 with pg_net extension (required by GoTrue webhooks / Supabase).

@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    promtail.yaml                                      :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/04/10 00:34:30 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/11 17:15:22 by dlesieur         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 # Promtail configuration — ships Docker container logs to Loki
 server:
   http_listen_port: 9080
