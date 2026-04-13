@@ -15,24 +15,25 @@ BEGIN;
 -- ══════════════════════════════════════════════════════════════════
 -- 1. Ensure the trigger function exists (idempotent)
 -- ══════════════════════════════════════════════════════════════════
+-- Field names MUST match what the Rust parser (realtime-db-postgres/parser.rs)
+-- expects: "operation" (not "type"), "data" (not "record"), "old_data" (not "old_record").
 CREATE OR REPLACE FUNCTION public.realtime_notify()
 RETURNS TRIGGER AS $fn$
 DECLARE
-  payload JSONB;
+  payload JSON;
 BEGIN
-  payload := jsonb_build_object(
-    'schema',     TG_TABLE_SCHEMA,
-    'table',      TG_TABLE_NAME,
-    'type',       TG_OP,
-    'record',     CASE
-                    WHEN TG_OP = 'DELETE' THEN row_to_json(OLD)::jsonb
-                    ELSE row_to_json(NEW)::jsonb
-                  END,
-    'old_record', CASE
-                    WHEN TG_OP = 'UPDATE' THEN row_to_json(OLD)::jsonb
-                    ELSE NULL
-                  END,
-    'timestamp',  extract(epoch FROM now())
+  payload := json_build_object(
+    'table',     TG_TABLE_NAME,
+    'schema',    TG_TABLE_SCHEMA,
+    'operation', TG_OP,
+    'data',      CASE
+                   WHEN TG_OP = 'DELETE' THEN row_to_json(OLD)
+                   ELSE row_to_json(NEW)
+                 END,
+    'old_data',  CASE
+                   WHEN TG_OP = 'UPDATE' THEN row_to_json(OLD)
+                   ELSE NULL
+                 END
   );
 
   PERFORM pg_notify('realtime_events', payload::text);
