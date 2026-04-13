@@ -34,8 +34,9 @@ plugins:
         - __KONG_CORS_ORIGIN_FRONTEND__
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers:
-        [Authorization, Content-Type, apikey, x-client-info, X-Request-ID,
-         Prefer, Range, Accept, Accept-Profile, x-supabase-api-version]
+        [Authorization, Content-Type, Content-Profile, apikey, x-client-info,
+         X-Request-ID, Prefer, Range, Accept, Accept-Profile,
+         x-supabase-api-version]
       exposed_headers:
         [X-Kong-Upstream-Latency, X-Kong-Proxy-Latency, X-Request-ID]
       credentials: true
