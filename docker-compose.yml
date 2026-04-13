@@ -470,6 +470,10 @@ services:
   # ─── Realtime / WebSocket ────────────────────────────────────────
   realtime:
     image: dlesieur/realtime-agnostic:latest
+    build:
+      context: ./docker/services/realtime/realtime-agnostic
+      dockerfile: Dockerfile
+      # Run:  docker compose build realtime  to rebuild with source fixes
     container_name: mini-baas-realtime
     env_file: [.env]
     environment:
