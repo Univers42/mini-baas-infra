@@ -40,7 +40,7 @@ MUTATION_EMAIL="phase10_mutation_$(date +%s)@example.com"
 pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
     return 0
 }
 
@@ -48,7 +48,7 @@ fail() {
     local name="$1"
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
     return 0
 }
 

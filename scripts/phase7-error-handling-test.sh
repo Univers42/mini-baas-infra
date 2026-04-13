@@ -33,10 +33,10 @@ test_case() {
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -49,10 +49,10 @@ test_in_range() {
 
     if [[ "$value" -ge "$min" && "$value" -le "$max" ]]; then
         echo -e "${GREEN}✓${NC} $name (got: $value, range: $min-$max)"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected range: $min-$max, got: $value)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -133,10 +133,10 @@ WEAK_PASS=$(curl -sS -o "$TMPDIR/weak_pass.json" -w "$CURL_FMT" \
 
 if [[ "$WEAK_PASS" -gt 399 ]] && [[ "$WEAK_PASS" -lt 500 ]]; then
     echo "✓ Weak password rejected (status: $WEAK_PASS)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "⚠ Weak password handling unclear (status: $WEAK_PASS)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 8: Duplicate email signup
@@ -161,10 +161,10 @@ DUP_EMAIL=$(curl -sS -o "$TMPDIR/dup_email.json" -w "$CURL_FMT" \
 
 if [[ "$DUP_EMAIL" -gt 399 ]] && [[ "$DUP_EMAIL" -lt 500 ]]; then
     echo "✓ Duplicate email rejected (status: $DUP_EMAIL)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "⚠ Duplicate email validation unclear (status: $DUP_EMAIL)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 9: Invalid query parameters
@@ -177,10 +177,10 @@ BAD_QUERY=$(curl -sS -o "$TMPDIR/bad_query.json" -w "$CURL_FMT" \
 # Either succeeds with filter ignored or returns 400
 if [[ "$BAD_QUERY" == "200" ]] || [[ "$BAD_QUERY" -ge 400 ]]; then
     echo "✓ Invalid query param handled (status: $BAD_QUERY)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ Invalid query param handling unexpected (status: $BAD_QUERY)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 10: Non-existent resource (404)

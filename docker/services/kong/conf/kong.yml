@@ -118,8 +118,8 @@ services:
             config:
               policy: local
               limit_by: ip
-              minute: 60
-              hour: 2000
+              minute: 300
+              hour: 5000
 
   - name: rest
     url: http://postgrest:3000
@@ -138,6 +138,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -145,14 +146,14 @@ services:
               minute: 180
               hour: 5000
 
-  # Realtime — Rust WebSocket CDC server.
-  # The upstream exposes /v1/health and /v1/ws, so the API route strips
-  # only the /realtime prefix, preserving /v1/*.
+  # Realtime — custom WebSocket CDC server.
+  # The upstream exposes / (dashboard) and /ws (WebSocket endpoint).
+  # The API route maps /realtime/v1 → upstream /ws.
   - name: realtime
-    url: http://realtime:4000
+    url: http://realtime:4000/ws
     routes:
       - name: realtime-api
-        paths: [/realtime]
+        paths: [/realtime/v1]
         strip_path: true
         protocols: [http, https]
         plugins:
@@ -166,6 +167,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -176,7 +178,7 @@ services:
   # Realtime WebSocket — separate service so it can skip auth plugins.
   # WS auth happens in-band inside the WebSocket protocol.
   - name: realtime-ws
-    url: http://realtime:4000/v1/ws
+    url: http://realtime:4000/ws
     routes:
       - name: realtime-ws-route
         paths: [/realtime/v1/ws]
@@ -200,6 +202,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -228,6 +231,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: ip-restriction
             config:
               allow: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1]
@@ -255,6 +259,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -279,6 +284,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: ip-restriction
             config:
               allow: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1]
@@ -310,6 +316,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-size-limiting
             config:
               allowed_payload_size: 1
@@ -338,6 +345,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-transformer
             config:
               remove:
@@ -384,6 +392,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-size-limiting
             config:
               allowed_payload_size: 64
@@ -412,6 +421,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-size-limiting
             config:
               allowed_payload_size: 16
@@ -440,6 +450,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -464,6 +475,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-size-limiting
             config:
               allowed_payload_size: 64
@@ -494,6 +506,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-size-limiting
             config:
               allowed_payload_size: 64
@@ -522,6 +535,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -546,6 +560,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -570,6 +585,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: request-size-limiting
             config:
               allowed_payload_size: 64
@@ -598,6 +614,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local
@@ -622,6 +639,7 @@ services:
               key_claim_name: iss
               claims_to_verify: [exp]
               run_on_preflight: false
+              anonymous: __KONG_ANON_UUID__
           - name: rate-limiting
             config:
               policy: local

@@ -34,10 +34,10 @@ test_case() {
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $name"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -49,10 +49,10 @@ test_contains() {
 
     if [[ "$haystack" == *"$needle"* ]]; then
         echo -e "${GREEN}✓${NC} $name"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -83,10 +83,10 @@ if [[ "$SIGNUP_HTTP" == "200" ]]; then
     USER_ID=$(jq -r '.id // .user.id // empty' "$TMPDIR/signup.json" 2>/dev/null || true)
     if [[ -n "$USER_ID" ]]; then
         echo -e "${GREEN}  └─${NC} User ID: $USER_ID"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} Signup response contains user id"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
 fi
 
@@ -111,10 +111,10 @@ if [[ "$LOGIN_HTTP" == "200" ]]; then
         echo -e "${GREEN}  └─${NC} JWT token obtained"
         # Store for later use
         echo "$JWT_TOKEN" > "$TMPDIR/jwt_token.txt"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} Login response contains access_token"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
         JWT_TOKEN=""
     fi
 fi
@@ -133,10 +133,10 @@ else
     # Should fail or return empty for unauthenticated
     if [[ "$UNAUTH_HTTP" != "200" ]]; then
         echo -e "${GREEN}✓${NC} Unauthenticated access correctly rejected"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${YELLOW}  (Note: Unauthenticated access returned 200 - may be expected)${NC}"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     fi
 
     # 3b. Test authorized access (with JWT)
@@ -152,7 +152,7 @@ else
         RESPONSE_BODY=$(cat "$TMPDIR/rest_auth.json")
         test_contains "Response is valid JSON array" "$RESPONSE_BODY" "["
         echo -e "${GREEN}  └─${NC} Response: $RESPONSE_BODY"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     fi
 fi
 
@@ -184,10 +184,10 @@ INVALID_HTTP=$(curl -sS -o "$TMPDIR/invalid_token.json" -w "$CURL_FMT" \
 
 if [[ "$INVALID_HTTP" != "200" ]]; then
     echo -e "${GREEN}✓${NC} Invalid JWT token rejected"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${YELLOW}  (Note: Invalid token returned 200 - JWT validation may not be enforced)${NC}"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "All tests passed!" "Phase 3 has failing tests"

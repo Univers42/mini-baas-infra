@@ -51,10 +51,10 @@ assert_eq() {
   local name="$1" expected="$2" actual="$3"
   if [[ "$actual" == "$expected" ]]; then
     echo -e "  ${GREEN}✓${NC} $name"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
   else
     echo -e "  ${RED}✗${NC} $name (expected: $expected, got: $actual)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
   fi
 }
 
@@ -62,10 +62,10 @@ assert_not_empty() {
   local name="$1" value="$2"
   if [[ -n "$value" && "$value" != "null" ]]; then
     echo -e "  ${GREEN}✓${NC} $name"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
   else
     echo -e "  ${RED}✗${NC} $name (value is empty or null)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
   fi
 }
 
@@ -73,10 +73,10 @@ assert_contains() {
   local name="$1" haystack="$2" needle="$3"
   if echo "$haystack" | grep -q "$needle"; then
     echo -e "  ${GREEN}✓${NC} $name"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
   else
     echo -e "  ${RED}✗${NC} $name (missing: $needle)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
   fi
 }
 
@@ -156,10 +156,10 @@ assert_not_empty "JWT has role claim" "$JWT_ROLE"
 
 if [[ "$JWT_EXP" -gt "$NOW" ]]; then
   echo -e "  ${GREEN}✓${NC} Token expires in future ($((JWT_EXP - NOW))s)"
-  ((TESTS_PASSED++))
+  ((++TESTS_PASSED))
 else
   echo -e "  ${RED}✗${NC} Token already expired!"
-  ((TESTS_FAILED++))
+  ((++TESTS_FAILED))
 fi
 
 # ═══════════════════════════════════════════════════════════════════
@@ -184,10 +184,10 @@ HTTP=$($CURL -o "$TMPDIR/unauth.json" -w '%{http_code}' \
 # We accept 200 (anon allowed) or 401 (strict JWT required).
 if [[ "$HTTP" == "200" || "$HTTP" == "401" || "$HTTP" == "404" ]]; then
   echo -e "  ${GREEN}✓${NC} Request without JWT handled correctly (HTTP $HTTP)"
-  ((TESTS_PASSED++))
+  ((++TESTS_PASSED))
 else
   echo -e "  ${RED}✗${NC} Unexpected response without JWT: HTTP $HTTP"
-  ((TESTS_FAILED++))
+  ((++TESTS_FAILED))
 fi
 
 # ═══════════════════════════════════════════════════════════════════
@@ -267,10 +267,10 @@ HTTP=$($CURL -o "$TMPDIR/logout.json" -w '%{http_code}' \
 # GoTrue returns 204 No Content on successful logout
 if [[ "$HTTP" == "204" || "$HTTP" == "200" ]]; then
   echo -e "  ${GREEN}✓${NC} Logout returned $HTTP"
-  ((TESTS_PASSED++))
+  ((++TESTS_PASSED))
 else
   echo -e "  ${RED}✗${NC} Logout returned $HTTP (expected 204 or 200)"
-  ((TESTS_FAILED++))
+  ((++TESTS_FAILED))
 fi
 
 # ═══════════════════════════════════════════════════════════════════
@@ -300,10 +300,10 @@ for i in $(seq 1 65); do
 done
 if [[ "$RATE_LIMITED" == "true" ]]; then
   echo -e "  ${GREEN}✓${NC} Rate limiting active (429 after $i requests)"
-  ((TESTS_PASSED++))
+  ((++TESTS_PASSED))
 else
   echo -e "  ${YELLOW}⚠${NC} Rate limit not triggered in 65 requests (may be tuned higher)"
-  ((TESTS_PASSED++))  # soft pass — limit may be set to 60/min
+  ((++TESTS_PASSED))  # soft pass — limit may be set to 60/min
 fi
 
 # ═══════════════════════════════════════════════════════════════════

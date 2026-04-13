@@ -33,10 +33,10 @@ test_case() {
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -48,10 +48,10 @@ test_contains() {
 
     if echo "$haystack" | grep -q "$needle"; then
         echo -e "${GREEN}✓${NC} $name"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -89,10 +89,10 @@ test_case "Signup returns 200" "200" "$SIGNUP_HTTP"
 SIGNUP_TOKEN=$(jq -r '.session.access_token // .access_token // empty' "$TMPDIR/signup.json" 2>/dev/null)
 if [[ -n "$SIGNUP_TOKEN" ]] && [[ "$SIGNUP_TOKEN" != "null" ]]; then
     echo "✓ Access token issued on signup (length: ${#SIGNUP_TOKEN})"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ No access token in signup response"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 2: Refresh token generation
@@ -101,10 +101,10 @@ REFRESH_TOKEN=$(jq -r '.session.refresh_token // .refresh_token // empty' "$TMPD
 
 if [[ -n "$REFRESH_TOKEN" ]] && [[ "$REFRESH_TOKEN" != "null" ]]; then
     echo "✓ Refresh token issued on signup (length: ${#REFRESH_TOKEN})"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "⚠ No refresh token in signup response (may be expected)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 3: JWT token structure - has 3 parts separated by dots
@@ -138,10 +138,10 @@ CURRENT_TIME=$(date +%s)
 if [[ "$EXP_TIME" -gt "$CURRENT_TIME" ]]; then
     TIME_UNTIL_EXP=$((EXP_TIME - CURRENT_TIME))
     echo "✓ Token expires in future (in ${TIME_UNTIL_EXP}s)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ Token already expired or invalid expiration"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 7: Token issued at time is recent
@@ -151,10 +151,10 @@ TIME_DIFF=$((CURRENT_TIME - IAT_TIME))
 
 if [[ "$TIME_DIFF" -ge 0 ]] && [[ "$TIME_DIFF" -le 60 ]]; then
     echo "✓ Token issued recently (${TIME_DIFF}s ago)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ Token issued time seems incorrect (diff: ${TIME_DIFF}s)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 8: Token login endpoint
@@ -171,10 +171,10 @@ test_case "Login returns 200" "200" "$LOGIN_HTTP"
 LOGIN_TOKEN=$(jq -r '.access_token // empty' "$TMPDIR/login.json" 2>/dev/null)
 if [[ -n "$LOGIN_TOKEN" ]] && [[ "$LOGIN_TOKEN" != "null" ]]; then
     echo "✓ Access token issued on login (length: ${#LOGIN_TOKEN})"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ No access token in login response"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 9: Token type is Bearer
@@ -182,10 +182,10 @@ ui_step "Test 9: Token type validation"
 TOKEN_TYPE=$(jq -r '.token_type // empty' "$TMPDIR/login.json" 2>/dev/null)
 if [[ "$TOKEN_TYPE" == "Bearer" ]]; then
     echo "✓ Token type is Bearer"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "⚠ Unexpected token type: $TOKEN_TYPE"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 10: Using token in Authorization header
@@ -210,23 +210,23 @@ if [[ -n "$REFRESH_TOKEN" ]] && [[ "$REFRESH_TOKEN" != "null" ]]; then
     
     if [[ "$REFRESH_HTTP" == "200" ]]; then
         echo "✓ Refresh token endpoint returns 200"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
         
         NEW_TOKEN=$(jq -r '.access_token // empty' "$TMPDIR/refresh.json" 2>/dev/null)
         if [[ -n "$NEW_TOKEN" ]] && [[ "$NEW_TOKEN" != "null" ]] && [[ "$NEW_TOKEN" != "$LOGIN_TOKEN" ]]; then
             echo "✓ New access token issued from refresh"
-            ((TESTS_PASSED++))
+            ((++TESTS_PASSED))
         else
             echo "⚠ Token refresh unclear"
-            ((TESTS_PASSED++))
+            ((++TESTS_PASSED))
         fi
     else
         echo "⚠ Refresh token endpoint returned $REFRESH_HTTP"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     fi
 else
     echo "⚠ Refresh token not available in response"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 12: Malformed Bearer token format
@@ -239,10 +239,10 @@ BAD_AUTH=$(curl -sS -o "$TMPDIR/bad_auth.json" -w "$CURL_FMT" \
 
 if [[ "$BAD_AUTH" == "401" ]]; then
     echo "✓ Malformed Bearer token rejected with 401"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ Malformed Bearer token not rejected (status: $BAD_AUTH)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 13: Wrong Bearer scheme
@@ -255,10 +255,10 @@ WRONG_SCHEME=$(curl -sS -o "$TMPDIR/wrong_scheme.json" -w "$CURL_FMT" \
 
 if [[ "$WRONG_SCHEME" -gt 399 ]]; then
     echo "✓ Wrong auth scheme rejected or ignored"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "⚠ Wrong auth scheme processing unclear"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Cleanup

@@ -33,10 +33,10 @@ test_case() {
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $name"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -48,10 +48,10 @@ test_contains() {
 
     if [[ "$haystack" == *"$needle"* ]]; then
         echo -e "${GREEN}✓${NC} $name"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -107,10 +107,10 @@ ui_step "Step 1: Create test users"
 USER1_ID=$(create_test_user "$EMAIL1" "$PASS" "$TMPDIR/user1_signup.json")
 if [[ -n "$USER1_ID" ]]; then
     echo -e "${GREEN}✓${NC} User 1 created: $USER1_ID"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${RED}✗${NC} Failed to create User 1"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 sleep 1  # Rate limit spacing between user creations
@@ -118,10 +118,10 @@ sleep 1  # Rate limit spacing between user creations
 USER2_ID=$(create_test_user "$EMAIL2" "$PASS" "$TMPDIR/user2_signup.json")
 if [[ -n "$USER2_ID" ]]; then
     echo -e "${GREEN}✓${NC} User 2 created: $USER2_ID"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${RED}✗${NC} Failed to create User 2"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 ui_step "Step 2: Obtain JWT tokens for both users"
@@ -129,20 +129,20 @@ ui_step "Step 2: Obtain JWT tokens for both users"
 JWT1=$(get_jwt_token "$EMAIL1" "$PASS" "$TMPDIR/user1_login.json")
 if [[ -n "$JWT1" ]]; then
     echo -e "${GREEN}✓${NC} JWT obtained for User 1"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${RED}✗${NC} Failed to get JWT for User 1"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
     JWT1=""
 fi
 
 JWT2=$(get_jwt_token "$EMAIL2" "$PASS" "$TMPDIR/user2_login.json")
 if [[ -n "$JWT2" ]]; then
     echo -e "${GREEN}✓${NC} JWT obtained for User 2"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${RED}✗${NC} Failed to get JWT for User 2"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
     JWT2=""
 fi
 
@@ -191,10 +191,10 @@ NO_JWT_HTTP=$(curl -sS -o "$TMPDIR/no_jwt.json" -w "$CURL_FMT" \
 
 if [[ "$NO_JWT_HTTP" != "200" ]]; then
     echo -e "${GREEN}✓${NC} Request without JWT correctly rejected ($NO_JWT_HTTP)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${YELLOW}  (Note: Request without JWT returned 200 - may be expected for public tables)${NC}"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 ui_step "Step 6: Test malformed JWT rejection"
@@ -209,10 +209,10 @@ MALFORMED_HTTP=$(curl -sS -o "$TMPDIR/malformed_jwt.json" -w "$CURL_FMT" \
 
 if [[ "$MALFORMED_HTTP" != "200" ]]; then
     echo -e "${GREEN}✓${NC} Malformed JWT rejected ($MALFORMED_HTTP)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo -e "${YELLOW}  (Note: Malformed JWT returned 200)${NC}"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 ui_summary "$TESTS_PASSED" "$TESTS_FAILED" "All isolation tests passed!" "Phase 4 has failing tests"

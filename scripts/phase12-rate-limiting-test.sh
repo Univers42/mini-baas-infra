@@ -30,7 +30,7 @@ source "$SCRIPT_DIR/test-ui.sh"
 pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
     return 0
 }
 
@@ -38,7 +38,7 @@ fail() {
     local name="$1"
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
     return 0
 }
 
@@ -65,7 +65,7 @@ ui_kv "Test focus" "Route-level and IP-based rate limiting"
 ui_hr
 
 # Define rate limits per route (from kong.yml)
-# auth: minute: 60, hour: 2000
+# auth: minute: 300, hour: 5000
 # rest: minute: 180, hour: 5000
 # realtime: minute: 120, hour: 3000
 # storage: minute: 60, hour: 1500
@@ -145,8 +145,8 @@ for i in {1..3}; do
 done
 
 ui_step "Test 6: Auth endpoint minute limit enforces"
-# Attempt to hit the auth minute limit (60 per minute)
-# We'll try 10 rapid requests to see if we can trigger it
+# Attempt to verify auth endpoint handles rapid requests (300 per minute)
+# We'll try 10 rapid requests to see if they succeed
 RAPID_COUNT=0
 for i in {1..10}; do
     CODE=$(curl -sS -o /dev/null -w "$CURL_FMT" \

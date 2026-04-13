@@ -14,7 +14,7 @@
 BEGIN;
 
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM schema_migrations WHERE version = 11) THEN
+  IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 11) THEN
     RAISE NOTICE 'Migration 011 already applied — skipping';
     RETURN;
   END IF;
@@ -85,7 +85,7 @@ DO $$ BEGIN
     FOR EACH ROW EXECUTE FUNCTION public.realtime_notify();
 
   -- Record migration
-  INSERT INTO schema_migrations (version, name) VALUES (11, '011_realtime_triggers');
+  INSERT INTO public.schema_migrations (version, name) VALUES (11, '011_realtime_triggers');
 
 END $$;
 

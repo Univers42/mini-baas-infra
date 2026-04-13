@@ -7,7 +7,7 @@ BEGIN;
 
 -- ── Guard: skip if already applied ────────────────────────────────
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM schema_migrations WHERE version = 7) THEN
+  IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 7) THEN
     RAISE NOTICE 'Migration 007 already applied — skipping';
     RETURN;
   END IF;
@@ -28,8 +28,10 @@ DO $$ BEGIN
   ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
 
   -- Authenticated users can read roles; only service_role can mutate.
+  DROP POLICY IF EXISTS roles_read ON public.roles;
   CREATE POLICY roles_read ON public.roles
     FOR SELECT TO authenticated USING (true);
+  DROP POLICY IF EXISTS roles_admin ON public.roles;
   CREATE POLICY roles_admin ON public.roles
     FOR ALL TO authenticated USING (
       EXISTS (
@@ -67,6 +69,7 @@ DO $$ BEGIN
   ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
   -- Users see their own roles; admins see all.
+  DROP POLICY IF EXISTS user_roles_select_own ON public.user_roles;
   CREATE POLICY user_roles_select_own ON public.user_roles
     FOR SELECT TO authenticated USING (
       user_id = auth.uid()
@@ -77,6 +80,7 @@ DO $$ BEGIN
       )
     );
 
+  DROP POLICY IF EXISTS user_roles_admin ON public.user_roles;
   CREATE POLICY user_roles_admin ON public.user_roles
     FOR ALL TO authenticated USING (
       EXISTS (
@@ -128,8 +132,10 @@ DO $$ BEGIN
 
   ALTER TABLE public.resource_policies ENABLE ROW LEVEL SECURITY;
 
+  DROP POLICY IF EXISTS resource_policies_read ON public.resource_policies;
   CREATE POLICY resource_policies_read ON public.resource_policies
     FOR SELECT TO authenticated USING (true);
+  DROP POLICY IF EXISTS resource_policies_admin ON public.resource_policies;
   CREATE POLICY resource_policies_admin ON public.resource_policies
     FOR ALL TO authenticated USING (
       EXISTS (
@@ -229,7 +235,7 @@ DO $$ BEGIN
   ON CONFLICT DO NOTHING;
 
   -- Record migration
-  INSERT INTO schema_migrations (version, name) VALUES (7, '007_permissions_system');
+  INSERT INTO public.schema_migrations (version, name) VALUES (7, '007_permissions_system');
 
 END $$;
 

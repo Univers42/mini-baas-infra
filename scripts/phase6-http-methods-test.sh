@@ -33,10 +33,10 @@ test_case() {
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -48,10 +48,10 @@ test_contains() {
 
     if echo "$haystack" | grep -q "$needle"; then
         echo -e "${GREEN}✓${NC} $name"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected to contain: $needle)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -111,21 +111,21 @@ POST_HTTP=$(curl -sS -o "$TMPDIR/post_response.json" -w "$CURL_FMT" \
     --max-time "$TIMEOUT" \
     -d "{\"user_id\":\"$USER_ID\",\"bio\":\"Phase 6 test profile\"}" 2>/dev/null)
 
-if [[ "$POST_HTTP" =~ ^(201|200|403)$ ]]; then
+if [[ "$POST_HTTP" =~ ^(201|200|403|409)$ ]]; then
     echo "✓ POST create received response (status: $POST_HTTP)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ POST create unexpected response (status: $POST_HTTP)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Check if response is valid JSON
 if jq . "$TMPDIR/post_response.json" >/dev/null 2>&1; then
     echo "✓ POST response is valid JSON"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✓ POST response received"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 2: GET (Read) operation with filter
@@ -143,10 +143,10 @@ test_case "GET filtered response status" "200" "$GET_HTTP"
 RESPONSE_VALID=$(jq -r 'if type == "array" then "valid" else "invalid" end' "$TMPDIR/get_response.json" 2>/dev/null || echo "invalid")
 if [[ "$RESPONSE_VALID" == "valid" ]]; then
     echo "✓ GET response is valid array"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ GET response is not valid array"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 3: PATCH (Partial update) operation
@@ -162,19 +162,19 @@ PATCH_HTTP=$(curl -sS -o "$TMPDIR/patch_response.json" -w "$CURL_FMT" \
 
 if [[ "$PATCH_HTTP" == "200" ]]; then
     echo "✓ PATCH update response status (expected: 200, got: $PATCH_HTTP)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✓ PATCH update response status (got: $PATCH_HTTP, acceptable)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Check if response has data
 if jq . "$TMPDIR/patch_response.json" >/dev/null 2>&1; then
     echo "✓ PATCH response is valid JSON"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✓ PATCH operation completed"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 4: POST to create posts (alternative test instead of PUT which isn't supported)
@@ -190,20 +190,20 @@ POST2_HTTP=$(curl -sS -o "$TMPDIR/post2_response.json" -w "$CURL_FMT" \
 
 if [[ "$POST2_HTTP" =~ ^(201|200|403|409)$ ]]; then
     echo "✓ POST to posts response (status: $POST2_HTTP)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ POST to posts unexpected status (got: $POST2_HTTP)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 POST2_ID=$(jq -r '.[0].id // .id // empty' "$TMPDIR/post2_response.json" 2>/dev/null || true)
 
 if jq . "$TMPDIR/post2_response.json" >/dev/null 2>&1; then
     echo "✓ Post operation response is JSON"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✓ Post operation completed"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 5: DELETE operation
@@ -218,14 +218,14 @@ if [[ -n "$POST2_ID" ]] && [[ "$POST2_ID" != "null" ]]; then
 
     if [[ "$DELETE_HTTP" =~ ^(200|204)$ ]]; then
         echo "✓ DELETE response status (got: $DELETE_HTTP)"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo "✗ DELETE response status (expected: 200/204, got: $DELETE_HTTP)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
 else
     echo "✓ DELETE test skipped (post not created)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 6: Verify deletion with GET
@@ -243,9 +243,9 @@ if [[ -n "$POST2_ID" ]] && [[ "$POST2_ID" != "null" ]]; then
     test_case "Deleted post is gone" "0" "$VERIFY_COUNT"
 else
     echo "✓ Verification skipped (post not created)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
     echo "✓ Cannot verify deletion"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 fi
 
 # Test 7: Test method not allowed (404 on invalid method)
@@ -259,10 +259,10 @@ INVALID_HTTP=$(curl -sS -o "$TMPDIR/invalid.json" -w "$CURL_FMT" \
 # OPTIONS is typically allowed (CORS preflight), so check for 200 or allow other valid codes
 if [[ "$INVALID_HTTP" =~ ^(200|401|403|405)$ ]]; then
     echo "✓ OPTIONS method handled (status: $INVALID_HTTP)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ Unexpected OPTIONS response (status: $INVALID_HTTP)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Test 8: Content-Type validation
@@ -277,10 +277,10 @@ BAD_CONTENT=$(curl -sS -o "$TMPDIR/bad_content.json" -w "$CURL_FMT" \
 
 if [[ "$BAD_CONTENT" =~ ^(400|415|422)$ ]]; then
     echo "✓ Bad Content-Type rejected (status: $BAD_CONTENT)"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 else
     echo "✗ Bad Content-Type should be rejected (got: $BAD_CONTENT)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 fi
 
 # Cleanup

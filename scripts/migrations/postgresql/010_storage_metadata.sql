@@ -6,7 +6,7 @@
 BEGIN;
 
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM schema_migrations WHERE version = 10) THEN
+  IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 10) THEN
     RAISE NOTICE 'Migration 010 already applied — skipping';
     RETURN;
   END IF;
@@ -108,7 +108,7 @@ DO $$ BEGIN
   $fn$ LANGUAGE sql STABLE SECURITY DEFINER;
 
   -- Record migration
-  INSERT INTO schema_migrations (version, name) VALUES (10, '010_storage_metadata');
+  INSERT INTO public.schema_migrations (version, name) VALUES (10, '010_storage_metadata');
 
 END $$;
 

@@ -32,10 +32,10 @@ test_case() {
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
     return 0
 }
@@ -49,13 +49,13 @@ test_one_of() {
     for expected in "${allowed[@]}"; do
         if [[ "$actual" == "$expected" ]]; then
             echo -e "${GREEN}✓${NC} $name (got: $actual)"
-            ((TESTS_PASSED++))
+            ((++TESTS_PASSED))
             return
         fi
     done
 
     echo -e "${RED}✗${NC} $name (expected one of: ${allowed[*]}, got: $actual)"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
     return 0
 }
 
@@ -90,10 +90,10 @@ if [[ "$SIGNUP_HTTP" == "200" ]]; then
     USER_ID=$(jq -r '.id // .user.id // empty' "$TMPDIR/signup.json" 2>/dev/null || true)
     if [[ -n "$USER_ID" ]]; then
         echo -e "${GREEN}  └─${NC} User created: $USER_ID"
-        ((TESTS_PASSED++))
+        ((++TESTS_PASSED))
     else
         echo -e "${RED}✗${NC} Signup response contains user id"
-        ((TESTS_FAILED++))
+        ((++TESTS_FAILED))
     fi
 fi
 

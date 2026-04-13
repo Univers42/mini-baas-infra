@@ -28,7 +28,7 @@ source "$SCRIPT_DIR/test-ui.sh"
 pass() {
     local name="$1"
     echo -e "${GREEN}✓${NC} $name"
-    ((TESTS_PASSED++)) || true
+    ((++TESTS_PASSED)) || true
     return 0
 }
 
@@ -36,7 +36,7 @@ fail() {
     local name="$1"
     local details="$2"
     echo -e "${RED}✗${NC} $name${details:+ ($details)}"
-    ((TESTS_FAILED++)) || true
+    ((++TESTS_FAILED)) || true
     return 0
 }
 

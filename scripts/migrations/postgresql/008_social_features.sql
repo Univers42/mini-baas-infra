@@ -5,7 +5,7 @@
 BEGIN;
 
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM schema_migrations WHERE version = 8) THEN
+  IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 8) THEN
     RAISE NOTICE 'Migration 008 already applied — skipping';
     RETURN;
   END IF;
@@ -116,6 +116,16 @@ DO $$ BEGIN
   CREATE OR REPLACE FUNCTION public.handle_new_user()
   RETURNS TRIGGER AS $fn$
   BEGIN
+    -- 1. Create the public.users row first (FK target for user_profiles)
+    INSERT INTO public.users (id, email, name)
+    VALUES (
+      NEW.id,
+      NEW.email,
+      COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1))
+    )
+    ON CONFLICT (id) DO NOTHING;
+
+    -- 2. Create user_profiles (FK → public.users)
     INSERT INTO public.user_profiles (user_id, display_name, avatar_url)
     VALUES (
       NEW.id,
@@ -124,9 +134,15 @@ DO $$ BEGIN
     )
     ON CONFLICT DO NOTHING;
 
+    -- 3. Create user_presence
     INSERT INTO public.user_presence (user_id, status)
     VALUES (NEW.id, 'offline')
     ON CONFLICT (user_id) DO NOTHING;
+
+    -- 4. Create profiles (legacy compatibility)
+    INSERT INTO public.profiles (id, email)
+    VALUES (NEW.id, NEW.email)
+    ON CONFLICT (id) DO NOTHING;
 
     RETURN NEW;
   END;
@@ -138,7 +154,7 @@ DO $$ BEGIN
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
   -- Record migration
-  INSERT INTO schema_migrations (version, name) VALUES (8, '008_social_features');
+  INSERT INTO public.schema_migrations (version, name) VALUES (8, '008_social_features');
 
 END $$;
 

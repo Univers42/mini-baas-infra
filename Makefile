@@ -230,7 +230,10 @@ image-sizes: ## Show image sizes for the stack
 			--format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'
 
 tests: ## Run all smoke tests (phase 1→15)
-	@total_p=0; total_f=0; rc_all=0; \
+	@export APIKEY=$${APIKEY:-$$(grep '^ANON_KEY=' .env 2>/dev/null | cut -d= -f2-)}; \
+	export PUBLIC_APIKEY=$${PUBLIC_APIKEY:-$$APIKEY}; \
+	export SERVICE_ROLE_KEY=$${SERVICE_ROLE_KEY:-$$(grep '^SERVICE_ROLE_KEY=' .env 2>/dev/null | cut -d= -f2-)}; \
+	total_p=0; total_f=0; rc_all=0; \
 	for script in $$(ls -1 ./scripts/phase*-*.sh ./scripts/phase*-*.py 2>/dev/null | sort -t/ -k3 -V); do \
 		[ -f "$$script" ] || continue; \
 		tmp=$$(mktemp); \
@@ -259,7 +262,10 @@ tests: ## Run all smoke tests (phase 1→15)
 		|| { echo -e "$(_R)$(_W)✖ Some phases failed$(_0)"; exit 1; }
 
 test-phase%: ## Run one phase (e.g. make test-phase3)
-	@script=$$(ls scripts/phase$*-*.sh 2>/dev/null | head -1); \
+	@export APIKEY=$${APIKEY:-$$(grep '^ANON_KEY=' .env 2>/dev/null | cut -d= -f2-)}; \
+	export PUBLIC_APIKEY=$${PUBLIC_APIKEY:-$$APIKEY}; \
+	export SERVICE_ROLE_KEY=$${SERVICE_ROLE_KEY:-$$(grep '^SERVICE_ROLE_KEY=' .env 2>/dev/null | cut -d= -f2-)}; \
+	script=$$(ls scripts/phase$*-*.sh 2>/dev/null | head -1); \
 	if [ -n "$$script" ]; then FORCE_COLORS=1 bash "$$script"; \
 	else \
 		script=$$(ls scripts/phase$*-*.py 2>/dev/null | head -1); \

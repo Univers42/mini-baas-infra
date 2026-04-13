@@ -95,6 +95,7 @@ services:
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: "cjson.safe"
       JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_ISS: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}
+      KONG_ANON_UUID: ${KONG_ANON_UUID:-cd4f782c-ac87-5081-b322-b54834d15651}
     volumes:
       - ./docker/services/kong/conf/kong.yml:/etc/kong/kong.yml.tmpl:ro
     command: >
@@ -108,6 +109,7 @@ services:
           -e "s|__KONG_CORS_ORIGIN_FRONTEND__|$${KONG_CORS_ORIGIN_FRONTEND}|g" \
           -e "s|__JWT_SECRET__|$${JWT_SECRET}|g" \
           -e "s|__GOTRUE_JWT_ISS__|$${GOTRUE_JWT_ISS}|g" \
+          -e "s|__KONG_ANON_UUID__|$${KONG_ANON_UUID}|g" \
           /etc/kong/kong.yml.tmpl > /tmp/kong.yml;
         exec /docker-entrypoint.sh kong docker-start
       '
@@ -373,6 +375,7 @@ services:
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}
       # MFA / 2FA (TOTP)
       GOTRUE_MFA_ENABLED: "true"
       GOTRUE_SECURITY_MFA_MAX_ENROLLED_FACTORS: 5
@@ -382,9 +385,9 @@ services:
       GOTRUE_SECURITY_REFRESH_TOKEN_REUSE_INTERVAL: 10
       # Password policy
       GOTRUE_PASSWORD_MIN_LENGTH: 8
-      # Rate limiting (per-IP)
+      # Rate limiting (per-IP) — raised for E2E test suite
       GOTRUE_RATE_LIMIT_HEADER: X-Real-IP
-      GOTRUE_RATE_LIMIT_EMAIL_SENT: 5
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: ${GOTRUE_RATE_LIMIT_EMAIL_SENT:-100}
       # OAuth: Google
       GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_OAUTH_ENABLED:-false}
       GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}

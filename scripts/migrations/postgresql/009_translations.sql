@@ -5,7 +5,7 @@
 BEGIN;
 
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM schema_migrations WHERE version = 9) THEN
+  IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 9) THEN
     RAISE NOTICE 'Migration 009 already applied — skipping';
     RETURN;
   END IF;
@@ -115,7 +115,7 @@ DO $$ BEGIN
   $fn$ LANGUAGE plpgsql STABLE;
 
   -- Record migration
-  INSERT INTO schema_migrations (version, name) VALUES (9, '009_translations');
+  INSERT INTO public.schema_migrations (version, name) VALUES (9, '009_translations');
 
 END $$;
 

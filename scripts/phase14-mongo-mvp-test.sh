@@ -28,7 +28,7 @@ source "$SCRIPT_DIR/test-ui.sh"
 pass() {
     local name="$1"
     echo -e "${GREEN}[PASS]${NC} $name"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
     return 0
 }
 
@@ -36,7 +36,7 @@ fail() {
     local name="$1"
     local details="$2"
     echo -e "${RED}[FAIL]${NC} $name - $details"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
     return 0
 }
 
@@ -156,10 +156,10 @@ if [[ -n "$TOKEN_A" ]]; then
         -H "$HDR_APIKEY" \
         -H "Authorization: Bearer $TOKEN_A" \
         --max-time "$TIMEOUT" \
-        -d '{"document":{"title":"phase14 task","status":"open"}}' 2>/dev/null || echo "000")
+        -d '{"data":{"title":"phase14 task","status":"open"}}' 2>/dev/null || echo "000")
     assert_code "Create Mongo document as User A" "201" "$CREATE_HTTP"
 
-    DOC_ID="$(jq -r '.data.id // empty' "$TMPDIR/mongo_create_a.json" 2>/dev/null || true)"
+    DOC_ID="$(jq -r '.id // empty' "$TMPDIR/mongo_create_a.json" 2>/dev/null || true)"
     if [[ -n "$DOC_ID" ]]; then
         pass "Created document has id"
     else
@@ -195,7 +195,7 @@ if [[ -n "$TOKEN_A" ]]; then
         -d '{"patch":{"status":"done"}}' 2>/dev/null || echo "000")
     assert_code "Patch Mongo document as User A" "200" "$PATCH_HTTP"
 
-    PATCHED_STATUS="$(jq -r '.data.status // empty' "$TMPDIR/mongo_patch_a.json" 2>/dev/null || true)"
+    PATCHED_STATUS="$(jq -r '.status // empty' "$TMPDIR/mongo_patch_a.json" 2>/dev/null || true)"
     if [[ "$PATCHED_STATUS" == "done" ]]; then
         pass "Patched document status updated"
     else
@@ -242,7 +242,7 @@ if [[ -n "$TOKEN_A" ]] && [[ -n "$DOC_ID" ]]; then
         --max-time "$TIMEOUT" 2>/dev/null || echo "000")
     assert_code "User A deletes own document" "200" "$A_DELETE_HTTP"
 
-    DELETED_FLAG="$(jq -r '.data.deleted // empty' "$TMPDIR/mongo_delete_a.json" 2>/dev/null || true)"
+    DELETED_FLAG="$(jq -r '.deleted // empty' "$TMPDIR/mongo_delete_a.json" 2>/dev/null || true)"
     if [[ "$DELETED_FLAG" == "true" ]]; then
         pass "Delete response confirms deleted=true"
     else
