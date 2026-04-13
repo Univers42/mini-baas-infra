@@ -172,7 +172,7 @@ services:
   # ─── Relational Database (custom image with pg_net) ───────────────
   postgres:
     build:
-      context: ./docker/postgres
+      context: ./docker/services/postgres
       dockerfile: Dockerfile
     container_name: mini-baas-postgres
     env_file: [.env]

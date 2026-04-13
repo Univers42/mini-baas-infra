@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/13 17:51:52 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/13 19:23:49 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -157,11 +157,14 @@ services:
               minute: 180
               hour: 5000
 
+  # Realtime — Rust WebSocket CDC server.
+  # The upstream exposes /v1/health and /v1/ws, so the API route strips
+  # only the /realtime prefix, preserving /v1/*.
   - name: realtime
     url: http://realtime:4000
     routes:
       - name: realtime-api
-        paths: [/realtime/v1]
+        paths: [/realtime]
         strip_path: true
         protocols: [http, https]
         plugins:
@@ -181,8 +184,14 @@ services:
               limit_by: ip
               minute: 120
               hour: 3000
-      - name: realtime-ws
-        paths: [/realtime/ws]
+
+  # Realtime WebSocket — separate service so it can skip auth plugins.
+  # WS auth happens in-band inside the WebSocket protocol.
+  - name: realtime-ws
+    url: http://realtime:4000/v1/ws
+    routes:
+      - name: realtime-ws-route
+        paths: [/realtime/v1/ws]
         strip_path: true
         protocols: [http, https]
 

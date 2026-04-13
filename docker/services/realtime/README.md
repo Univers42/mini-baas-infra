@@ -10,21 +10,29 @@ docker compose up realtime
 
 ## Environment Variables
 
-| Variable              | Default   | Description                                  |
-| --------------------- | --------- | -------------------------------------------- |
-| `REALTIME_HOST`       | `0.0.0.0` | Bind address                                 |
-| `REALTIME_PORT`       | `4000`    | HTTP/WebSocket server port                   |
-| `REALTIME_JWT_SECRET` | —         | Shared JWT secret for token verification     |
-| `REALTIME_PG_URL`     | —         | PostgreSQL connection string for CDC         |
-| `REALTIME_MONGO_URL`  | —         | MongoDB connection string for change streams |
-| `RUST_LOG`            | `info`    | Log level (`debug`, `info`, `warn`, `error`) |
+| Variable                | Default   | Description                                      |
+| ----------------------- | --------- | ------------------------------------------------ |
+| `REALTIME_HOST`         | `0.0.0.0` | Bind address                                     |
+| `REALTIME_PORT`         | `4000`    | HTTP/WebSocket server port                       |
+| `REALTIME_JWT_SECRET`   | —         | Shared JWT secret for token verification         |
+| `REALTIME_PG_URL`       | —         | PostgreSQL connection string for CDC             |
+| `REALTIME_PG_CHANNEL`   | `realtime_events` | PostgreSQL `NOTIFY` channel to listen on  |
+| `REALTIME_MONGO_URI`    | —         | MongoDB connection string for change streams     |
+| `REALTIME_MONGO_DB`     | —         | MongoDB database name for change streams         |
+| `RUST_LOG`              | `info`    | Log level (`debug`, `info`, `warn`, `error`)     |
+
+> **Config file**: A reference `realtime.conf` is shipped in
+> `conf/realtime.conf` with all tunables (event bus capacity, performance limits,
+> circuit-breaker thresholds, engine limits). In docker-compose all settings are
+> provided via environment variables which take precedence, so the file is not
+> mounted by default.
 
 ## Endpoints
 
-| Protocol  | Path         | Description                          |
-| --------- | ------------ | ------------------------------------ |
-| HTTP      | `/v1/health` | Health & metrics endpoint (JSON)     |
-| WebSocket | `/v1/ws`     | WebSocket endpoint for subscriptions |
+| Protocol  | Internal Path | Kong Route                  | Description                          |
+| --------- | ------------- | --------------------------- | ------------------------------------ |
+| HTTP      | `/v1/health`  | `GET /realtime/v1/health`   | Health & metrics endpoint (JSON)     |
+| WebSocket | `/v1/ws`      | `WS  /realtime/v1/ws`       | WebSocket endpoint for subscriptions |
 
 ## CLI Examples
 
@@ -71,4 +79,4 @@ Returns a `200` status with JSON metrics when the Realtime server is ready to ac
 - **Image:** `dlesieur/realtime-agnostic`
 - **Port:** `4000`
 - **Depends on:** `postgres`, `mongo`
-- **Networks:** Internal `baas` network
+- **Networks:** Internal `mini-baas` network

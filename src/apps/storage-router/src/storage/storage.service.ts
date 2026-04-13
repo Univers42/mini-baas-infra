@@ -4,6 +4,7 @@ import {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
+  ListBucketsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PresignDto } from './dto/presign.dto';
@@ -29,6 +30,16 @@ export class StorageService implements OnModuleInit {
 
     this.defaultExpires = this.config.get<number>('PRESIGN_EXPIRES_SECONDS', 3600);
     this.logger.log('S3 client initialised');
+  }
+
+  /** Lightweight S3 connectivity check (ListBuckets). */
+  async isHealthy(): Promise<boolean> {
+    try {
+      await this.s3.send(new ListBucketsCommand({}));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async presign(

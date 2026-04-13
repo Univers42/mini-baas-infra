@@ -9,7 +9,7 @@ group "default" {
     "permission-engine", "schema-service",
     "analytics-service", "gdpr-service", "newsletter-service",
     "ai-service", "log-service", "session-service",
-    "waf", "vault"
+    "waf", "vault", "postgres"
   ]
 }
 
@@ -24,7 +24,7 @@ group "apps" {
 }
 
 group "infra" {
-  targets = ["waf", "vault"]
+  targets = ["waf", "vault", "postgres"]
 }
 
 variable "REGISTRY" {
@@ -163,4 +163,13 @@ target "vault" {
   tags       = ["${REGISTRY}/vault:${TAG}"]
   cache-from = ["type=registry,ref=${REGISTRY}/cache:vault"]
   cache-to   = ["type=registry,ref=${REGISTRY}/cache:vault,mode=max"]
+}
+
+target "postgres" {
+  context    = "./docker/services/postgres"
+  dockerfile = "Dockerfile"
+  platforms  = ["linux/amd64", "linux/arm64"]
+  tags       = ["${REGISTRY}/postgres:${TAG}"]
+  cache-from = ["type=registry,ref=${REGISTRY}/cache:postgres"]
+  cache-to   = ["type=registry,ref=${REGISTRY}/cache:postgres,mode=max"]
 }
