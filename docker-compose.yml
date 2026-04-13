@@ -476,11 +476,14 @@ services:
       REALTIME_HOST: 0.0.0.0
       REALTIME_PORT: 4000
       REALTIME_JWT_SECRET: ${JWT_SECRET}
+      REALTIME_JWT_AUDIENCE: ""
       REALTIME_PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
       REALTIME_PG_CHANNEL: realtime_events
       REALTIME_MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-mongo}:${MONGO_INITDB_ROOT_PASSWORD:-mongo}@mongo:27017/?replicaSet=rs0&authSource=admin
       REALTIME_MONGO_DB: ${MONGO_DB:-syncspace}
       RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - ./docker/services/realtime/realtime-agnostic/realtime.toml:/etc/realtime/realtime.toml:ro
     depends_on:
       db-bootstrap:
         condition: service_completed_successfully
