@@ -80,6 +80,7 @@ KONG_SERVICE_API_KEY=service-role-key
 KONG_CORS_ORIGIN_APP=http://localhost:3000
 KONG_CORS_ORIGIN_PLAYGROUND=http://localhost:3100
 KONG_CORS_ORIGIN_STUDIO=http://localhost:3001
+KONG_CORS_ORIGIN_FRONTEND=http://localhost:5173
 
 # GoTrue
 API_EXTERNAL_URL=http://localhost:8000/auth/v1
@@ -183,6 +184,10 @@ LOG_STREAM_TOKEN=$(gen_alnum 32)
 
 # Session Service
 SESSION_TTL_DAYS=7
+
+# Frontend SPA
+FRONTEND_PORT=5173
+FRONTEND_URL=http://localhost:5173
 EOF
 
 chmod 600 "$ENV_FILE"

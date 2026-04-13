@@ -104,6 +104,7 @@ services:
           -e "s|__KONG_CORS_ORIGIN_APP__|$${KONG_CORS_ORIGIN_APP}|g" \
           -e "s|__KONG_CORS_ORIGIN_PLAYGROUND__|$${KONG_CORS_ORIGIN_PLAYGROUND}|g" \
           -e "s|__KONG_CORS_ORIGIN_STUDIO__|$${KONG_CORS_ORIGIN_STUDIO}|g" \
+          -e "s|__KONG_CORS_ORIGIN_FRONTEND__|$${KONG_CORS_ORIGIN_FRONTEND}|g" \
           -e "s|__JWT_SECRET__|$${JWT_SECRET}|g" \
           -e "s|__GOTRUE_JWT_ISS__|$${GOTRUE_JWT_ISS}|g" \
           /etc/kong/kong.yml.tmpl > /tmp/kong.yml;
@@ -167,9 +168,11 @@ services:
       - mini-baas
     restart: unless-stopped
 
-  # ─── Relational Database ─────────────────────────────────────────
+  # ─── Relational Database (custom image with pg_net) ───────────────
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
     container_name: mini-baas-postgres
     env_file: [.env]
     ports:
@@ -182,6 +185,10 @@ services:
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    command: >
+      postgres
+        -c shared_preload_libraries=pg_net
+        -c pg_net.database_name=${POSTGRES_DB:-postgres}
     networks:
       mini-baas:
         aliases:
@@ -217,6 +224,27 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - mini-baas
+    restart: "no"
+
+  # ─── Domain Bootstrap (migrations + seeds from ../database/) ─────
+  domain-bootstrap:
+    image: postgres:16-alpine
+    container_name: mini-baas-domain-bootstrap
+    env_file: [.env]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    command: ["sh", "/domain/domain-bootstrap.sh"]
+    volumes:
+      - ../database/domain-bootstrap.sh:/domain/domain-bootstrap.sh:ro
+      - ../database/migrations:/domain/migrations:ro
+      - ../database/seeds:/domain/seeds:ro
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
     networks:
       - mini-baas
     restart: "no"
@@ -397,7 +425,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      db-bootstrap:
+      domain-bootstrap:
         condition: service_completed_successfully
     networks:
       - mini-baas
@@ -428,7 +456,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      db-bootstrap:
+      domain-bootstrap:
         condition: service_completed_successfully
     networks:
       - mini-baas
@@ -1022,6 +1050,31 @@ services:
     networks:
       - mini-baas
     restart: unless-stopped
+
+  # ─── Vite & Gourmand SPA Frontend ───────────────────────────────
+  frontend:
+    build:
+      context: ../nginx
+      dockerfile: Dockerfile
+    container_name: mini-baas-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    volumes:
+      - ../View/dist:/usr/share/nginx/html:ro
+    depends_on:
+      kong:
+        condition: service_healthy
+    networks:
+      - mini-baas
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    mem_limit: 128m
+    cpus: 0.25
 
 networks:
   mini-baas:
