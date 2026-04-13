@@ -95,7 +95,7 @@ PGRST_DB_SCHEMA=public
 PGRST_DB_ANON_ROLE=anon
 
 # Realtime (dlesieur/realtime-agnostic)
-REALTIME_PORT=4002
+# Connection vars are set in docker-compose.yml environment: block.
 RUST_LOG=info
 
 # Supabase API keys (legacy HS256 JWTs)
