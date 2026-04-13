@@ -74,9 +74,11 @@ POSTGRES_DB=${POSTGRES_DB}
 DATABASE_URL=${DATABASE_URL}
 PGRST_DB_URI=${PGRST_DB_URI}
 
-# Kong key-auth and CORS policy
-KONG_PUBLIC_API_KEY=public-anon-key
-KONG_SERVICE_API_KEY=service-role-key
+# Kong key-auth credentials = the JWT themselves
+# supabase-js sends the same value as both apikey header (key-auth) and
+# Authorization: Bearer (jwt plugin), so they must be valid JWTs.
+KONG_PUBLIC_API_KEY=${ANON_KEY}
+KONG_SERVICE_API_KEY=${SERVICE_ROLE_KEY}
 KONG_CORS_ORIGIN_APP=http://localhost:3000
 KONG_CORS_ORIGIN_PLAYGROUND=http://localhost:3100
 KONG_CORS_ORIGIN_STUDIO=http://localhost:3001
@@ -84,12 +86,13 @@ KONG_CORS_ORIGIN_FRONTEND=http://localhost:5173
 
 # GoTrue
 API_EXTERNAL_URL=http://localhost:8000/auth/v1
-GOTRUE_SITE_URL=http://localhost:3001
+GOTRUE_SITE_URL=http://localhost:5173
+GOTRUE_URI_ALLOW_LIST=http://localhost:5173/**
 JWT_SECRET=${JWT_SECRET}
 
 # PostgREST
 PGRST_DB_SCHEMA=public
-PGRST_DB_ANON_ROLE=postgres
+PGRST_DB_ANON_ROLE=anon
 
 # Realtime (dlesieur/realtime-agnostic)
 REALTIME_PORT=4002

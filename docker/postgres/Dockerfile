@@ -10,10 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-server-dev-16 \
   && rm -rf /var/lib/apt/lists/*
 
-# Build and install pg_net from source
+# Build and install pg_net from source (suppress -Werror=attribute-warning for curl/gcc compat)
 RUN git clone --depth 1 --branch v0.14.0 https://github.com/supabase/pg_net.git /tmp/pg_net \
   && cd /tmp/pg_net \
-  && make \
+  && make COPT="-Wno-error=attribute-warning" \
   && make install \
   && rm -rf /tmp/pg_net
 

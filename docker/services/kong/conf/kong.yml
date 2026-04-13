@@ -6,7 +6,7 @@
 #    By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/09 23:34:34 by dlesieur          #+#    #+#              #
-#    Updated: 2026/04/13 02:16:03 by dlesieur         ###   ########.fr        #
+#    Updated: 2026/04/13 14:38:26 by dlesieur         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,9 @@ consumers:
       - key: __GOTRUE_JWT_ISS__
         secret: __JWT_SECRET__
         algorithm: HS256
+      - key: supabase
+        secret: __JWT_SECRET__
+        algorithm: HS256
 
 # ─── Global Plugins ──────────────────────────────────────────────
 plugins:
@@ -43,7 +46,8 @@ plugins:
         - __KONG_CORS_ORIGIN_FRONTEND__
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers:
-        [Authorization, Content-Type, apikey, x-client-info, X-Request-ID]
+        [Authorization, Content-Type, apikey, x-client-info, X-Request-ID,
+         Prefer, Range, Accept, Accept-Profile, x-supabase-api-version]
       exposed_headers:
         [X-Kong-Upstream-Latency, X-Kong-Proxy-Latency, X-Request-ID]
       credentials: true
@@ -152,38 +156,6 @@ services:
               limit_by: ip
               minute: 180
               hour: 5000
-          - name: post-function
-            config:
-              body_filter:
-                - |
-                  -- Wrap PostgREST JSON responses in {success, statusCode, data, message, timestamp}
-                  local status = kong.response.get_status()
-                  local ct = kong.response.get_header("Content-Type") or ""
-                  if not ct:find("application/json", 1, true) then return end
-                  -- Collect chunked body
-                  local chunk = ngx.arg[1] or ""
-                  local ctx = ngx.ctx
-                  if not ctx._resp_body then ctx._resp_body = {} end
-                  ctx._resp_body[#ctx._resp_body + 1] = chunk
-                  ngx.arg[1] = nil
-                  if not ngx.arg[2] then return end
-                  -- Final chunk: build wrapped response
-                  local body = table.concat(ctx._resp_body)
-                  local cjson = require("cjson.safe")
-                  local data = cjson.decode(body)
-                  local success = status >= 200 and status < 300
-                  local msg = success and "OK" or "Error"
-                  if not success and type(data) == "table" and data.message then
-                    msg = data.message
-                  end
-                  local wrapper = {
-                    success = success,
-                    statusCode = status,
-                    data = data,
-                    message = msg,
-                    timestamp = ngx.time()
-                  }
-                  ngx.arg[1] = cjson.encode(wrapper)
 
   - name: realtime
     url: http://realtime:4000

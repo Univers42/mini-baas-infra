@@ -92,6 +92,7 @@ services:
       KONG_ADMIN_LISTEN: "0.0.0.0:8001"
       KONG_NGINX_WORKER_PROCESSES: "1"
       KONG_MEM_CACHE_SIZE: "64m"
+      KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: "cjson.safe"
       JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_ISS: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}
     volumes:
@@ -245,6 +246,8 @@ services:
     depends_on:
       db-bootstrap:
         condition: service_completed_successfully
+      gotrue:
+        condition: service_healthy
     networks:
       - mini-baas
     restart: "no"
@@ -375,8 +378,8 @@ services:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
       API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8000/auth/v1}
-      GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:3001}
-      GOTRUE_URI_ALLOW_LIST: ${GOTRUE_URI_ALLOW_LIST:-http://localhost:3000,http://localhost:3001,http://localhost:3100}
+      GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:5173}
+      GOTRUE_URI_ALLOW_LIST: ${GOTRUE_URI_ALLOW_LIST:-http://localhost:5173/**,http://localhost:3000,http://localhost:3001,http://localhost:3100}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/postgres}
       # Email
@@ -425,7 +428,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      domain-bootstrap:
+      db-bootstrap:
         condition: service_completed_successfully
     networks:
       - mini-baas
@@ -1068,7 +1071,7 @@ services:
       - mini-baas
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/health || exit 1"]
       interval: 10s
       timeout: 3s
       start_period: 5s
