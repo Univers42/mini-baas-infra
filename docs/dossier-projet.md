@@ -35,8 +35,9 @@ Mon travail s'est équilibré entre la production d'interfaces utilistateur (fro
 
 BaaS (Backend as a Service) est une solution qui fournit une infrastructure de back-end préconfigurée, permettant aux développeurs de se concentrer sur la logique métier plutôt que sur la gestion de l'infrastructure. En adoptant une approche orientée `data mesh`, j'ai structuré le back-end de manière à favoriser la décentralisation et la distribution des données, facilitant ainsi la scalabilité et la résilience de l'application. orientée Docker Compose, conçue comme une **usine à backend génériques** capable de fournir authentification, données relationnelles, données documentaires, requêtage multi-tenant, temps réel, stockage objet, email transactionnel, politique de sécurité unifiées sans développement d'API métier spécifique pour chaque nouveau projet.
 
-| Membre   | Rôle principal                                     | Responsabilités observées / déduites                                                                                                                                    |
-| -------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Membre | Rôle principal | Responsabilités observées / déduites |
+| ------ | -------------- | ------------------------------------ |
+
 | dlesieur | Product Owner / Tech Lead / DevOps / Back-End Lead | Conception de l'architecture, intégration Docker, orchestration des services, sécurité, écriture des services NestJS, outillage d'exploitation, documentation technique |
 
 **Modélisation de la base de données** J'ai conçu le schéma de la base de données relationnelle **PostgreSQL** pour stocker les données de l'application, en veillant à la normalisation et à l'optimisation des requêtes. J'ai également utilisé **MongoDB** pour certaines fonctionnalités nécessitant une flexibilité accrue dans la gestion des données. La modélisation a permis de structurer les données de manière efficace, facilitant ainsi les opérations de lecture et d'écriture en définissant des relations claires entre les différentes entités de l'application et les contraintes d'intégrité.

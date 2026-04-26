@@ -9,7 +9,11 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8000}"
-APIKEY="${APIKEY:-public-anon-key}"
+if [[ -z "${APIKEY:-}" && -f .env ]]; then
+  APIKEY="$(grep '^ANON_KEY=' .env | cut -d= -f2-)"
+else
+  APIKEY="${APIKEY:-public-anon-key}"
+fi
 TIMEOUT="${TIMEOUT:-5}"
 
 RED='\033[0;31m'
@@ -22,6 +26,7 @@ PASSED=0
 FAILED=0
 readonly CURL_FMT='%{http_code}'
 readonly HDR_APIKEY="apikey: $APIKEY"
+readonly HDR_AUTH="Authorization: Bearer $APIKEY"
 
 smoke() {
   local name="$1"
@@ -31,6 +36,7 @@ smoke() {
   code=$(curl -sS -o /dev/null -w "$CURL_FMT" \
     --max-time "$TIMEOUT" \
     -H "$HDR_APIKEY" \
+    -H "$HDR_AUTH" \
     "$url" 2>/dev/null || echo "000")
 
   if [[ "$code" = "$expected" ]]; then
@@ -63,8 +69,7 @@ smoke "PostgREST schema"       "$BASE_URL/rest/v1/"
 smoke "Mongo-api liveness"     "$BASE_URL/mongo/v1/health/live"
 
 # ── Adapter-registry liveness ────────────────────────────────────
-smoke "Adapter-registry"       "$BASE_URL/admin/v1/databases/health/live" "401"
-# 401 is expected: no JWT, but service is alive and responding
+smoke "Adapter-registry"       "$BASE_URL/admin/v1/health/live"
 
 t1=$(date +%s)
 elapsed=$((t1 - t0))

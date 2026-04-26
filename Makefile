@@ -65,11 +65,16 @@ _require-compose: _require-docker
 	@docker compose version >/dev/null 2>&1 \
 		|| { echo >&2 "Docker Compose v2 plugin is required."; exit 1; }
 
+_ensure-env:
+	@if [ ! -f .env ]; then \
+		echo -e "$(_Y).env not found; generating local development secrets…$(_0)"; \
+		bash scripts/generate-env.sh .env; \
+	fi
+
 _rm-stale:
 	@ids=$$(docker ps -a --format '{{.ID}} {{.Names}} {{.Status}}' \
 		| awk '/ mini-baas-/ && ($$3=="Created"||$$3=="Exited") {print $$1}'); \
 	[ -z "$$ids" ] || { echo -e "$(_Y)Removing stale containers…$(_0)"; docker rm -f $$ids >/dev/null; }
-
 # ========================================================================== #
 ##@ 42 Classics
 # ========================================================================== #
@@ -92,6 +97,30 @@ fclean: _require-compose ## Full cleanup — stop everything, prune containers, 
 	@docker builder prune -af >/dev/null 2>&1 || true
 	@echo -e "$(_G)✓ Full Docker clean complete$(_0)"
 
+ffclean: _require-compose ## EXTREME cleanup — purge ALL Docker containers, images, volumes, networks and caches
+	@echo -e "$(_R)$(_W)⚠ EXTREME DOCKER PURGE$(_0)"
+	@echo -e "$(_R)This removes ALL Docker containers, images, volumes, unused networks and build caches on this machine.$(_0)"
+	@echo -e "$(_R)It is NOT limited to $(PROJECT). Data in Docker volumes will be destroyed.$(_0)"
+	@if [ "$${SKIP_FFCLEAN_DELAY:-0}" != "1" ]; then \
+		for i in 5 4 3 2 1; do \
+			echo -e "$(_Y)Starting irreversible purge in $$i… Ctrl+C to abort$(_0)"; \
+			sleep 1; \
+		done; \
+	fi
+	@$(DC) down --volumes --remove-orphans 2>/dev/null || true
+	@ids=$$(docker ps -aq); \
+	[ -z "$$ids" ] || { echo -e "$(_Y)Removing ALL containers…$(_0)"; docker rm -f $$ids >/dev/null 2>&1 || true; }
+	@vols=$$(docker volume ls -q); \
+	[ -z "$$vols" ] || { echo -e "$(_Y)Removing ALL volumes…$(_0)"; docker volume rm -f $$vols >/dev/null 2>&1 || true; }
+	@imgs=$$(docker images -aq); \
+	[ -z "$$imgs" ] || { echo -e "$(_Y)Removing ALL images…$(_0)"; docker rmi -f $$imgs >/dev/null 2>&1 || true; }
+	@echo -e "$(_Y)Pruning networks, system data and build caches…$(_0)"
+	@docker network prune -f >/dev/null 2>&1 || true
+	@docker builder prune -af >/dev/null 2>&1 || true
+	@docker buildx prune -af --all >/dev/null 2>&1 || true
+	@docker system prune -af --volumes >/dev/null 2>&1 || true
+	@echo -e "$(_G)✓ Extreme Docker purge complete$(_0)"
+
 re: ## Fully reset Docker state via fclean, then rebuild and restart the stack
 	@$(MAKE) --no-print-directory fclean
 	@$(MAKE) --no-print-directory all
@@ -100,7 +129,7 @@ re: ## Fully reset Docker state via fclean, then rebuild and restart the stack
 ##@ Stack
 # ========================================================================== #
 
-up: _require-compose _rm-stale ## Start stack in detached mode
+up: _require-compose _ensure-env _rm-stale ## Start stack in detached mode
 	@eval "$$(bash scripts/resolve-ports.sh)"; \
 	echo -e "$(_B)Starting stack from $(COMPOSE_FILE)…$(_0)"; \
 	$(DC) up -d; \
@@ -139,6 +168,42 @@ restart: _require-compose ## Restart all services
 ps: _require-compose ## Show service status
 	@$(DC) ps
 
+dok-status: _require-compose ## Show Docker containers, health, images, volumes, networks and disk usage
+	@echo -e "$(_C)$(_W)Docker engine$(_0)"
+	@docker version --format '  Client: {{.Client.Version}}  Server: {{.Server.Version}}' 2>/dev/null || docker version
+	@echo ""
+	@echo -e "$(_C)$(_W)Compose services ($(PROJECT))$(_0)"
+	@$(DC) ps --format 'table {{.Service}}\t{{.State}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null || $(DC) ps
+	@echo ""
+	@echo -e "$(_C)$(_W)Container health details ($(PROJECT))$(_0)"
+	@containers=$$(docker ps -a --filter label=com.docker.compose.project=$(PROJECT) --format '{{.Names}}'); \
+	if [ -z "$$containers" ]; then \
+		echo "  No $(PROJECT) containers found"; \
+	else \
+		printf '  %-34s %-12s %-12s %-20s\n' 'CONTAINER' 'STATE' 'HEALTH' 'IMAGE'; \
+		for name in $$containers; do \
+			state=$$(docker inspect -f '{{.State.Status}}' "$$name" 2>/dev/null || echo unknown); \
+			health=$$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}n/a{{end}}' "$$name" 2>/dev/null || echo unknown); \
+			image=$$(docker inspect -f '{{.Config.Image}}' "$$name" 2>/dev/null || echo unknown); \
+			printf '  %-34s %-12s %-12s %-20s\n' "$$name" "$$state" "$$health" "$$image"; \
+		done; \
+	fi
+	@echo ""
+	@echo -e "$(_C)$(_W)All Docker containers$(_0)"
+	@docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+	@echo ""
+	@echo -e "$(_C)$(_W)Images$(_0)"
+	@docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.Size}}'
+	@echo ""
+	@echo -e "$(_C)$(_W)Volumes$(_0)"
+	@docker volume ls --format 'table {{.Name}}\t{{.Driver}}\t{{.Scope}}'
+	@echo ""
+	@echo -e "$(_C)$(_W)Networks$(_0)"
+	@docker network ls --format 'table {{.Name}}\t{{.Driver}}\t{{.Scope}}'
+	@echo ""
+	@echo -e "$(_C)$(_W)Docker disk usage$(_0)"
+	@docker system df
+
 logs: _require-compose ## Stream logs (SERVICE=<name> to filter)
 	@$(DC) logs -f --tail=100 $(SERVICE)
 
@@ -146,14 +211,16 @@ pull: _require-compose ## Pull latest images for all services
 	@$(DC) pull
 	@echo -e "$(_G)✓ Pulled$(_0)"
 
-health: ## Quick health-check on gateway routes
+health: _ensure-env ## Quick health-check on gateway routes
 	@echo -e "$(_B)Checking endpoints…$(_0)"
-	@curl -fsS http://localhost:8000/auth/v1/health >/dev/null \
+	@anon=$$(grep '^ANON_KEY=' .env | cut -d= -f2-); \
+	curl -fsS -H "apikey: $$anon" -H "Authorization: Bearer $$anon" http://localhost:8000/auth/v1/health >/dev/null \
 		&& echo "  ✓ /auth/v1/health" || echo "  ✗ /auth/v1/health"
-	@curl -fsS http://localhost:8000/rest/v1/ >/dev/null \
+	@anon=$$(grep '^ANON_KEY=' .env | cut -d= -f2-); \
+	curl -fsS -H "apikey: $$anon" -H "Authorization: Bearer $$anon" http://localhost:8000/rest/v1/ >/dev/null \
 		&& echo "  ✓ /rest/v1/"       || echo "  ✗ /rest/v1/"
-	@curl -fsS http://localhost:5432 >/dev/null 2>&1 \
-		&& echo "  ✓ postgres:5432"   || echo "  • postgres TCP skipped"
+	@docker compose exec -T postgres pg_isready -U postgres -d postgres >/dev/null \
+		&& echo "  ✓ postgres ready"   || echo "  ✗ postgres ready"
 
 # ========================================================================== #
 ##@ Docker Images
@@ -556,8 +623,8 @@ help: ## Show this help
 	@echo ""
 
 # --------------------------------------------------------------------------- #
-.PHONY: all clean fclean re \
-	up down restart ps logs pull health bench-startup \
+.PHONY: all clean fclean ffclean re \
+	up down restart ps dok-status logs pull health bench-startup \
 	build build-% build-optimized tag push push-bake images image-sizes \
 	tests test-phase% test-postgres \
 	migrate migrate-mongo migrate-down migrate-status seed-mongo \
@@ -572,4 +639,4 @@ help: ## Show this help
 	waf-logs waf-test \
 	watch watch-logs watch-headless kill-watch watch-attach watch-docker \
 	env preflight hooks update help \
-	_require-docker _require-compose _rm-stale
+	_require-docker _require-compose _ensure-env _rm-stale

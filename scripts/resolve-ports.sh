@@ -36,6 +36,15 @@ port_in_use() {
   if [[ " $_used_ports " == *" $p "* ]]; then
     return 0
   fi
+  # A running container from this Compose project may already own the port.
+  # Treat that as reusable so repeated `make up` / `make all` calls are
+  # idempotent instead of drifting to 5433, 27018, etc.
+  if command -v docker >/dev/null 2>&1 \
+    && for id in $(docker ps --filter label=com.docker.compose.project=mini-baas --format '{{.ID}}' 2>/dev/null); do \
+      docker port "$id" 2>/dev/null || true; \
+    done | grep -qE ":${p}$"; then
+    return 1
+  fi
   # Check if something on the host is listening
   if ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE "(:|^)${p}$"; then
     return 0
