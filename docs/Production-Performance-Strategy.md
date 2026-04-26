@@ -94,13 +94,13 @@ The L2 cache is intentionally best-effort. Redis read/write/invalidation failure
 
 ### Criticality tiers
 
-| Tier | Path | Runtime rule |
-| ---- | ---- | ------------ |
-| Core BaaS | `WAF → Kong → GoTrue/PostgREST/Realtime → PostgreSQL/Redis` | Always hot, scaled and monitored together |
-| Adapter plane | `Kong → query-router → permission-engine/adapter-registry → DB adapters` | Opt-in for normalized multi-engine data APIs |
-| Control plane | Vault, pg-meta, Supavisor, schema-service, Studio | Admin/boot/metadata flows only |
-| Data/analytics plane | Mongo, MinIO, Trino, analytics/AI | Isolated from CRUD/auth latency |
-| Background/observability | email, newsletter, GDPR, logs, Prometheus/Grafana/Loki | Must not block the synchronous request path |
+| Tier                     | Path                                                                     | Runtime rule                                 |
+| ------------------------ | ------------------------------------------------------------------------ | -------------------------------------------- |
+| Core BaaS                | `WAF → Kong → GoTrue/PostgREST/Realtime → PostgreSQL/Redis`              | Always hot, scaled and monitored together    |
+| Adapter plane            | `Kong → query-router → permission-engine/adapter-registry → DB adapters` | Opt-in for normalized multi-engine data APIs |
+| Control plane            | Vault, pg-meta, Supavisor, schema-service, Studio                        | Admin/boot/metadata flows only               |
+| Data/analytics plane     | Mongo, MinIO, Trino, analytics/AI                                        | Isolated from CRUD/auth latency              |
+| Background/observability | email, newsletter, GDPR, logs, Prometheus/Grafana/Loki                   | Must not block the synchronous request path  |
 
 Default Compose now starts only the core path. Use profiles such as `adapter-plane`, `control-plane`, `data-plane`, `analytics`, `storage`, `background`, and `observability` for additional layers.
 

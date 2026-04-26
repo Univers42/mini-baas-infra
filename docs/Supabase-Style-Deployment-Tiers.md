@@ -31,16 +31,16 @@ The default Compose stack now starts only the critical BaaS path. Optional plane
 
 ## Compose profiles
 
-| Profile | Purpose | Typical services |
-| ------- | ------- | ---------------- |
-| default | Critical BaaS hot path | `waf`, `kong`, `postgres`, `postgrest`, `gotrue`, `realtime`, `redis` |
-| `adapter-plane` | Normalized SQL/NoSQL API path | `query-router`, `adapter-registry`, `permission-engine` |
-| `control-plane` | Rare/admin/platform operations | `vault`, `pg-meta`, `supavisor`, `schema-service`, `studio` |
-| `data-plane` | Secondary data stores/adapters | `mongo`, `mongo-api`, `minio`, `storage-router`, `trino` |
-| `analytics` | OLAP/reporting only | `trino`, `analytics-service` |
-| `storage` | Object storage | `minio`, `storage-router` |
-| `background` | Async/non-critical product services | `email-service`, `newsletter-service`, `gdpr-service`, `ai-service`, `log-service`, `session-service` |
-| `observability` | Metrics/log dashboards | `prometheus`, `grafana`, `loki`, `promtail`, `log-service` |
+| Profile         | Purpose                             | Typical services                                                                                      |
+| --------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| default         | Critical BaaS hot path              | `waf`, `kong`, `postgres`, `postgrest`, `gotrue`, `realtime`, `redis`                                 |
+| `adapter-plane` | Normalized SQL/NoSQL API path       | `query-router`, `adapter-registry`, `permission-engine`                                               |
+| `control-plane` | Rare/admin/platform operations      | `vault`, `pg-meta`, `supavisor`, `schema-service`, `studio`                                           |
+| `data-plane`    | Secondary data stores/adapters      | `mongo`, `mongo-api`, `minio`, `storage-router`, `trino`                                              |
+| `analytics`     | OLAP/reporting only                 | `trino`, `analytics-service`                                                                          |
+| `storage`       | Object storage                      | `minio`, `storage-router`                                                                             |
+| `background`    | Async/non-critical product services | `email-service`, `newsletter-service`, `gdpr-service`, `ai-service`, `log-service`, `session-service` |
+| `observability` | Metrics/log dashboards              | `prometheus`, `grafana`, `loki`, `promtail`, `log-service`                                            |
 
 ## Startup modes
 
@@ -155,12 +155,12 @@ Keep isolated:
 
 Redis is core infrastructure, but usage must stay separated by key namespace:
 
-| Usage | Prefix | Notes |
-| ----- | ------ | ----- |
-| Query-router cache | `query-router:` | L2 read-through/shared cache |
-| Realtime/events | `realtime:` | Future pub/sub or stream usage |
-| Background queues | `queue:` | Future worker queue namespace |
-| Sessions/rate limit | `session:` / `rate:` | Short TTL only |
+| Usage               | Prefix               | Notes                          |
+| ------------------- | -------------------- | ------------------------------ |
+| Query-router cache  | `query-router:`      | L2 read-through/shared cache   |
+| Realtime/events     | `realtime:`          | Future pub/sub or stream usage |
+| Background queues   | `queue:`             | Future worker queue namespace  |
+| Sessions/rate limit | `session:` / `rate:` | Short TTL only                 |
 
 Do not turn Redis into an unstructured shared bucket.
 

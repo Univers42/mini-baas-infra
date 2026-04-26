@@ -40,13 +40,13 @@ flowchart LR
   UI -->|"Kong :8000"| MDB
 ```
 
-| # | Model | Data Plane |
-|---|-------|-----------|
-| 1 | `mock_orders` | PostgreSQL |
-| 2 | `projects` | PostgreSQL |
-| 3 | `inventory_item` | MongoDB |
-| 4 | `sensor_telemetry` | MongoDB |
-| 5 | `customer_events` | MongoDB |
+| #   | Model              | Data Plane |
+| --- | ------------------ | ---------- |
+| 1   | `mock_orders`      | PostgreSQL |
+| 2   | `projects`         | PostgreSQL |
+| 3   | `inventory_item`   | MongoDB    |
+| 4   | `sensor_telemetry` | MongoDB    |
+| 5   | `customer_events`  | MongoDB    |
 
 ---
 
@@ -129,11 +129,11 @@ Step-by-step:
 
 The "List All 5 Schemas" output contains:
 
-| Field | Description |
-|-------|-------------|
-| Authenticated user ID | The JWT subject used for all requests |
-| Timestamp | When the proof was generated |
-| Per-model entry | Data plane, resource name, HTTP status, record count, sample IDs |
+| Field                 | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| Authenticated user ID | The JWT subject used for all requests                            |
+| Timestamp             | When the proof was generated                                     |
+| Per-model entry       | Data plane, resource name, HTTP status, record count, sample IDs |
 
 This is the primary deliverable for the demo — proof that five distinct models are independently queryable through one gateway and one auth context.
 
@@ -141,15 +141,15 @@ This is the primary deliverable for the demo — proof that five distinct models
 
 ## Suggested 7-Minute Script
 
-| Minute | Action |
-|--------|--------|
-| 0–1 | Explain the architecture: one gateway, one auth flow, two data planes, one UI |
-| 1–2 | Authenticate the session |
-| 2–3 | Create a PostgreSQL record (`projects`) |
-| 3–4 | Create a MongoDB record (`inventory_item`) |
-| 4–5 | List each model individually |
-| 5–6 | Run **List All 5 Schemas** and show per-model counts and IDs |
-| 6–7 | Demonstrate Update and Delete on one model to prove full CRUD |
+| Minute | Action                                                                        |
+| ------ | ----------------------------------------------------------------------------- |
+| 0–1    | Explain the architecture: one gateway, one auth flow, two data planes, one UI |
+| 1–2    | Authenticate the session                                                      |
+| 2–3    | Create a PostgreSQL record (`projects`)                                       |
+| 3–4    | Create a MongoDB record (`inventory_item`)                                    |
+| 4–5    | List each model individually                                                  |
+| 5–6    | Run **List All 5 Schemas** and show per-model counts and IDs                  |
+| 6–7    | Demonstrate Update and Delete on one model to prove full CRUD                 |
 
 **Closing statement:** "This demo shows runtime CRUD generation across five distinct models spanning PostgreSQL and MongoDB, with shared gateway security and shared auth context, while preserving model-specific storage behavior."
 
@@ -157,12 +157,12 @@ This is the primary deliverable for the demo — proof that five distinct models
 
 ## Expected Responses
 
-| Operation | PostgreSQL | MongoDB |
-|-----------|-----------|---------|
-| Create | `201` or `200` (depends on table and PostgREST behavior) | `201` with `{ success: true, data: { id, ... } }` |
-| List | `200` with array body | `200` with `{ success: true, data: [...], meta: {...} }` |
-| Update | `200` with updated row | `200` with `{ success: true, data: { ... } }` |
-| Delete | `200` or `204` | `200` with `{ success: true, data: { deleted: true } }` |
+| Operation | PostgreSQL                                               | MongoDB                                                  |
+| --------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| Create    | `201` or `200` (depends on table and PostgREST behavior) | `201` with `{ success: true, data: { id, ... } }`        |
+| List      | `200` with array body                                    | `200` with `{ success: true, data: [...], meta: {...} }` |
+| Update    | `200` with updated row                                   | `200` with `{ success: true, data: { ... } }`            |
+| Delete    | `200` or `204`                                           | `200` with `{ success: true, data: { deleted: true } }`  |
 
 ---
 
