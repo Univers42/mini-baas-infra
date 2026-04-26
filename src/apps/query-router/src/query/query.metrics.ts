@@ -5,6 +5,7 @@ import { Counter, Histogram } from 'prom-client';
 type CacheEvent = 'hit' | 'miss' | 'set' | 'invalidate';
 type RequestStatus = 'success' | 'error';
 type AsyncEventStatus = 'queued' | 'flushed' | 'failed' | 'dropped';
+type CircuitBreakerEvent = 'success' | 'failure' | 'opened' | 'half_opened' | 'closed' | 'rejected';
 
 @Injectable()
 export class QueryMetricsService {
@@ -21,6 +22,8 @@ export class QueryMetricsService {
     private readonly coalescedRequests: Counter<string>,
     @InjectMetric('query_router_async_events_total')
     private readonly asyncEvents: Counter<string>,
+    @InjectMetric('query_router_circuit_breaker_events_total')
+    private readonly circuitBreakerEvents: Counter<string>,
   ) {}
 
   recordCache(cache: string, result: CacheEvent): void {
@@ -41,6 +44,10 @@ export class QueryMetricsService {
 
   recordAsyncEvent(status: AsyncEventStatus): void {
     this.asyncEvents.inc({ status });
+  }
+
+  recordCircuitBreaker(circuit: string, event: CircuitBreakerEvent): void {
+    this.circuitBreakerEvents.inc({ circuit, event });
   }
 
   async observe<T>(phase: string, engine: string, action: string, operation: () => Promise<T>): Promise<T> {

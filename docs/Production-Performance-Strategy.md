@@ -31,11 +31,20 @@ Implemented controls:
 | Adapter metadata cache    | `QUERY_ROUTER_ADAPTER_CACHE_TTL_MS`    | `30000` | Avoid repeated adapter-registry lookups                  |
 | Permission decision cache | `QUERY_ROUTER_PERMISSION_CACHE_TTL_MS` | `5000`  | Reduce authZ latency while keeping short-lived decisions |
 | Read-result cache         | `QUERY_ROUTER_READ_CACHE_TTL_MS`       | `3000`  | Absorb repeated read bursts                              |
-| Cache max entries         | `QUERY_ROUTER_CACHE_MAX_ENTRIES`       | `2000`  | Bound memory usage                                       |
+| Cache max entries         | `QUERY_ROUTER_CACHE_MAX_ENTRIES`       | `2000`  | Bound L1 memory usage                                    |
+| Redis L2 cache            | `QUERY_ROUTER_REDIS_CACHE_ENABLED`     | `true`* | Share safe cache entries across query-router instances   |
+| Redis URL                 | `QUERY_ROUTER_REDIS_URL`               | Redis   | Shared cache backend                                     |
+| Redis key prefix          | `QUERY_ROUTER_REDIS_KEY_PREFIX`        | `query-router:` | Namespace shared keys                             |
+| Circuit breakers          | `QUERY_ROUTER_CIRCUIT_BREAKER_ENABLED` | `true`  | Stop cascading failures to control-plane services        |
+| Circuit failure threshold | `QUERY_ROUTER_CIRCUIT_BREAKER_FAILURE_THRESHOLD` | `5` | Open circuit after repeated failures            |
+| Circuit success threshold | `QUERY_ROUTER_CIRCUIT_BREAKER_SUCCESS_THRESHOLD` | `2` | Close circuit after half-open recovery          |
+| Circuit open window       | `QUERY_ROUTER_CIRCUIT_BREAKER_OPEN_MS` | `10000` | Cooldown before half-open probes                         |
 | Async event queue         | `QUERY_ROUTER_ASYNC_EVENTS_ENABLED`    | `true`  | Keep logs/analytics out of the synchronous request path  |
 | Async flush interval      | `QUERY_ROUTER_ASYNC_EVENT_FLUSH_MS`    | `1000`  | Batch non-critical event emission                        |
 | Async batch size          | `QUERY_ROUTER_ASYNC_EVENT_BATCH_SIZE`  | `25`    | Bound each background flush                              |
 | Async queue max entries   | `QUERY_ROUTER_ASYNC_EVENT_MAX_ENTRIES` | `1000`  | Drop oldest events before impacting request latency      |
+
+`*` Redis L2 is enabled in Docker Compose. Fly keeps it disabled by default until a managed/internal Redis app is provisioned.
 
 These are intentionally conservative. Reads can be cached briefly; writes invalidate cached read results for the same user/database/resource prefix.
 
@@ -63,7 +72,9 @@ Stampede protection:
 
 ### Level 2 — Redis cache
 
-Recommended next production step when multiple query-router instances run. Redis should become the shared L2 cache for:
+Implemented as an optional shared L2 cache behind the query-router cache service. When enabled, each query-router instance keeps its own bounded L1 cache and reads through Redis on L1 misses.
+
+Redis stores:
 
 - permission decisions
 - adapter metadata
@@ -76,6 +87,8 @@ Rules:
 - never cache service secrets in frontend-accessible payloads
 - cache permission decisions with short TTL only
 - invalidate read caches on mutations
+
+The L2 cache is intentionally best-effort. Redis read/write/invalidation failures degrade to L1 cache only instead of blocking the request path.
 
 ## Routing and failover
 
@@ -98,6 +111,7 @@ Query-router is responsible for:
 - resolving database engine through adapter-registry
 - delegating execution to the adapter layer
 - enforcing control-plane timeouts and bounded retries
+- opening circuit breakers for failing control-plane services
 - coalescing identical in-flight reads
 - emitting non-critical logs/events asynchronously
 
@@ -137,6 +151,13 @@ Implemented query-router metrics:
 - `query_router_permission_denied_total{resource_type,action}`
 - `query_router_coalesced_requests_total{scope}`
 - `query_router_async_events_total{status}`
+- `query_router_circuit_breaker_events_total{circuit,event}`
+
+Circuit breaker semantics:
+
+- `permission-engine` fails closed: if no cached decision exists and permission checks fail or the circuit is open, the request is denied.
+- `adapter-registry` fails fast: if no cached connection metadata exists and the circuit is open, the request is rejected instead of piling more traffic onto the failing service.
+- Half-open probes allow automatic recovery after the cooldown window.
 
 ## API versioning
 
@@ -184,8 +205,8 @@ Implemented safeguards:
 3. Request coalescing for hot repeated reads/control-plane calls — implemented.
 4. Non-blocking async event queue to log-service — implemented.
 5. Trino gateway hardening and timeouts — implemented.
-6. Redis L2 shared cache for multi-instance deployments.
-7. Circuit breakers for permission-engine and adapter-registry.
+6. Redis L2 shared cache for multi-instance deployments — implemented.
+7. Circuit breakers for permission-engine and adapter-registry — implemented.
 8. Per-route Kong rate limits by plan/project.
 9. Server-side analytics query allowlists.
 10. API version compatibility tests.

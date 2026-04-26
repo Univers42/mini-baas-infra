@@ -37,8 +37,8 @@ export class QueryService {
 
       const readCacheKey = this.readCacheKey(dbId, userId, engine, table, dto);
       if (productAction === 'read') {
-        const cached = this.cache.get<unknown>(readCacheKey);
-        if (cached) {
+        const cached = await this.cache.get<unknown>(readCacheKey);
+        if (cached !== undefined) {
           this.metrics.recordCache('read', 'hit');
           this.metrics.recordRequest(engine, productAction, 'success');
           this.emitQueryEvent('query.cache_hit', engine, productAction, dbId, table, userId, startedAt);
@@ -57,7 +57,7 @@ export class QueryService {
 
         const result = await this.cache.coalesce(readCacheKey, async () => {
           const executed = await this.executeAgainstEngine(engine, connection_string, table, productAction, dto, userId);
-          this.cache.set(readCacheKey, executed, this.cache.readTtlMs);
+          await this.cache.set(readCacheKey, executed, this.cache.readTtlMs);
           this.metrics.recordCache('read', 'set');
           return executed;
         });
@@ -66,7 +66,7 @@ export class QueryService {
         return result;
       }
 
-      this.cache.deletePrefix(this.cache.key('read', userId, dbId, table));
+      await this.cache.deletePrefix(this.cache.key('read', userId, dbId, table));
       this.metrics.recordCache('read', 'invalidate');
 
       const result = await this.executeAgainstEngine(engine, connection_string, table, productAction, dto, userId);
@@ -92,8 +92,8 @@ export class QueryService {
     });
 
     const cacheKey = this.cache.key('tables', userId, dbId, engine);
-    const cached = this.cache.get<unknown>(cacheKey);
-    if (cached) {
+    const cached = await this.cache.get<unknown>(cacheKey);
+    if (cached !== undefined) {
       this.metrics.recordCache('tables', 'hit');
       this.emitQueryEvent('tables.cache_hit', engine, 'read', dbId, 'database', userId, startedAt);
       return cached;
@@ -108,7 +108,7 @@ export class QueryService {
     }
 
     const result = await this.cache.coalesce(cacheKey, async () => this.listTablesFromEngine(engine, connection_string));
-    this.cache.set(cacheKey, result, this.cache.adapterTtlMs);
+  await this.cache.set(cacheKey, result, this.cache.adapterTtlMs);
     this.metrics.recordCache('tables', 'set');
     this.emitQueryEvent('tables.listed', engine, 'read', dbId, 'database', userId, startedAt);
     return result;

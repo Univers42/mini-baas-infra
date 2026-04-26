@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { QueryCacheService } from './query-cache.service';
 import { QueryMetricsService } from './query.metrics';
+import { CircuitBreakerRegistry } from './circuit-breaker.service';
 
 export interface AdapterConnection {
   engine: string;
@@ -22,6 +23,7 @@ export class AdapterRegistryClient {
     private readonly http: HttpService,
     private readonly cache: QueryCacheService,
     private readonly metrics: QueryMetricsService,
+    private readonly circuits: CircuitBreakerRegistry,
   ) {
     this.registryUrl = this.config.getOrThrow<string>('ADAPTER_REGISTRY_URL');
     this.serviceToken = this.config.get<string>('ADAPTER_REGISTRY_SERVICE_TOKEN', '');
@@ -31,7 +33,7 @@ export class AdapterRegistryClient {
 
   async getConnection(dbId: string, userId: string): Promise<AdapterConnection> {
     const cacheKey = this.cache.key('adapter', userId, dbId);
-    const cached = this.cache.get<AdapterConnection>(cacheKey);
+    const cached = await this.cache.get<AdapterConnection>(cacheKey);
     if (cached) {
       this.metrics.recordCache('adapter', 'hit');
       return cached;
@@ -48,22 +50,24 @@ export class AdapterRegistryClient {
     const data = await this.cache.coalesce(cacheKey, async () => {
       const url = `${this.registryUrl}/databases/${dbId}/connect`;
       return this.metrics.observe('adapter_registry', 'control-plane', 'connect', async () =>
-        this.withRetry(async () => {
-          const response = await firstValueFrom(
-            this.http.get<AdapterConnection>(url, {
-              timeout: this.timeoutMs,
-              headers: {
-                'X-Service-Token': this.serviceToken,
-                'X-Tenant-Id': userId,
-              },
-            }),
-          );
-          return response.data;
-        }),
+        this.circuits.execute('adapter-registry', () =>
+          this.withRetry(async () => {
+            const response = await firstValueFrom(
+              this.http.get<AdapterConnection>(url, {
+                timeout: this.timeoutMs,
+                headers: {
+                  'X-Service-Token': this.serviceToken,
+                  'X-Tenant-Id': userId,
+                },
+              }),
+            );
+            return response.data;
+          }),
+        ),
       );
     });
 
-    this.cache.set(cacheKey, data, this.cache.adapterTtlMs);
+    await this.cache.set(cacheKey, data, this.cache.adapterTtlMs);
     this.metrics.recordCache('adapter', 'set');
     return data;
   }

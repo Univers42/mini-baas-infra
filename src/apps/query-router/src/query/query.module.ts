@@ -9,6 +9,7 @@ import { PermissionClient } from './permission.client';
 import { QueryCacheService } from './query-cache.service';
 import { QueryMetricsService } from './query.metrics';
 import { AsyncEventService } from './async-event.service';
+import { CircuitBreakerRegistry } from './circuit-breaker.service';
 import { PostgresqlEngine } from '../engines/postgresql.engine';
 import { MongodbEngine } from '../engines/mongodb.engine';
 
@@ -22,6 +23,7 @@ import { MongodbEngine } from '../engines/mongodb.engine';
     QueryCacheService,
     QueryMetricsService,
     AsyncEventService,
+    CircuitBreakerRegistry,
     PostgresqlEngine,
     MongodbEngine,
     makeCounterProvider({
@@ -54,6 +56,11 @@ import { MongodbEngine } from '../engines/mongodb.engine';
       name: 'query_router_async_events_total',
       help: 'Non-blocking query-router async event queue outcomes',
       labelNames: ['status'],
+    }),
+    makeCounterProvider({
+      name: 'query_router_circuit_breaker_events_total',
+      help: 'Query router circuit breaker state transitions and outcomes',
+      labelNames: ['circuit', 'event'],
     }),
   ],
 })

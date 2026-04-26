@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { QueryCacheService } from './query-cache.service';
 import { QueryMetricsService } from './query.metrics';
+import { CircuitBreakerOpenError, CircuitBreakerRegistry } from './circuit-breaker.service';
 
 export type ProductAction = 'read' | 'create' | 'update' | 'delete';
 
@@ -25,6 +26,7 @@ export class PermissionClient {
     private readonly http: HttpService,
     private readonly cache: QueryCacheService,
     private readonly metrics: QueryMetricsService,
+    private readonly circuits: CircuitBreakerRegistry,
   ) {
     this.permissionEngineUrl = this.config.get<string>(
       'PERMISSION_ENGINE_URL',
@@ -48,7 +50,7 @@ export class PermissionClient {
       input.resourceName,
       input.action,
     );
-    const cached = this.cache.get<boolean>(cacheKey);
+    const cached = await this.cache.get<boolean>(cacheKey);
     if (cached === true) {
       this.metrics.recordCache('permission', 'hit');
       return;
@@ -68,34 +70,45 @@ export class PermissionClient {
       this.metrics.recordCoalesced('permission');
     }
 
-    const data = await this.cache.coalesce(cacheKey, async () => {
-      const url = `${this.permissionEngineUrl}/permissions/check`;
-      return this.metrics.observe('permission_engine', 'control-plane', input.action, async () =>
-        this.withRetry(async () => {
-          const response = await firstValueFrom(
-            this.http.post<PermissionResponse>(
-              url,
-              {
-                resource_type: input.resourceType,
-                resource_name: input.resourceName,
-                action: input.action,
-              },
-              {
-                timeout: this.timeoutMs,
-                headers: {
-                  'X-User-Id': input.userId,
-                  'X-User-Role': input.role ?? 'authenticated',
-                },
-              },
-            ),
-          );
-          return response.data;
-        }),
-      );
-    });
+    const data = await this.cache
+      .coalesce(cacheKey, async () => {
+        const url = `${this.permissionEngineUrl}/permissions/check`;
+        return this.metrics.observe('permission_engine', 'control-plane', input.action, async () =>
+          this.circuits.execute('permission-engine', () =>
+            this.withRetry(async () => {
+              const response = await firstValueFrom(
+                this.http.post<PermissionResponse>(
+                  url,
+                  {
+                    resource_type: input.resourceType,
+                    resource_name: input.resourceName,
+                    action: input.action,
+                  },
+                  {
+                    timeout: this.timeoutMs,
+                    headers: {
+                      'X-User-Id': input.userId,
+                      'X-User-Role': input.role ?? 'authenticated',
+                    },
+                  },
+                ),
+              );
+              return response.data;
+            }),
+          ),
+        );
+      })
+      .catch((error: unknown) => {
+        this.metrics.recordPermissionDenied(input.resourceType, input.action);
+        if (error instanceof CircuitBreakerOpenError) {
+          throw new ForbiddenException('Permission check temporarily unavailable; request denied by fail-closed policy');
+        }
+
+        throw new ForbiddenException('Permission check failed; request denied by fail-closed policy');
+      });
 
     const allowed = data.allowed ?? data.permitted ?? data.allow ?? false;
-    this.cache.set(cacheKey, allowed, this.cache.permissionTtlMs);
+  await this.cache.set(cacheKey, allowed, this.cache.permissionTtlMs);
     this.metrics.recordCache('permission', 'set');
 
     if (!allowed) {
