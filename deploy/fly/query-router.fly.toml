@@ -1,0 +1,27 @@
+primary_region = "cdg"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "src/Dockerfile"
+  [build.args]
+    APP = "query-router"
+
+[env]
+  PORT = "4001"
+  ADAPTER_REGISTRY_URL = "http://mini-baas-adapter-registry.internal:3020"
+  LOG_LEVEL = "info"
+
+[checks.live]
+  type = "http"
+  port = 4001
+  method = "GET"
+  path = "/health/live"
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "30s"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

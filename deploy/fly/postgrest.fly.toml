@@ -1,0 +1,26 @@
+primary_region = "cdg"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  image = "postgrest/postgrest:v12.2.3"
+
+[env]
+  PGRST_SERVER_PORT = "3000"
+  PGRST_DB_SCHEMAS = "public"
+  PGRST_DB_SCHEMA = "public"
+  PGRST_DB_ANON_ROLE = "anon"
+
+[checks.live]
+  type = "http"
+  port = 3000
+  method = "GET"
+  path = "/"
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "30s"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

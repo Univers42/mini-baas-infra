@@ -1,0 +1,35 @@
+primary_region = "cdg"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  image = "supabase/gotrue:v2.188.1"
+
+[env]
+  GOTRUE_API_HOST = "0.0.0.0"
+  GOTRUE_API_PORT = "9999"
+  API_EXTERNAL_URL = "https://api.example.com/auth/v1"
+  GOTRUE_SITE_URL = "https://app.example.com"
+  GOTRUE_URI_ALLOW_LIST = "https://app.example.com/**"
+  GOTRUE_DB_DRIVER = "postgres"
+  GOTRUE_JWT_DEFAULT_GROUP_NAME = "authenticated"
+  GOTRUE_JWT_EXP = "3600"
+  GOTRUE_MAILER_AUTOCONFIRM = "false"
+  GOTRUE_MFA_ENABLED = "true"
+  GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED = "true"
+  GOTRUE_SECURITY_REFRESH_TOKEN_REUSE_INTERVAL = "10"
+  GOTRUE_PASSWORD_MIN_LENGTH = "8"
+
+[checks.live]
+  type = "http"
+  port = 9999
+  method = "GET"
+  path = "/health"
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "30s"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

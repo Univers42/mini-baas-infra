@@ -211,6 +211,33 @@ pull: _require-compose ## Pull latest images for all services
 	@$(DC) pull
 	@echo -e "$(_G)✓ Pulled$(_0)"
 
+fly-deploy: ## Deploy Fly apps (SERVICE=name optional, FLY_APP_PREFIX=mini-baas)
+	@services="$${SERVICE:-}"; \
+	if [ -n "$$services" ]; then \
+		bash scripts/fly/deploy.sh $$services; \
+	else \
+		bash scripts/fly/deploy.sh; \
+	fi
+
+fly-secrets: _ensure-env ## Push per-service Fly secrets from .env (SERVICE=name optional)
+	@services="$${SERVICE:-}"; \
+	if [ -n "$$services" ]; then \
+		bash scripts/fly/secrets-from-env.sh $$services; \
+	else \
+		bash scripts/fly/secrets-from-env.sh; \
+	fi
+
+fly-status: ## Show Fly app status (SERVICE=name optional)
+	@services="$${SERVICE:-}"; \
+	if [ -n "$$services" ]; then \
+		bash scripts/fly/status.sh $$services; \
+	else \
+		bash scripts/fly/status.sh; \
+	fi
+
+fly-smoke: ## Smoke-test deployed gateway (BAAS_URL=https://api.example.com)
+	@bash scripts/fly/smoke.sh
+
 health: _ensure-env ## Quick health-check on gateway routes
 	@echo -e "$(_B)Checking endpoints…$(_0)"
 	@anon=$$(grep '^ANON_KEY=' .env | cut -d= -f2-); \
@@ -625,6 +652,7 @@ help: ## Show this help
 # --------------------------------------------------------------------------- #
 .PHONY: all clean fclean ffclean re \
 	up down restart ps dok-status logs pull health bench-startup \
+	fly-deploy fly-secrets fly-status fly-smoke \
 	build build-% build-optimized tag push push-bake images image-sizes \
 	tests test-phase% test-postgres \
 	migrate migrate-mongo migrate-down migrate-status seed-mongo \

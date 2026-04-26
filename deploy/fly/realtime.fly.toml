@@ -1,0 +1,27 @@
+primary_region = "cdg"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  image = "dlesieur/realtime-agnostic:latest"
+
+[env]
+  REALTIME_HOST = "0.0.0.0"
+  REALTIME_PORT = "4000"
+  REALTIME_PG_CHANNEL = "realtime_events"
+  REALTIME_JWT_AUDIENCE = ""
+  RUST_LOG = "info"
+
+[checks.live]
+  type = "http"
+  port = 4000
+  method = "GET"
+  path = "/v1/health"
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "30s"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
