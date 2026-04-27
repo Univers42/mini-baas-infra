@@ -250,32 +250,61 @@ mindmap
 Les scénarios suivants illustrent l'usage attendu de Prismatica dans un contexte professionnel. Ils montrent que l'application peut servir à la fois d'outil interne de gestion, d'interface de dashboarding et de couche de publication vers l'extérieur.
 
 ```mermaid
-journey
-title Scénarios d'utilisation
-section Utilisateur métier
-  Créer un projet de données: 5: Utilisateur
-  Définir des collections et des champs: 5: Utilisateur
-  Importer un fichier CSV ou JSON: 4: Utilisateur
-  Corriger les données dans une vue tableau: 4: Utilisateur
-  Construire une première interface de travail: 5: Utilisateur
-section Manager
-  Composer un dashboard d'équipe: 5: Manager
-  Ajouter des KPI et graphiques: 5: Manager
-  Partager une vue officielle: 4: Manager
-  Former les collègues à utiliser l'espace: 4: Manager
-  Ajuster les permissions par équipe: 5: Manager
-section Intégrateur
-  Générer un widget embarqué: 5: Intégrateur
-  Configurer les domaines autorisés: 4: Intégrateur
-  Publier la vue dans une page web: 5: Intégrateur
-  Tester le rendu public en lecture seule: 4: Intégrateur
-  Révoquer l'accès si nécessaire: 5: Intégrateur
-section Administrateur
-  Définir les rôles et politiques ABAC: 5: Administrateur
-  Contrôler les accès sensibles: 5: Administrateur
-  Surveiller les adapters et les logs: 4: Administrateur
-  Exporter ou supprimer des données RGPD: 4: Administrateur
-  Auditer les actions critiques: 5: Administrateur
+flowchart TB
+  Start([Besoin métier<br/>Structurer, visualiser et partager des données])
+  Core{{Prismatica<br/>Plateforme de données polymorphe}}
+
+  Start --> Core
+
+  subgraph P1[Utilisateur métier]
+    direction TB
+    U1[Créer un projet]
+    U2[Définir des collections<br/>et champs typés]
+    U3[Importer CSV / JSON]
+    U4[Modifier les données<br/>dans une vue tableau]
+    U5[Construire une interface<br/>de travail]
+    U1 --> U2 --> U3 --> U4 --> U5
+  end
+
+  subgraph P2[Manager / responsable d'équipe]
+    direction TB
+    M1[Composer un dashboard]
+    M2[Ajouter KPI et graphiques]
+    M3[Partager une vue officielle]
+    M4[Former les collègues]
+    M5[Ajuster les permissions<br/>par équipe]
+    M1 --> M2 --> M3 --> M4 --> M5
+  end
+
+  subgraph P3[Intégrateur web]
+    direction TB
+    I1[Générer un widget]
+    I2[Définir les domaines<br/>autorisés]
+    I3[Intégrer dans une page web]
+    I4[Tester le rendu public<br/>en lecture seule]
+    I5[Révoquer l'accès<br/>si nécessaire]
+    I1 --> I2 --> I3 --> I4 --> I5
+  end
+
+  subgraph P4[Administrateur plateforme]
+    direction TB
+    A1[Définir rôles<br/>et politiques ABAC]
+    A2[Contrôler les accès<br/>sensibles]
+    A3[Surveiller adapters<br/>et logs]
+    A4[Gérer exports et<br/>suppressions RGPD]
+    A5[Auditer les actions<br/>critiques]
+    A1 --> A2 --> A3 --> A4 --> A5
+  end
+
+  Core --> P1
+  Core --> P2
+  Core --> P3
+  Core --> P4
+
+  P1 --> Result([Données structurées<br/>et exploitables])
+  P2 --> Result
+  P3 --> Result
+  P4 --> Result
 ```
 
 Exemples concrets d'utilisation :
