@@ -21,7 +21,12 @@ _0 := \033[0m
 # Tunables  (override via CLI: make up COMPOSE_FILE=docker-compose.prod.yml)
 IMAGE_TAG      ?= latest
 REGISTRY       ?= localhost:5000
+GHCR_OWNER     ?= univers42
+GHCR_REPOSITORY ?= mini-baas-infra
+DOCKERHUB_NAMESPACE ?= dlesieur
+DOCKERHUB_REPOSITORY_PREFIX ?= mini-baas-infra
 COMPOSE_FILE   ?= docker-compose.yml
+PROFILE        ?= track-binocle
 SERVICE        ?=
 STEPS          ?= 1
 HOOKS_DIR      := vendor/scripts/hooks
@@ -161,6 +166,15 @@ down: _require-compose ## Stop and remove stack resources
 	@echo -e "$(_Y)Stopping stack…$(_0)"
 	@$(DC) down
 	@echo -e "$(_G)✓ Stack stopped$(_0)"
+
+config-up: _require-compose _ensure-env ## Start services declared by config/*.conf (PROFILE=track-binocle)
+	@bash scripts/mini-baas-config.sh up $(PROFILE)
+
+config-down: _require-compose ## Stop config-selected stack (PROFILE=track-binocle)
+	@bash scripts/mini-baas-config.sh down $(PROFILE)
+
+config-services: _require-compose ## Show enabled services from config/*.conf (PROFILE=track-binocle)
+	@bash scripts/mini-baas-config.sh services $(PROFILE)
 
 restart: _require-compose ## Restart all services
 	@$(DC) restart
@@ -314,6 +328,19 @@ push-bake: ## Build & push via docker buildx bake
 	@docker buildx bake --file docker-bake.hcl --push \
 		--set "*.cache-to=type=registry,ref=$(REGISTRY)/cache,mode=max"
 	@echo -e "$(_G)✓ Bake push to $(REGISTRY) complete$(_0)"
+
+version: _require-docker ## Tag git and publish versioned images to GHCR + DockerHub (VERSION=x.y.z)
+	@[ -n "$(VERSION)" ] || { echo -e "$(_R)VERSION is required. Usage: make version VERSION=x.y.z GHCR_OWNER=org DOCKERHUB_NAMESPACE=user$(_0)"; exit 1; }
+	@echo -e "$(_B)Creating git tag v$(VERSION)…$(_0)"
+	@if git rev-parse "v$(VERSION)" >/dev/null 2>&1; then \
+		echo -e "$(_Y)Tag v$(VERSION) already exists locally; skipping create.$(_0)"; \
+	else \
+		git tag "v$(VERSION)"; \
+	fi
+	@git push origin "v$(VERSION)"
+	@$(MAKE) --no-print-directory IMAGE_TAG=$(VERSION) build
+	@VERSION=$(VERSION) PROJECT=$(PROJECT) IMAGES='$(IMAGES)' GHCR_OWNER=$(GHCR_OWNER) GHCR_REPOSITORY=$(GHCR_REPOSITORY) DOCKERHUB_NAMESPACE=$(DOCKERHUB_NAMESPACE) DOCKERHUB_REPOSITORY_PREFIX=$(DOCKERHUB_REPOSITORY_PREFIX) bash scripts/publish-version.sh
+	@echo -e "$(_G)✓ Published v$(VERSION) to GitHub, GHCR, and DockerHub$(_0)"
 
 images: _require-docker ## List local $(PROJECT) images
 	@docker images | grep $(PROJECT) || echo "No images found. Run 'make build'."
@@ -645,8 +672,9 @@ help: ## Show this help
 # --------------------------------------------------------------------------- #
 .PHONY: all clean fclean ffclean re \
 	up down restart ps dok-status logs pull health bench-startup \
+	config-up config-down config-services \
 	fly-deploy fly-secrets fly-status fly-smoke \
-	build build-% build-optimized tag push push-bake images image-sizes \
+	build build-% build-optimized tag push push-bake version images image-sizes \
 	tests test-phase% test-postgres \
 	migrate migrate-mongo migrate-down migrate-status seed-mongo \
 	secrets secrets-validate secrets-rotate check-secrets \
