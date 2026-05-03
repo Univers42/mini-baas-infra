@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { LoggerModule } from 'nestjs-pino';
 import { TerminusModule } from '@nestjs/terminus';
-import { randomUUID } from 'node:crypto';
 import { PostgresModule } from '@mini-baas/database';
 import { SchemasModule } from './schemas/schemas.module';
 import { HealthController } from './health.controller';
@@ -14,13 +13,6 @@ import { HealthController } from './health.controller';
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env['LOG_LEVEL'] ?? 'info',
-        genReqId: (req: { headers?: Record<string, unknown> }) =>
-          (req.headers?.['x-request-id'] as string) ??
-          randomUUID(),
-        transport:
-          process.env['NODE_ENV'] === 'production'
-            ? undefined
-            : { target: 'pino-pretty', options: { colorize: true } },
         base: { service: 'schema-service' },
       },
     }),

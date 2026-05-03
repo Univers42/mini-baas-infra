@@ -27,6 +27,8 @@ export class PostgresSchemaEngine {
     const colDefs: string[] = [
       `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`,
       `owner_id UUID NOT NULL`,
+      `created_at TIMESTAMPTZ DEFAULT now()`,
+      `updated_at TIMESTAMPTZ DEFAULT now()`,
     ];
 
     for (const col of columns) {
@@ -40,11 +42,6 @@ export class PostgresSchemaEngine {
       if (col.default_value) def += ` DEFAULT ${col.default_value}`;
       colDefs.push(def);
     }
-
-    colDefs.push(
-      `created_at TIMESTAMPTZ DEFAULT now()`,
-      `updated_at TIMESTAMPTZ DEFAULT now()`,
-    );
 
     const ddl = `CREATE TABLE IF NOT EXISTS public."${tableName}" (\n  ${colDefs.join(',\n  ')}\n)`;
 
