@@ -17,10 +17,10 @@
  * Requires: Docker socket access (/var/run/docker.sock)
  */
 
-import { execSync, spawn } from 'child_process';
-import { createInterface, Interface as RLInterface } from 'readline';
-import * as fs from 'fs';
-import * as path from 'path';
+import { execFileSync, spawn } from 'node:child_process';
+import { createInterface, Interface as RLInterface } from 'node:readline';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
 	Observable,
 	Subject,
@@ -37,15 +37,37 @@ import {
 
 const COMPOSE_PROJECT = 'mini-baas';
 const PID_FILE = path.resolve(__dirname, '../../.observatory.pid');
+const DOCKER_EXECUTABLE = '/usr/bin/docker';
+
+// eslint-disable-next-line no-control-regex
+const ANSI_ESCAPE_RE = /\x1b\[[0-9;]*m/g;
+
+function safeString(value: unknown, fallback = ''): string {
+	if (value == null) return fallback;
+	if (typeof value === 'string') return value;
+	if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+		return String(value);
+	}
+	if (typeof value === 'symbol') return value.description ?? fallback;
+	try {
+		return JSON.stringify(value) ?? fallback;
+	} catch {
+		return fallback;
+	}
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+	return value && typeof value === 'object' ? value as Record<string, unknown> : undefined;
+}
 
 // ─── Modes ──────────────────────────────────────────────────────────────────
 
 type Mode = 'interactive' | 'headless' | 'logs';
 
 function resolveMode(): Mode {
-	const args = process.argv.slice(2);
-	if (args.includes('--headless')) return 'headless';
-	if (args.includes('--logs') || args.includes('--logs-only')) return 'logs';
+	const args = new Set(process.argv.slice(2));
+	if (args.has('--headless')) return 'headless';
+	if (args.has('--logs') || args.has('--logs-only')) return 'logs';
 	return 'interactive';
 }
 
@@ -53,7 +75,7 @@ function resolveMode(): Mode {
 
 function getActiveServices(): string[] {
 	try {
-		return execSync('docker compose config --services', {
+		return execFileSync(DOCKER_EXECUTABLE, ['compose', 'config', '--services'], {
 			encoding: 'utf-8',
 			timeout: 10_000,
 		})
@@ -103,13 +125,13 @@ const PALETTE = [
 function colorFor(service: string): string {
 	const idx = SERVICES.indexOf(service);
 	const i = idx >= 0 ? idx : hashCode(service);
-	return PALETTE[Math.abs(i) % PALETTE.length]!;
+	return PALETTE[Math.abs(i) % PALETTE.length];
 }
 
 function hashCode(s: string): number {
 	let h = 0;
-	for (let i = 0; i < s.length; i++) {
-		h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+	for (const character of s) {
+		h = Math.trunc(Math.imul(31, h) + (character.codePointAt(0) ?? 0));
 	}
 	return h;
 }
@@ -124,8 +146,7 @@ function timestamp(): string {
 
 /** Strip ANSI escape codes for visible-length measurement. */
 function stripAnsi(s: string): string {
-	// eslint-disable-next-line no-control-regex
-	return s.replace(/\x1b\[[0-9;]*m/g, '');
+	return s.replaceAll(ANSI_ESCAPE_RE, '');
 }
 
 /** Pad a (possibly ANSI-colored) string to `width` visible characters. */
@@ -147,9 +168,14 @@ interface ContainerInfo {
 
 function listContainers(): ContainerInfo[] {
 	try {
-		const raw = execSync(
-			`docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" ` +
-			`--format '{{.ID}}|{{.Names}}|{{.Label "com.docker.compose.service"}}|{{.Status}}|{{.State}}'`,
+		const raw = execFileSync(
+			DOCKER_EXECUTABLE,
+			[
+				'ps',
+				'-a',
+				'--filter', `label=com.docker.compose.project=${COMPOSE_PROJECT}`,
+				'--format', '{{.ID}}|{{.Names}}|{{.Label "com.docker.compose.service"}}|{{.Status}}|{{.State}}',
+			],
 			{ encoding: 'utf-8', timeout: 10_000 },
 		).trim();
 
@@ -165,7 +191,7 @@ function listContainers(): ContainerInfo[] {
 			else if (state === 'exited') health = 'exited';
 			else if (state === 'created') health = 'created';
 
-			const startedAt = status.replace(/\s*\(.*\)/, '');
+			const startedAt = statusWithoutHealth(status);
 			return {
 				id: id.trim(), name: name.trim(), service: service.trim(),
 				status: status.trim(), health, startedAt: startedAt.trim(),
@@ -174,6 +200,11 @@ function listContainers(): ContainerInfo[] {
 	} catch {
 		return [];
 	}
+}
+
+function statusWithoutHealth(status: string): string {
+	const parenthesisIndex = status.indexOf('(');
+	return parenthesisIndex >= 0 ? status.slice(0, parenthesisIndex).trimEnd() : status;
 }
 
 // ─── Log entry ──────────────────────────────────────────────────────────────
@@ -189,7 +220,7 @@ interface LogEntry {
 
 function containerLogs$(containerId: string, service: string): Observable<LogEntry> {
 	return new Observable<LogEntry>((subscriber) => {
-		const proc = spawn('docker', ['logs', '--follow', '--tail', '50', containerId], {
+		const proc = spawn(DOCKER_EXECUTABLE, ['logs', '--follow', '--tail', '50', containerId], {
 			stdio: ['ignore', 'pipe', 'pipe'],
 		});
 
@@ -222,7 +253,7 @@ interface DockerEvent {
 function dockerEvents$(): Observable<DockerEvent> {
 	return new Observable<DockerEvent>((subscriber) => {
 		const proc = spawn(
-			'docker',
+			DOCKER_EXECUTABLE,
 			[
 				'events',
 				'--filter', `label=com.docker.compose.project=${COMPOSE_PROJECT}`,
@@ -255,102 +286,122 @@ function dockerEvents$(): Observable<DockerEvent> {
 
 // ─── Health Matrix ──────────────────────────────────────────────────────────
 
-function renderHealthMatrix(): string {
-	const containers = listContainers();
-	const serviceMap = new Map<string, ContainerInfo>();
-	for (const c of containers) serviceMap.set(c.service, c);
+const HEALTH_SERVICE_WIDTH = 20;
+const HEALTH_STATUS_WIDTH = 14;
+const HEALTH_UPTIME_WIDTH = 26;
+const HEALTH_INNER_WIDTH = HEALTH_SERVICE_WIDTH + HEALTH_STATUS_WIDTH + HEALTH_UPTIME_WIDTH + 8;
+const HEALTH_BORDER = `${CYAN}│${RESET}`;
+const UP_HEALTH_STATES = new Set(['healthy', 'running', 'starting']);
+const EXITED_STATUS_RE = /Exited\s*\((\d+)\)/;
 
-	const C1 = 20;
-	const C2 = 14;
-	const C3 = 26;
-	const INNER = C1 + C2 + C3 + 8;
+interface HealthDisplay {
+	statusCol: string;
+	uptimeCol: string;
+}
 
-	const B = `${CYAN}│${RESET}`;
+function healthColumnRow(service: string, status: string, uptime: string): string {
+	return `${HEALTH_BORDER} ${vpad(service, HEALTH_SERVICE_WIDTH)} ${HEALTH_BORDER} ${vpad(status, HEALTH_STATUS_WIDTH)} ${HEALTH_BORDER} ${vpad(uptime, HEALTH_UPTIME_WIDTH)} ${HEALTH_BORDER}`;
+}
 
-	const colRow = (a: string, b: string, c: string) =>
-		`${B} ${vpad(a, C1)} ${B} ${vpad(b, C2)} ${B} ${vpad(c, C3)} ${B}`;
+function healthFullRule(left: string, right: string): string {
+	return `${CYAN}${left}${'─'.repeat(HEALTH_INNER_WIDTH)}${right}${RESET}`;
+}
 
-	const hrFull = (l: string, r: string) =>
-		`${CYAN}${l}${'─'.repeat(INNER)}${r}${RESET}`;
+function healthColumnRule(left: string, middle: string, right: string): string {
+	return `${CYAN}${left}${'─'.repeat(HEALTH_SERVICE_WIDTH + 2)}${middle}${'─'.repeat(HEALTH_STATUS_WIDTH + 2)}${middle}${'─'.repeat(HEALTH_UPTIME_WIDTH + 2)}${right}${RESET}`;
+}
 
-	const hrCols = (l: string, x: string, r: string) =>
-		`${CYAN}${l}${'─'.repeat(C1 + 2)}${x}${'─'.repeat(C2 + 2)}${x}${'─'.repeat(C3 + 2)}${r}${RESET}`;
-
-	const lines: string[] = [''];
-
-	lines.push(hrFull('┌', '┐'));
+function healthHeaderRows(): string[] {
 	const titleText = `${BOLD}${WHITE}mini-BaaS Health Matrix${RESET}`;
 	const tsText = `${DIM}${timestamp()}${RESET}`;
-	const titleGap = INNER - 2 - 22 - 8;
-	lines.push(`${B} ${titleText}${' '.repeat(Math.max(1, titleGap))}${tsText} ${B}`);
+	const titleGap = HEALTH_INNER_WIDTH - 2 - stripAnsi(titleText).length - stripAnsi(tsText).length;
+	return [
+		healthFullRule('┌', '┐'),
+		`${HEALTH_BORDER} ${titleText}${' '.repeat(Math.max(1, titleGap))}${tsText} ${HEALTH_BORDER}`,
+		healthColumnRule('├', '┬', '┤'),
+		healthColumnRow(
+			`${BOLD}Service${RESET}`,
+			`${BOLD}Status${RESET}`,
+			`${BOLD}Uptime${RESET}`,
+		),
+		healthColumnRule('├', '┼', '┤'),
+	];
+}
 
-	lines.push(hrCols('├', '┬', '┤'));
-	lines.push(colRow(
-		`${BOLD}Service${RESET}`,
-		`${BOLD}Status${RESET}`,
-		`${BOLD}Uptime${RESET}`,
-	));
-	lines.push(hrCols('├', '┼', '┤'));
+function exitedDisplay(container: ContainerInfo): HealthDisplay {
+	const exitMatch = EXITED_STATUS_RE.exec(container.status);
+	const exitCode = Number.parseInt(exitMatch?.[1] ?? '-1', 10);
+	const statusCol = exitCode === 0
+		? `${GREEN}✓ done${RESET}`
+		: `${RED}✗ exit(${exitCode})${RESET}`;
+	return { statusCol, uptimeCol: `${DIM}${container.startedAt}${RESET}` };
+}
 
-	for (const svc of SERVICES) {
-		const c = serviceMap.get(svc);
-		const color = colorFor(svc);
-		let statusCol: string;
-		let uptimeCol: string;
+function serviceDisplay(container: ContainerInfo | undefined): HealthDisplay {
+	if (!container) return { statusCol: `${DIM}○ —${RESET}`, uptimeCol: `${DIM}—${RESET}` };
 
-		if (!c) {
-			statusCol = `${DIM}○ —${RESET}`;
-			uptimeCol = `${DIM}—${RESET}`;
-		} else if (c.health === 'healthy') {
-			statusCol = `${GREEN}● healthy${RESET}`;
-			uptimeCol = c.startedAt;
-		} else if (c.health === 'running') {
-			statusCol = `${YELLOW}● running${RESET}`;
-			uptimeCol = c.startedAt;
-		} else if (c.health === 'starting') {
-			statusCol = `${YELLOW}◐ starting${RESET}`;
-			uptimeCol = c.startedAt;
-		} else if (c.health === 'unhealthy') {
-			statusCol = `${RED}● unhealthy${RESET}`;
-			uptimeCol = c.startedAt;
-		} else if (c.health === 'exited') {
-			const exitMatch = c.status.match(/Exited\s*\((\d+)\)/);
-			const exitCode = exitMatch ? parseInt(exitMatch[1]!, 10) : -1;
-			statusCol = exitCode === 0
-				? `${GREEN}✓ done${RESET}`
-				: `${RED}✗ exit(${exitCode})${RESET}`;
-			uptimeCol = `${DIM}${c.startedAt}${RESET}`;
-		} else {
-			statusCol = `${DIM}? ${c.health}${RESET}`;
-			uptimeCol = c.startedAt;
-		}
-
-		lines.push(colRow(`${color}${svc}${RESET}`, statusCol, uptimeCol));
+	switch (container.health) {
+		case 'healthy':
+			return { statusCol: `${GREEN}● healthy${RESET}`, uptimeCol: container.startedAt };
+		case 'running':
+			return { statusCol: `${YELLOW}● running${RESET}`, uptimeCol: container.startedAt };
+		case 'starting':
+			return { statusCol: `${YELLOW}◐ starting${RESET}`, uptimeCol: container.startedAt };
+		case 'unhealthy':
+			return { statusCol: `${RED}● unhealthy${RESET}`, uptimeCol: container.startedAt };
+		case 'exited':
+			return exitedDisplay(container);
+		default:
+			return { statusCol: `${DIM}? ${container.health}${RESET}`, uptimeCol: container.startedAt };
 	}
+}
 
-	for (const c of containers) {
-		if (isKnownService(c.service)) continue;
-		lines.push(colRow(
-			`${colorFor(c.service)}${c.service || c.name}${RESET}`,
-			`${YELLOW}● ${c.health}${RESET}`,
-			c.startedAt,
+function knownServiceRows(serviceMap: Map<string, ContainerInfo>): string[] {
+	return SERVICES.map((service) => {
+		const { statusCol, uptimeCol } = serviceDisplay(serviceMap.get(service));
+		return healthColumnRow(`${colorFor(service)}${service}${RESET}`, statusCol, uptimeCol);
+	});
+}
+
+function extraContainerRows(containers: ContainerInfo[]): string[] {
+	return containers
+		.filter((container) => !isKnownService(container.service))
+		.map((container) => healthColumnRow(
+			`${colorFor(container.service)}${container.service || container.name}${RESET}`,
+			`${YELLOW}● ${container.health}${RESET}`,
+			container.startedAt,
 		));
-	}
+}
 
+function healthSummaryRows(containers: ContainerInfo[]): string[] {
 	const total = containers.length;
-	const up = containers.filter((c) => ['healthy', 'running', 'starting'].includes(c.health)).length;
-	const unhealthy = containers.filter((c) => c.health === 'unhealthy').length;
-	const exited = containers.filter((c) => c.health === 'exited').length;
-
-	lines.push(hrCols('├', '┴', '┤'));
-	const summaryLeft = `${GREEN}● ${up} up${RESET}   ${unhealthy > 0 ? RED : DIM}● ${unhealthy} unhealthy${RESET}   ${DIM}✗ ${exited} exited${RESET}`;
+	const up = containers.filter((container) => UP_HEALTH_STATES.has(container.health)).length;
+	const unhealthy = containers.filter((container) => container.health === 'unhealthy').length;
+	const exited = containers.filter((container) => container.health === 'exited').length;
+	const unhealthyColor = unhealthy > 0 ? RED : DIM;
+	const summaryLeft = `${GREEN}● ${up} up${RESET}   ${unhealthyColor}● ${unhealthy} unhealthy${RESET}   ${DIM}✗ ${exited} exited${RESET}`;
 	const summaryRight = `${BOLD}${total}${RESET} ${DIM}total${RESET}`;
-	const sGap = INNER - 2 - stripAnsi(summaryLeft).length - stripAnsi(summaryRight).length;
-	lines.push(`${B} ${summaryLeft}${' '.repeat(Math.max(1, sGap))}${summaryRight} ${B}`);
-	lines.push(hrFull('└', '┘'));
-	lines.push('');
+	const summaryGap = HEALTH_INNER_WIDTH - 2 - stripAnsi(summaryLeft).length - stripAnsi(summaryRight).length;
 
-	return lines.join('\n');
+	return [
+		healthColumnRule('├', '┴', '┤'),
+		`${HEALTH_BORDER} ${summaryLeft}${' '.repeat(Math.max(1, summaryGap))}${summaryRight} ${HEALTH_BORDER}`,
+		healthFullRule('└', '┘'),
+		'',
+	];
+}
+
+function renderHealthMatrix(): string {
+	const containers = listContainers();
+	const serviceMap = new Map(containers.map((container) => [container.service, container]));
+
+	return [
+		'',
+		...healthHeaderRows(),
+		...knownServiceRows(serviceMap),
+		...extraContainerRows(containers),
+		...healthSummaryRows(containers),
+	].join('\n');
 }
 
 // ─── Smart Log Formatting ───────────────────────────────────────────────────
@@ -373,7 +424,7 @@ const LEVEL_COLORS: Record<LogLevel, string> = {
 };
 
 function pinoLevel(n: number | string): LogLevel {
-	const v = typeof n === 'string' ? parseInt(n, 10) : n;
+	const v = typeof n === 'string' ? Number.parseInt(n, 10) : n;
 	if (v >= 60) return 'FATAL';
 	if (v >= 50) return 'ERROR';
 	if (v >= 40) return 'WARN';
@@ -407,6 +458,12 @@ function isHealthCheck(url: string): boolean {
 	return /\/health\/(live|ready|startup)/.test(url);
 }
 
+function statusCodeColor(statusCode: number): string {
+	if (statusCode >= 500) return RED;
+	if (statusCode >= 400) return YELLOW;
+	return GREEN;
+}
+
 // ── Format Parsers ──────────────────────────────────────────────────────────
 
 function tryPino(raw: string): ParsedLog | null {
@@ -414,25 +471,27 @@ function tryPino(raw: string): ParsedLog | null {
 		const j = JSON.parse(raw) as Record<string, unknown>;
 		if (typeof j['level'] !== 'number' || j['time'] == null) return null;
 
-		const level = pinoLevel(j['level'] as number);
-		const msg = String(j['msg'] ?? j['message'] ?? '');
-		const req = j['req'] as Record<string, unknown> | undefined;
-		const res = j['res'] as Record<string, unknown> | undefined;
+		const level = pinoLevel(j['level']);
+		const msg = safeString(j['msg'] ?? j['message']);
+		const req = asRecord(j['req']);
+		const res = asRecord(j['res']);
 
 		if (req && res) {
-			const method = String(req['method'] ?? '');
-			const url = String(req['url'] ?? '');
+			const method = safeString(req['method']);
+			const url = safeString(req['url']);
 			const sc = Number(res['statusCode'] ?? 0);
-			const rt = j['responseTime'] != null ? `${j['responseTime']}ms` : '';
+			let rt = '';
+			if (j['responseTime'] != null) rt = `${safeString(j['responseTime'])}ms`;
 			if (isHealthCheck(url)) return { level, message: '', skip: true };
-			const scColor = sc >= 500 ? RED : sc >= 400 ? YELLOW : GREEN;
+			const scColor = statusCodeColor(sc);
 			return {
 				level,
 				message: `${BOLD}${method}${RESET} ${url} ${scColor}${sc}${RESET} ${DIM}${rt}${RESET}`,
 			};
 		}
 
-		const ctx = j['context'] ? `${DIM}[${j['context']}]${RESET} ` : '';
+		const context = safeString(j['context']);
+		const ctx = context ? `${DIM}[${context}]${RESET} ` : '';
 		return { level, message: `${ctx}${msg}` };
 	} catch {
 		return null;
@@ -444,11 +503,11 @@ function tryGotrue(raw: string): ParsedLog | null {
 		const j = JSON.parse(raw) as Record<string, unknown>;
 		if (typeof j['level'] !== 'string' || typeof j['time'] !== 'string') return null;
 		if (j['msg'] == null) return null;
-		if (typeof j['level'] === 'number') return null;
 
-		const level = strLevel(j['level'] as string);
-		const component = j['component'] ? `${DIM}[${j['component']}]${RESET} ` : '';
-		const msg = String(j['msg'] ?? '')
+		const level = strLevel(j['level']);
+		const componentName = safeString(j['component']);
+		const component = componentName ? `${DIM}[${componentName}]${RESET} ` : '';
+		const msg = safeString(j['msg'])
 			.replace(/applying connection limits to db using the "(\w+)" strategy.*/, 'connection limits applied ($1 strategy)');
 
 		return { level, message: `${component}${msg}` };
@@ -460,13 +519,13 @@ function tryGotrue(raw: string): ParsedLog | null {
 function tryMongo(raw: string): ParsedLog | null {
 	try {
 		const j = JSON.parse(raw) as Record<string, unknown>;
-		const t = j['t'] as Record<string, unknown> | undefined;
-		if (!t || !t['$date']) return null;
+		const t = asRecord(j['t']);
+		if (!t?.['$date']) return null;
 
-		const level = mongoSeverity(String(j['s'] ?? 'I'));
-		const component = String(j['c'] ?? '');
-		const msg = String(j['msg'] ?? '');
-		const attr = j['attr'] as Record<string, unknown> | undefined;
+		const level = mongoSeverity(safeString(j['s'], 'I'));
+		const component = safeString(j['c']);
+		const msg = safeString(j['msg']);
+		const attr = asRecord(j['attr']);
 
 		const isConnChurn = component === 'NETWORK'
 			&& /^(Connection (accepted|ended)|client metadata|Received first command)/.test(msg);
@@ -477,8 +536,10 @@ function tryMongo(raw: string): ParsedLog | null {
 		const cmpTag = component ? `${DIM}[${component}]${RESET} ` : '';
 		let extra = '';
 		if (attr) {
-			if (attr['remote']) extra = ` ${DIM}${attr['remote']}${RESET}`;
-			if (attr['connectionCount'] != null) extra += ` ${DIM}conns:${attr['connectionCount']}${RESET}`;
+			const remote = safeString(attr['remote']);
+			const connectionCount = safeString(attr['connectionCount']);
+			if (remote) extra = ` ${DIM}${remote}${RESET}`;
+			if (connectionCount) extra += ` ${DIM}conns:${connectionCount}${RESET}`;
 		}
 
 		return { level, message: `${cmpTag}${msg}${extra}` };
@@ -494,50 +555,78 @@ const VAULT_BANNER_RE = /^==>?\s*(.*)/;
 const POSTGREST_TS_RE = /^\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2}\s+[+-]\d{4}:\s*(.*)/;
 const POSTGREST_FATAL_RE = /^FATAL:\s*(.*)/;
 const POSTGRES_RE = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+\w+\s+\[\d+]\s+(\w+):\s*(.*)/;
-const REALTIME_RE = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z?\s+(\w+)\s+([\w_:]+)\s*(.*)/;
+const REALTIME_RE = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z?\s+(\w+)\s+([\w:]+)\s*(.*)/;
 const NGINX_RE = /^\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2}\s+\[(\w+)]\s+[\d#]+:\s*(.*)/;
 const GENERIC_LEVEL_RE = /^(?:nginx:\s*)?\[(\w+)]\s*(.*)/;
 
-function tryTextParsers(raw: string): ParsedLog | null {
-	let m: RegExpMatchArray | null;
+function postgresLevel(level: string): LogLevel {
+	const pgLevel = level.toUpperCase();
+	if (pgLevel === 'ERROR' || pgLevel === 'FATAL' || pgLevel === 'PANIC') return 'ERROR';
+	if (pgLevel === 'WARNING') return 'WARN';
+	if (pgLevel === 'DEBUG') return 'DEBUG';
+	return 'INFO';
+}
 
-	if ((m = raw.match(VAULT_RE)))
-		return { level: strLevel(m[1]!), message: m[2]! };
-	if ((m = raw.match(VAULT_BANNER_RE)))
-		return { level: 'INFO', message: `${BOLD}${m[1]}${RESET}` };
-	if ((m = raw.match(POSTGREST_FATAL_RE)))
-		return { level: 'ERROR', message: m[1]! };
-	if ((m = raw.match(POSTGREST_TS_RE))) {
-		const msg = m[1]!;
+function tryTextParsers(raw: string): ParsedLog | null {
+	let match = VAULT_RE.exec(raw);
+	if (match) {
+		const [, level = '', message = ''] = match;
+		return { level: strLevel(level), message };
+	}
+
+	match = VAULT_BANNER_RE.exec(raw);
+	if (match) {
+		const [, message = ''] = match;
+		return { level: 'INFO', message: `${BOLD}${message}${RESET}` };
+	}
+
+	match = POSTGREST_FATAL_RE.exec(raw);
+	if (match) {
+		const [, message = ''] = match;
+		return { level: 'ERROR', message };
+	}
+
+	match = POSTGREST_TS_RE.exec(raw);
+	if (match) {
+		const [, msg = ''] = match;
 		const lvl: LogLevel = /failed|error|fatal/i.test(msg) ? 'ERROR' : 'INFO';
 		return { level: lvl, message: msg };
 	}
-	if ((m = raw.match(POSTGRES_RE))) {
-		const pgLevel = m[1]!.toUpperCase();
-		let lvl: LogLevel = 'INFO';
-		if (pgLevel === 'ERROR' || pgLevel === 'FATAL' || pgLevel === 'PANIC') lvl = 'ERROR';
-		else if (pgLevel === 'WARNING') lvl = 'WARN';
-		else if (pgLevel === 'DEBUG') lvl = 'DEBUG';
-		return { level: lvl, message: m[2]! };
+
+	match = POSTGRES_RE.exec(raw);
+	if (match) {
+		const [, level = '', message = ''] = match;
+		return { level: postgresLevel(level), message };
 	}
-	if ((m = raw.match(REALTIME_RE))) {
-		const module = m[2]!.replace(/:$/, '');
-		const msg = m[3]!.trim();
+
+	match = REALTIME_RE.exec(raw);
+	if (match) {
+		const [, level = '', moduleName = '', rawMsg = ''] = match;
+		const module = moduleName.replace(/:$/, '');
+		const msg = rawMsg.trim();
 		return {
-			level: strLevel(m[1]!),
+			level: strLevel(level),
 			message: msg ? `${DIM}[${module}]${RESET} ${msg}` : `${DIM}[${module}]${RESET}`,
 		};
 	}
-	if ((m = raw.match(NGINX_RE)))
-		return { level: strLevel(m[1]!), message: m[2]! };
-	if ((m = raw.match(GENERIC_LEVEL_RE)))
-		return { level: strLevel(m[1]!), message: m[2]! };
+
+	match = NGINX_RE.exec(raw);
+	if (match) {
+		const [, level = '', message = ''] = match;
+		return { level: strLevel(level), message };
+	}
+
+	match = GENERIC_LEVEL_RE.exec(raw);
+	if (match) {
+		const [, level = '', message = ''] = match;
+		return { level: strLevel(level), message };
+	}
+
 	return null;
 }
 
 function parseLogLine(raw: string, stream: 'stdout' | 'stderr'): ParsedLog {
-	// eslint-disable-next-line no-control-regex
-	const clean = raw.replace(/\x1b\[[0-9;]*m/g, '');
+	const clean = raw.replaceAll(ANSI_ESCAPE_RE, '');
 
 	if (/^\d{4}-\d{2}-\d{2}T[\d:.]+Z?\s*$/.test(clean))
 		return { level: 'INFO', message: '', skip: true };
@@ -625,6 +714,198 @@ ${CYAN}────────────────────────�
 
 const PROMPT = `${BOLD}${CYAN}observatory${RESET}${DIM}>${RESET} `;
 
+interface InteractiveCommandContext {
+	filterState: FilterState;
+	shutdownFn: () => void;
+}
+
+interface InteractiveInput {
+	command: string;
+	arg: string;
+}
+
+type InteractiveCommandHandler = (arg: string, context: InteractiveCommandContext) => boolean;
+
+function parseInteractiveInput(input: string): InteractiveInput | null {
+	const raw = input.trim();
+	if (!raw) return null;
+	const [command = '', ...rest] = raw.split(/\s+/);
+	return { command: command.toLowerCase(), arg: rest.join(' ') };
+}
+
+function setLevelFilter(filterState: FilterState, levels: LogLevel[], label: string): boolean {
+	filterState.levels = new Set<LogLevel>(levels);
+	filterState.paused = false;
+	process.stdout.write(`${GREEN}Filter: ${BOLD}${label}${RESET}\n`);
+	return true;
+}
+
+function showHealthCommand(): boolean {
+	process.stdout.write(renderHealthMatrix() + '\n');
+	return true;
+}
+
+function showErrorsCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	return setLevelFilter(context.filterState, ['ERROR', 'FATAL'], 'ERROR + FATAL');
+}
+
+function showWarningsCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	return setLevelFilter(context.filterState, ['WARN', 'ERROR', 'FATAL'], 'WARN + ERROR + FATAL');
+}
+
+function showInfoCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	return setLevelFilter(context.filterState, ['INFO', 'WARN', 'ERROR', 'FATAL'], 'INFO and above');
+}
+
+function resetFiltersCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	const { filterState } = context;
+	filterState.levels.clear();
+	filterState.services.clear();
+	filterState.grep = null;
+	filterState.paused = false;
+	process.stdout.write(`${GREEN}Filter reset: ${BOLD}showing all logs${RESET}\n`);
+	return true;
+}
+
+function serviceFilterCommand(arg: string, context: InteractiveCommandContext): boolean {
+	const { filterState } = context;
+	if (arg) {
+		const services = arg.split(',').map((service) => service.trim()).filter(Boolean);
+		filterState.services = new Set(services);
+		process.stdout.write(`${GREEN}Filter: services = ${BOLD}${services.join(', ')}${RESET}\n`);
+	} else {
+		filterState.services.clear();
+		process.stdout.write(`${GREEN}Service filter cleared: ${BOLD}showing all services${RESET}\n`);
+	}
+	return true;
+}
+
+function grepCommand(arg: string, context: InteractiveCommandContext): boolean {
+	const { filterState } = context;
+	if (arg) {
+		try {
+			filterState.grep = new RegExp(arg, 'i');
+			process.stdout.write(`${GREEN}Grep: ${BOLD}/${arg}/i${RESET}\n`);
+		} catch {
+			process.stdout.write(`${RED}Invalid regex: ${arg}${RESET}\n`);
+		}
+	} else {
+		filterState.grep = null;
+		process.stdout.write(`${GREEN}Grep filter cleared${RESET}\n`);
+	}
+	return true;
+}
+
+function pauseCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	context.filterState.paused = true;
+	process.stdout.write(`${YELLOW}${BOLD}⏸  Log output paused${RESET} ${DIM}(type 'resume' to continue)${RESET}\n`);
+	return true;
+}
+
+function resumeCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	context.filterState.paused = false;
+	process.stdout.write(`${GREEN}${BOLD}▶  Log output resumed${RESET}\n`);
+	return true;
+}
+
+function clearCommand(): boolean {
+	process.stdout.write('\x1Bc');
+	return true;
+}
+
+function formattedSet<T extends string>(values: Set<T>): string {
+	if (values.size === 0) return `${DIM}all${RESET}`;
+	return Array.from(values).join(', ');
+}
+
+function formattedGrep(grep: RegExp | null): string {
+	if (grep) return `/${grep.source}/${grep.flags}`;
+	return `${DIM}none${RESET}`;
+}
+
+function formattedPaused(paused: boolean): string {
+	if (paused) return `${YELLOW}yes${RESET}`;
+	return `${GREEN}no${RESET}`;
+}
+
+function filterCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	const { filterState } = context;
+	const levels = formattedSet(filterState.levels);
+	const services = formattedSet(filterState.services);
+	const grep = formattedGrep(filterState.grep);
+	const paused = formattedPaused(filterState.paused);
+	process.stdout.write(
+		`\n${BOLD}Current filter:${RESET}\n` +
+		`  Levels:   ${levels}\n` +
+		`  Services: ${services}\n` +
+		`  Grep:     ${grep}\n` +
+		`  Paused:   ${paused}\n\n`,
+	);
+	return true;
+}
+
+function servicesCommand(): boolean {
+	const services = SERVICES
+		.map((service) => `  ${colorFor(service)}${service}${RESET}`)
+		.join('\n');
+	process.stdout.write(`\n${BOLD}Available services:${RESET}\n${services}\n\n`);
+	return true;
+}
+
+function helpCommand(): boolean {
+	process.stdout.write(HELP_TEXT);
+	return true;
+}
+
+function quitCommand(_arg: string, context: InteractiveCommandContext): boolean {
+	context.shutdownFn();
+	return false;
+}
+
+const COMMAND_HANDLERS = new Map<string, InteractiveCommandHandler>([
+	['status', showHealthCommand],
+	['health', showHealthCommand],
+	['s', showHealthCommand],
+	['errors', showErrorsCommand],
+	['e', showErrorsCommand],
+	['warnings', showWarningsCommand],
+	['w', showWarningsCommand],
+	['info', showInfoCommand],
+	['i', showInfoCommand],
+	['all', resetFiltersCommand],
+	['a', resetFiltersCommand],
+	['service', serviceFilterCommand],
+	['svc', serviceFilterCommand],
+	['grep', grepCommand],
+	['g', grepCommand],
+	['pause', pauseCommand],
+	['p', pauseCommand],
+	['resume', resumeCommand],
+	['r', resumeCommand],
+	['clear', clearCommand],
+	['c', clearCommand],
+	['filter', filterCommand],
+	['f', filterCommand],
+	['services', servicesCommand],
+	['help', helpCommand],
+	['h', helpCommand],
+	['?', helpCommand],
+	['quit', quitCommand],
+	['q', quitCommand],
+	['exit', quitCommand],
+]);
+
+function handleInteractiveInput(input: string, context: InteractiveCommandContext): boolean {
+	const parsed = parseInteractiveInput(input);
+	if (!parsed) return true;
+
+	const handler = COMMAND_HANDLERS.get(parsed.command);
+	if (handler) return handler(parsed.arg, context);
+
+	process.stdout.write(`${DIM}Unknown command: ${parsed.command}. Type 'help' for available commands.${RESET}\n`);
+	return true;
+}
+
 function startInteractivePrompt(
 	filterState: FilterState,
 	shutdownFn: () => void,
@@ -640,139 +921,7 @@ function startInteractivePrompt(
 	rl.prompt();
 
 	rl.on('line', (input) => {
-		const raw = input.trim();
-		if (!raw) { rl.prompt(); return; }
-
-		const [cmd = '', ...rest] = raw.split(/\s+/);
-		const arg = rest.join(' ');
-
-		switch (cmd.toLowerCase()) {
-			// ── Health ──
-			case 'status':
-			case 'health':
-			case 's':
-				process.stdout.write(renderHealthMatrix() + '\n');
-				break;
-
-			// ── Level filters ──
-			case 'errors':
-			case 'e':
-				filterState.levels = new Set<LogLevel>(['ERROR', 'FATAL']);
-				filterState.paused = false;
-				process.stdout.write(`${GREEN}Filter: ${BOLD}ERROR + FATAL${RESET}\n`);
-				break;
-
-			case 'warnings':
-			case 'w':
-				filterState.levels = new Set<LogLevel>(['WARN', 'ERROR', 'FATAL']);
-				filterState.paused = false;
-				process.stdout.write(`${GREEN}Filter: ${BOLD}WARN + ERROR + FATAL${RESET}\n`);
-				break;
-
-			case 'info':
-			case 'i':
-				filterState.levels = new Set<LogLevel>(['INFO', 'WARN', 'ERROR', 'FATAL']);
-				filterState.paused = false;
-				process.stdout.write(`${GREEN}Filter: ${BOLD}INFO and above${RESET}\n`);
-				break;
-
-			case 'all':
-			case 'a':
-				filterState.levels.clear();
-				filterState.services.clear();
-				filterState.grep = null;
-				filterState.paused = false;
-				process.stdout.write(`${GREEN}Filter reset: ${BOLD}showing all logs${RESET}\n`);
-				break;
-
-			// ── Service filter ──
-			case 'service':
-			case 'svc':
-				if (!arg) {
-					filterState.services.clear();
-					process.stdout.write(`${GREEN}Service filter cleared: ${BOLD}showing all services${RESET}\n`);
-				} else {
-					const svcs = arg.split(',').map((s) => s.trim()).filter(Boolean);
-					filterState.services = new Set(svcs);
-					process.stdout.write(`${GREEN}Filter: services = ${BOLD}${svcs.join(', ')}${RESET}\n`);
-				}
-				break;
-
-			// ── Grep ──
-			case 'grep':
-			case 'g':
-				if (!arg) {
-					filterState.grep = null;
-					process.stdout.write(`${GREEN}Grep filter cleared${RESET}\n`);
-				} else {
-					try {
-						filterState.grep = new RegExp(arg, 'i');
-						process.stdout.write(`${GREEN}Grep: ${BOLD}/${arg}/i${RESET}\n`);
-					} catch {
-						process.stdout.write(`${RED}Invalid regex: ${arg}${RESET}\n`);
-					}
-				}
-				break;
-
-			// ── Pause / Resume ──
-			case 'pause':
-			case 'p':
-				filterState.paused = true;
-				process.stdout.write(`${YELLOW}${BOLD}⏸  Log output paused${RESET} ${DIM}(type 'resume' to continue)${RESET}\n`);
-				break;
-
-			case 'resume':
-			case 'r':
-				filterState.paused = false;
-				process.stdout.write(`${GREEN}${BOLD}▶  Log output resumed${RESET}\n`);
-				break;
-
-			// ── Clear ──
-			case 'clear':
-			case 'c':
-				process.stdout.write('\x1Bc');
-				break;
-
-			// ── Show filter ──
-			case 'filter':
-			case 'f':
-				process.stdout.write(
-					`\n${BOLD}Current filter:${RESET}\n` +
-					`  Levels:   ${filterState.levels.size === 0 ? `${DIM}all${RESET}` : Array.from(filterState.levels).join(', ')}\n` +
-					`  Services: ${filterState.services.size === 0 ? `${DIM}all${RESET}` : Array.from(filterState.services).join(', ')}\n` +
-					`  Grep:     ${filterState.grep ? `/${filterState.grep.source}/${filterState.grep.flags}` : `${DIM}none${RESET}`}\n` +
-					`  Paused:   ${filterState.paused ? `${YELLOW}yes${RESET}` : `${GREEN}no${RESET}`}\n\n`,
-				);
-				break;
-
-			// ── Services list ──
-			case 'services':
-				process.stdout.write(`\n${BOLD}Available services:${RESET}\n`);
-				for (const svc of SERVICES) {
-					process.stdout.write(`  ${colorFor(svc)}${svc}${RESET}\n`);
-				}
-				process.stdout.write('\n');
-				break;
-
-			// ── Help ──
-			case 'help':
-			case 'h':
-			case '?':
-				process.stdout.write(HELP_TEXT);
-				break;
-
-			// ── Quit ──
-			case 'quit':
-			case 'q':
-			case 'exit':
-				shutdownFn();
-				return;
-
-			default:
-				process.stdout.write(`${DIM}Unknown command: ${cmd}. Type 'help' for available commands.${RESET}\n`);
-		}
-
-		rl.prompt();
+		if (handleInteractiveInput(input, { filterState, shutdownFn })) rl.prompt();
 	});
 
 	rl.on('close', () => {

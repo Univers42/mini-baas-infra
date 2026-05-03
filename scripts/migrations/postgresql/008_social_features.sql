@@ -4,7 +4,10 @@
 
 BEGIN;
 
-DO $$ BEGIN
+DO $$
+DECLARE
+  email_separator CONSTANT TEXT := '@';
+BEGIN
   IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 8) THEN
     RAISE NOTICE 'Migration 008 already applied — skipping';
     RETURN;
@@ -89,17 +92,17 @@ DO $$ BEGIN
     ADD COLUMN IF NOT EXISTS language     TEXT DEFAULT 'en',
     ADD COLUMN IF NOT EXISTS theme        TEXT DEFAULT 'system'
                                             CHECK (theme IN ('light','dark','system')),
-    ADD COLUMN IF NOT EXISTS a11y_preferences JSONB DEFAULT '{
-      "high_contrast": false,
-      "reduced_motion": false,
-      "font_size": "medium",
-      "screen_reader_optimized": false
-    }'::jsonb,
-    ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{
-      "email": true,
-      "push": true,
-      "in_app": true
-    }'::jsonb;
+    ADD COLUMN IF NOT EXISTS a11y_preferences JSONB DEFAULT jsonb_build_object(
+      'high_contrast', false,
+      'reduced_motion', false,
+      'font_size', 'medium',
+      'screen_reader_optimized', false
+    ),
+    ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT jsonb_build_object(
+      'email', true,
+      'push', true,
+      'in_app', true
+    );
 
   -- Allow users to update their own extended profile
   DROP POLICY IF EXISTS user_profiles_update_own ON public.user_profiles;
@@ -121,7 +124,7 @@ DO $$ BEGIN
     VALUES (
       NEW.id,
       NEW.email,
-      COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1))
+      COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, email_separator, 1))
     )
     ON CONFLICT (id) DO NOTHING;
 
@@ -129,14 +132,14 @@ DO $$ BEGIN
     INSERT INTO public.user_profiles (user_id, display_name, avatar_url)
     VALUES (
       NEW.id,
-      COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
-      COALESCE(NEW.raw_user_meta_data->>'avatar_url', 'https://api.dicebear.com/7.x/initials/svg?seed=' || split_part(NEW.email, '@', 1))
+      COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, email_separator, 1)),
+      COALESCE(NEW.raw_user_meta_data->>'avatar_url', 'https://api.dicebear.com/7.x/initials/svg?seed=' || split_part(NEW.email, email_separator, 1))
     )
     ON CONFLICT DO NOTHING;
 
     -- 3. Create user_presence
-    INSERT INTO public.user_presence (user_id, status)
-    VALUES (NEW.id, 'offline')
+    INSERT INTO public.user_presence (user_id)
+    VALUES (NEW.id)
     ON CONFLICT (user_id) DO NOTHING;
 
     -- 4. Create profiles (legacy compatibility)

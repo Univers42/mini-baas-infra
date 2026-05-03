@@ -62,9 +62,7 @@ BEGIN
   END IF;
 
   EXECUTE format(
-    'CREATE TRIGGER %I
-       AFTER INSERT OR UPDATE OR DELETE ON %I.%I
-       FOR EACH ROW EXECUTE FUNCTION public.realtime_notify()',
+    'CREATE TRIGGER %I AFTER INSERT OR UPDATE OR DELETE ON %I.%I FOR EACH ROW EXECUTE FUNCTION public.realtime_notify()',
     _trigger_name, _schema, _table
   );
 
@@ -78,6 +76,7 @@ $fn$ LANGUAGE plpgsql;
 DO $$
 DECLARE
   _rec RECORD;
+  _public_schema CONSTANT TEXT := 'public';
 BEGIN
   -- Guard: skip if already applied
   IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 12) THEN
@@ -88,11 +87,11 @@ BEGIN
   FOR _rec IN
     SELECT table_name
     FROM information_schema.tables
-    WHERE table_schema = 'public'
+    WHERE table_schema = _public_schema
       AND table_type   = 'BASE TABLE'
     ORDER BY table_name
   LOOP
-    PERFORM public.realtime_ensure_trigger('public', _rec.table_name);
+    PERFORM public.realtime_ensure_trigger(_public_schema, _rec.table_name);
   END LOOP;
 
   INSERT INTO public.schema_migrations (version, name) VALUES (12, '012_realtime_triggers_all_tables');
@@ -105,10 +104,11 @@ CREATE OR REPLACE FUNCTION public.realtime_auto_trigger()
 RETURNS EVENT_TRIGGER AS $fn$
 DECLARE
   _obj RECORD;
+  _public_schema CONSTANT TEXT := 'public';
 BEGIN
   FOR _obj IN SELECT * FROM pg_event_trigger_ddl_commands()
     WHERE command_tag = 'CREATE TABLE'
-      AND schema_name = 'public'
+      AND schema_name = _public_schema
   LOOP
     PERFORM public.realtime_ensure_trigger(
       _obj.schema_name,
@@ -125,18 +125,3 @@ CREATE EVENT TRIGGER realtime_auto_trigger_on_create
   EXECUTE FUNCTION public.realtime_auto_trigger();
 
 COMMIT;
-
--- DOWN (rollback)
--- DROP EVENT TRIGGER IF EXISTS realtime_auto_trigger_on_create;
--- DROP FUNCTION IF EXISTS public.realtime_auto_trigger();
--- -- To remove all per-table triggers:
--- DO $$ DECLARE _rec RECORD; BEGIN
---   FOR _rec IN SELECT trigger_name, event_object_table
---     FROM information_schema.triggers
---     WHERE trigger_name LIKE '%_realtime_trigger'
---       AND event_object_schema = 'public'
---   LOOP
---     EXECUTE format('DROP TRIGGER IF EXISTS %I ON public.%I', _rec.trigger_name, _rec.event_object_table);
---   END LOOP;
--- END $$;
--- DROP FUNCTION IF EXISTS public.realtime_ensure_trigger(TEXT, TEXT);

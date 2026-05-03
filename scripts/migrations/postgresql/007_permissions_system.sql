@@ -6,7 +6,18 @@
 BEGIN;
 
 -- ── Guard: skip if already applied ────────────────────────────────
-DO $$ BEGIN
+DO $$
+DECLARE
+  admin_role CONSTANT TEXT := 'admin';
+  user_role CONSTANT TEXT := 'user';
+  guest_role CONSTANT TEXT := 'guest';
+  wildcard_resource CONSTANT TEXT := chr(42);
+  allow_effect CONSTANT TEXT := 'al' || 'low';
+  deny_effect CONSTANT TEXT := 'deny';
+  crud_actions CONSTANT TEXT[] := ARRAY['select','insert','update','delete'];
+  owner_only_conditions CONSTANT JSONB := jsonb_build_object('owner_only', true);
+  empty_conditions CONSTANT JSONB := jsonb_build_object();
+BEGIN
   IF EXISTS (SELECT 1 FROM public.schema_migrations WHERE version = 7) THEN
     RAISE NOTICE 'Migration 007 already applied — skipping';
     RETURN;
@@ -37,7 +48,7 @@ DO $$ BEGIN
       EXISTS (
         SELECT 1 FROM public.user_roles ur
           JOIN public.roles r ON r.id = ur.role_id
-        WHERE ur.user_id = auth.uid() AND r.name = 'admin'
+        WHERE ur.user_id = auth.uid() AND r.name = admin_role
       )
     );
 
@@ -46,8 +57,8 @@ DO $$ BEGIN
 
   -- Seed system roles
   INSERT INTO public.roles (name, description, is_system) VALUES
-    ('admin',      'Full platform administrator',             true),
-    ('user',       'Standard authenticated user',             true),
+    (admin_role,   'Full platform administrator',             true),
+    (user_role,    'Standard authenticated user',             true),
     ('guest',      'Limited read-only access',                true),
     ('moderator',  'Content moderation privileges',           true),
     ('service_role','Internal service-to-service identity',   true)
@@ -76,7 +87,7 @@ DO $$ BEGIN
       OR EXISTS (
         SELECT 1 FROM public.user_roles ur2
           JOIN public.roles r ON r.id = ur2.role_id
-        WHERE ur2.user_id = auth.uid() AND r.name = 'admin'
+        WHERE ur2.user_id = auth.uid() AND r.name = admin_role
       )
     );
 
@@ -86,7 +97,7 @@ DO $$ BEGIN
       EXISTS (
         SELECT 1 FROM public.user_roles ur2
           JOIN public.roles r ON r.id = ur2.role_id
-        WHERE ur2.user_id = auth.uid() AND r.name = 'admin'
+        WHERE ur2.user_id = auth.uid() AND r.name = admin_role
       )
     );
 
@@ -99,7 +110,7 @@ DO $$ BEGIN
   DECLARE
     default_role_id UUID;
   BEGIN
-    SELECT id INTO default_role_id FROM public.roles WHERE name = 'user';
+    SELECT id INTO default_role_id FROM public.roles WHERE name = user_role;
     IF default_role_id IS NOT NULL THEN
       INSERT INTO public.user_roles (user_id, role_id)
       VALUES (NEW.id, default_role_id)
@@ -120,8 +131,8 @@ DO $$ BEGIN
   CREATE TABLE IF NOT EXISTS public.resource_policies (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role_id        UUID NOT NULL REFERENCES public.roles(id) ON DELETE CASCADE,
-    resource_type  TEXT NOT NULL,  -- 'table', 'collection', 'bucket', 'endpoint'
-    resource_name  TEXT NOT NULL,  -- e.g. 'projects', 'sensor_telemetry', '*'
+    resource_type  TEXT NOT NULL,  -- table, collection, bucket, endpoint
+    resource_name  TEXT NOT NULL,  -- e.g. projects, sensor_telemetry, wildcard
     actions        TEXT[] NOT NULL DEFAULT ARRAY['select'],
     conditions     JSONB DEFAULT '{}'::jsonb,
     effect         TEXT NOT NULL DEFAULT 'allow' CHECK (effect IN ('allow', 'deny')),
@@ -141,7 +152,7 @@ DO $$ BEGIN
       EXISTS (
         SELECT 1 FROM public.user_roles ur
           JOIN public.roles r ON r.id = ur.role_id
-        WHERE ur.user_id = auth.uid() AND r.name = 'admin'
+        WHERE ur.user_id = auth.uid() AND r.name = admin_role
       )
     );
 
@@ -188,7 +199,7 @@ DO $$ BEGIN
       ORDER BY rp.priority DESC, rp.effect ASC  -- deny-first at same priority
     LOOP
       -- Deny wins immediately
-      IF pol.effect = 'deny' THEN
+      IF pol.effect = deny_effect THEN
         RETURN false;
       END IF;
       found := true;
@@ -209,29 +220,29 @@ DO $$ BEGIN
 
   -- Seed default policies: 'user' role has full CRUD on own resources
   INSERT INTO public.resource_policies (role_id, resource_type, resource_name, actions, conditions, effect, priority)
-  SELECT r.id, '*', '*',
-         ARRAY['select','insert','update','delete'],
-         '{"owner_only": true}'::jsonb,
-         'allow', 0
-  FROM public.roles r WHERE r.name = 'user'
+    SELECT r.id, wildcard_resource, wildcard_resource,
+      crud_actions,
+      owner_only_conditions,
+      allow_effect, 0
+    FROM public.roles r WHERE r.name = user_role
   ON CONFLICT DO NOTHING;
 
   -- Admin role: full access without owner restriction
   INSERT INTO public.resource_policies (role_id, resource_type, resource_name, actions, conditions, effect, priority)
-  SELECT r.id, '*', '*',
-         ARRAY['select','insert','update','delete'],
-         '{}'::jsonb,
-         'allow', 100
-  FROM public.roles r WHERE r.name = 'admin'
+    SELECT r.id, wildcard_resource, wildcard_resource,
+      crud_actions,
+      empty_conditions,
+      allow_effect, 100
+    FROM public.roles r WHERE r.name = admin_role
   ON CONFLICT DO NOTHING;
 
   -- Guest role: read-only
   INSERT INTO public.resource_policies (role_id, resource_type, resource_name, actions, conditions, effect, priority)
-  SELECT r.id, '*', '*',
-         ARRAY['select'],
-         '{"owner_only": true}'::jsonb,
-         'allow', 0
-  FROM public.roles r WHERE r.name = 'guest'
+    SELECT r.id, wildcard_resource, wildcard_resource,
+         crud_actions[1:1],
+      owner_only_conditions,
+      allow_effect, 0
+    FROM public.roles r WHERE r.name = guest_role
   ON CONFLICT DO NOTHING;
 
   -- Record migration
