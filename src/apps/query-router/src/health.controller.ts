@@ -22,7 +22,7 @@ export class HealthController {
   @HealthCheck()
   @ApiOperation({ summary: 'Readiness — checks adapter-registry reachability' })
   ready() {
-    const registryUrl = this.config.get<string>('ADAPTER_REGISTRY_URL', 'http://adapter-registry:3020');
+    const registryUrl = this.config.getOrThrow<string>('ADAPTER_REGISTRY_URL');
     return this.health.check([
       () => this.http.pingCheck('adapter-registry', `${registryUrl}/health/live`),
     ]);

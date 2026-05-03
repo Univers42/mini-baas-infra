@@ -33,7 +33,7 @@ export class ListDocumentsQueryDto {
   @ApiPropertyOptional({ example: 'created_at:desc', description: 'field:asc|desc' })
   @IsOptional()
   @IsString()
-  @Matches(/^[\w]+:(asc|desc)$/i, { message: 'sort must be field:asc or field:desc' })
+  @Matches(/^\w+:(asc|desc)$/i, { message: 'sort must be field:asc or field:desc' })
   sort?: string;
 
   @ApiPropertyOptional({ description: 'JSON filter object (owner_id/_id stripped)' })

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { TerminusModule } from '@nestjs/terminus';
+import { randomUUID } from 'node:crypto';
 import { PrometheusModule, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { MongoModule } from '@mini-baas/database';
 import { CollectionsModule } from './collections/collections.module';
@@ -16,11 +17,11 @@ import { HealthController } from './health.controller';
         level: process.env['LOG_LEVEL'] ?? 'info',
         genReqId: (req: { headers?: Record<string, unknown> }) =>
           (req.headers?.['x-request-id'] as string) ??
-          `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+          randomUUID(),
         transport:
-          process.env['NODE_ENV'] !== 'production'
-            ? { target: 'pino-pretty', options: { colorize: true } }
-            : undefined,
+          process.env['NODE_ENV'] === 'production'
+            ? undefined
+            : { target: 'pino-pretty', options: { colorize: true } },
         base: { service: 'mongo-api' },
       },
     }),

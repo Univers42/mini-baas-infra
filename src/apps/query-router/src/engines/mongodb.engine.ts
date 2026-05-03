@@ -1,11 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { MongoClient } from 'mongodb';
+import { Collection, MongoClient } from 'mongodb';
 
 const COLLECTION_REGEX = /^[\w-]{1,64}$/;
 
 export interface MongoQueryResult {
   rows: Record<string, unknown>[];
   rowCount: number;
+}
+
+interface MongoExecuteOptions {
+  data?: Record<string, unknown>;
+  filter?: Record<string, unknown>;
+  sort?: Record<string, string>;
+  limit?: number;
+  offset?: number;
+  userId?: string;
 }
 
 @Injectable()
@@ -22,19 +31,94 @@ export class MongodbEngine {
     return { id: String(_id), ...rest };
   }
 
+  private cloneFilter(filter?: Record<string, unknown>): Record<string, unknown> {
+    return filter ? { ...filter } : {};
+  }
+
+  private applyOwnerFilter(filter: Record<string, unknown>, userId?: string): Record<string, unknown> {
+    if (userId) {
+      filter['owner_id'] = userId;
+    }
+    return filter;
+  }
+
+  private buildSort(sortInput?: Record<string, string>): Record<string, 1 | -1> | undefined {
+    if (!sortInput) {
+      return undefined;
+    }
+
+    return Object.fromEntries(
+      Object.entries(sortInput).map(([field, dir]) => [
+        field,
+        dir.toLowerCase() === 'asc' ? 1 : -1,
+      ]),
+    );
+  }
+
+  private async find(col: Collection, opts: MongoExecuteOptions): Promise<MongoQueryResult> {
+    const filter = this.applyOwnerFilter(this.cloneFilter(opts.filter), opts.userId);
+    delete filter['$where'];
+
+    const limit = Math.min(opts.limit ?? 100, 100);
+    let cursor = col.find(filter).skip(opts.offset ?? 0).limit(limit);
+    const sort = this.buildSort(opts.sort);
+    if (sort) {
+      cursor = cursor.sort(sort);
+    }
+
+    const docs = await cursor.toArray();
+    return {
+      rows: docs.map((d) => this.normalizeDoc(d as Record<string, unknown>)),
+      rowCount: docs.length,
+    };
+  }
+
+  private async insertOne(col: Collection, opts: MongoExecuteOptions): Promise<MongoQueryResult> {
+    if (!opts.data) throw new BadRequestException('data is required for insertOne');
+    const { _id: _, owner_id: __, ...clean } = opts.data;
+    const doc: Record<string, unknown> = {
+      ...clean,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    if (opts.userId) {
+      doc['owner_id'] = opts.userId;
+    }
+    const result = await col.insertOne(doc);
+    return {
+      rows: [{ id: result.insertedId.toString(), ...doc }],
+      rowCount: 1,
+    };
+  }
+
+  private async updateMany(col: Collection, opts: MongoExecuteOptions): Promise<MongoQueryResult> {
+    if (!opts.data) throw new BadRequestException('data is required for updateMany');
+    const { _id: _, owner_id: __, ...cleanData } = opts.data;
+    const updateFilter = this.applyOwnerFilter(this.cloneFilter(opts.filter), opts.userId);
+    const result = await col.updateMany(updateFilter, {
+      $set: { ...cleanData, updated_at: new Date() },
+    });
+    return {
+      rows: [],
+      rowCount: result.modifiedCount,
+    };
+  }
+
+  private async deleteMany(col: Collection, opts: MongoExecuteOptions): Promise<MongoQueryResult> {
+    const deleteFilter = this.applyOwnerFilter(this.cloneFilter(opts.filter), opts.userId);
+    const result = await col.deleteMany(deleteFilter);
+    return {
+      rows: [],
+      rowCount: result.deletedCount,
+    };
+  }
+
   async execute(
     connectionString: string,
     dbName: string,
     collection: string,
     action: string,
-    opts: {
-      data?: Record<string, unknown>;
-      filter?: Record<string, unknown>;
-      sort?: Record<string, string>;
-      limit?: number;
-      offset?: number;
-      userId?: string;
-    },
+    opts: MongoExecuteOptions,
   ): Promise<MongoQueryResult> {
     this.validateCollection(collection);
 
@@ -49,81 +133,14 @@ export class MongodbEngine {
       const col = db.collection(collection);
 
       switch (action) {
-        case 'find': {
-          // Strip $where to prevent injection
-          const filter = { ...(opts.filter ?? {}) };
-          delete filter['$where'];
-
-          // Enforce owner isolation — user can only see their own documents
-          if (opts.userId) {
-            filter['owner_id'] = opts.userId;
-          }
-
-          const sort: Record<string, 1 | -1> = {};
-          if (opts.sort) {
-            for (const [field, dir] of Object.entries(opts.sort)) {
-              sort[field] = dir.toLowerCase() === 'asc' ? 1 : -1;
-            }
-          }
-
-          const limit = Math.min(opts.limit ?? 100, 100);
-          const docs = await col.find(filter).sort(sort).skip(opts.offset ?? 0).limit(limit).toArray();
-
-          return {
-            rows: docs.map((d) => this.normalizeDoc(d as Record<string, unknown>)),
-            rowCount: docs.length,
-          };
-        }
-
-        case 'insertOne': {
-          if (!opts.data) throw new BadRequestException('data is required for insertOne');
-          // Strip forbidden fields and auto-inject owner_id + timestamps
-          const { _id: _, owner_id: __, ...clean } = opts.data;
-          const doc: Record<string, unknown> = {
-            ...clean,
-            created_at: new Date(),
-            updated_at: new Date(),
-          };
-          if (opts.userId) {
-            doc['owner_id'] = opts.userId;
-          }
-          const result = await col.insertOne(doc);
-          return {
-            rows: [{ id: result.insertedId.toString(), ...doc }],
-            rowCount: 1,
-          };
-        }
-
-        case 'updateMany': {
-          if (!opts.data) throw new BadRequestException('data is required for updateMany');
-          // Strip forbidden fields from update payload
-          const { _id: _, owner_id: __, ...cleanData } = opts.data;
-          const updateFilter = { ...(opts.filter ?? {}) };
-          // Enforce owner isolation on updates
-          if (opts.userId) {
-            updateFilter['owner_id'] = opts.userId;
-          }
-          const result = await col.updateMany(updateFilter, {
-            $set: { ...cleanData, updated_at: new Date() },
-          });
-          return {
-            rows: [],
-            rowCount: result.modifiedCount,
-          };
-        }
-
-        case 'deleteMany': {
-          const deleteFilter = { ...(opts.filter ?? {}) };
-          // Enforce owner isolation on deletes
-          if (opts.userId) {
-            deleteFilter['owner_id'] = opts.userId;
-          }
-          const result = await col.deleteMany(deleteFilter);
-          return {
-            rows: [],
-            rowCount: result.deletedCount,
-          };
-        }
+        case 'find':
+          return this.find(col, opts);
+        case 'insertOne':
+          return this.insertOne(col, opts);
+        case 'updateMany':
+          return this.updateMany(col, opts);
+        case 'deleteMany':
+          return this.deleteMany(col, opts);
 
         default:
           throw new BadRequestException(`Unknown MongoDB action: ${action}`);

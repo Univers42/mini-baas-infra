@@ -40,7 +40,7 @@ export class CampaignService {
     }
 
     const batchSize = this.config.get<number>('NEWSLETTER_BATCH_SIZE', 5);
-    const emailServiceUrl = this.config.get<string>('EMAIL_SERVICE_URL', 'http://email-service:3030');
+    const emailServiceUrl = this.config.getOrThrow<string>('EMAIL_SERVICE_URL');
     const batches = chunk(subscribers, batchSize);
 
     let sent = 0;

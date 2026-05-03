@@ -16,6 +16,7 @@ GATEWAY = os.environ.get("BASE_URL", "http://localhost:8000")
 ANON_KEY = os.environ.get("APIKEY") or os.environ.get("PUBLIC_APIKEY") or "public-anon-key"
 COLLECTION = "tasks"
 HEALTH_PATH = "/mongo/v1/health"
+NOT_FOUND = "Not Found"
 
 pass_count = 0
 fail_count = 0
@@ -233,7 +234,7 @@ try:
     isolation_data = json.loads(isolation_resp)
     status_code = isolation_data.get("statusCode") or isolation_data.get("status")
     error_code = isolation_data.get("error", {}).get("code") if isinstance(isolation_data.get("error"), dict) else isolation_data.get("error")
-    if status_code == 404 or error_code in ("not_found", "Not Found"):
+    if status_code == 404 or error_code in ("not_found", NOT_FOUND):
         log_pass("User B correctly denied (404)")
     else:
         log_fail(f"Isolation broken: {isolation_resp}")
@@ -247,7 +248,7 @@ try:
     patch_data = json.loads(patch_isolation_resp)
     status_code = patch_data.get("statusCode") or patch_data.get("status")
     error_code = patch_data.get("error", {}).get("code") if isinstance(patch_data.get("error"), dict) else patch_data.get("error")
-    if status_code == 404 or error_code in ("not_found", "Not Found"):
+    if status_code == 404 or error_code in ("not_found", NOT_FOUND):
         log_pass("User B denied patch (404)")
     else:
         log_fail(f"Isolation broken: {patch_isolation_resp}")
@@ -260,7 +261,7 @@ try:
     delete_data = json.loads(delete_isolation_resp)
     status_code = delete_data.get("statusCode") or delete_data.get("status")
     error_code = delete_data.get("error", {}).get("code") if isinstance(delete_data.get("error"), dict) else delete_data.get("error")
-    if status_code == 404 or error_code in ("not_found", "Not Found"):
+    if status_code == 404 or error_code in ("not_found", NOT_FOUND):
         log_pass("User B denied delete (404)")
     else:
         log_fail(f"Isolation broken: {delete_isolation_resp}")
@@ -287,7 +288,7 @@ try:
     verify_data = json.loads(verify_resp)
     status_code = verify_data.get("statusCode") or verify_data.get("status")
     error_code = verify_data.get("error", {}).get("code") if isinstance(verify_data.get("error"), dict) else verify_data.get("error")
-    if status_code == 404 or error_code in ("not_found", "Not Found"):
+    if status_code == 404 or error_code in ("not_found", NOT_FOUND):
         log_pass("Document correctly returns 404 after deletion")
     else:
         log_fail(f"Verify failed: {verify_resp}")

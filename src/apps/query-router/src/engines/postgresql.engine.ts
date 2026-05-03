@@ -143,7 +143,8 @@ export class PostgresqlEngine {
     cols.forEach((c) => this.validateColumn(c));
 
     const placeholders = cols.map((_, i) => `$${i + 1}`);
-    const sql = `INSERT INTO "${table}" (${cols.map((c) => `"${c}"`).join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`;
+  const quotedColumns = cols.map((c) => `"${c}"`).join(', ');
+  const sql = `INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders.join(', ')}) RETURNING *`;
 
     const res = await client.query(sql, Object.values(enriched));
     return { rows: res.rows as Record<string, unknown>[], rowCount: res.rowCount ?? 0 };

@@ -1,11 +1,10 @@
 # File: docker/services/vault/Dockerfile
 FROM hashicorp/vault:1.16
 
-# Alpine-based image: add bash + jq for init script
-RUN apk add --no-cache bash jq
-
-# Ensure vault data directory has correct ownership
-RUN mkdir -p /vault/data && chown -R vault:vault /vault/data
+# Alpine-based image: add bash + jq for init script and prepare Vault data.
+RUN apk add --no-cache bash jq \
+  && mkdir -p /vault/data \
+  && chown -R vault:vault /vault/data
 
 COPY conf/vault.hcl    /vault/config/vault.hcl
 COPY policies/          /vault/policies/

@@ -79,7 +79,11 @@ export class DatabasesService implements OnModuleInit {
          RETURNING id, engine, name, created_at`,
         [userId, dto.engine, dto.name, encrypted, iv, tag, salt],
       );
-      return rows[0]!;
+      const row = rows[0];
+      if (!row) {
+        throw new NotFoundException('Database was not created');
+      }
+      return row;
     } catch (err: unknown) {
       if ((err as { code?: string }).code === '23505') {
         throw new ConflictException(`Database "${dto.name}" already registered`);
@@ -108,7 +112,7 @@ export class DatabasesService implements OnModuleInit {
     if (!rows.length) {
       throw new NotFoundException('Database not found');
     }
-    return rows[0]!;
+    return rows[0];
   }
 
   async getConnectionString(userId: string, id: string): Promise<{ engine: string; connection_string: string }> {
@@ -123,7 +127,7 @@ export class DatabasesService implements OnModuleInit {
       throw new NotFoundException('Database not found');
     }
 
-    const row = rows[0]!;
+    const row = rows[0];
     const connectionString = this.crypto.decrypt({
       encrypted: row.connection_enc,
       iv: row.connection_iv,

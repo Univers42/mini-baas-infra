@@ -60,7 +60,7 @@ export class SessionController {
     @Body() dto: ExtendSessionDto,
   ) {
     const token = auth?.replace('Bearer ', '');
-    return this.service.extend(token, dto.days ? parseInt(dto.days, 10) : undefined);
+    return this.service.extend(token, dto.days ? Number.parseInt(dto.days, 10) : undefined);
   }
 
   @Delete(':id')

@@ -41,8 +41,10 @@ export class PostgresSchemaEngine {
       colDefs.push(def);
     }
 
-    colDefs.push(`created_at TIMESTAMPTZ DEFAULT now()`);
-    colDefs.push(`updated_at TIMESTAMPTZ DEFAULT now()`);
+    colDefs.push(
+      `created_at TIMESTAMPTZ DEFAULT now()`,
+      `updated_at TIMESTAMPTZ DEFAULT now()`,
+    );
 
     const ddl = `CREATE TABLE IF NOT EXISTS public."${tableName}" (\n  ${colDefs.join(',\n  ')}\n)`;
 

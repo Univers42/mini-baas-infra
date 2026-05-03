@@ -41,10 +41,10 @@ YELLOW='\033[1;33m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-log()  { echo -e "${GREEN}[+]${NC} $*"; }
-warn() { echo -e "${YELLOW}[!]${NC} $*"; }
-err()  { echo -e "${RED}[✗]${NC} $*" >&2; }
-step() { echo -e "${BOLD}── $* ──${NC}"; }
+log()  { echo -e "${GREEN}[+]${NC} $*"; return 0; }
+warn() { echo -e "${YELLOW}[!]${NC} $*"; return 0; }
+err()  { echo -e "${RED}[✗]${NC} $*" >&2; return 0; }
+step() { echo -e "${BOLD}── $* ──${NC}"; return 0; }
 
 # ─── Auth ─────────────────────────────────────────────────────────
 if [[ -z "${VAULT_TOKEN:-}" ]]; then
@@ -63,8 +63,8 @@ if [[ -z "${VAULT_TOKEN:-}" ]]; then
 fi
 
 # ─── Helpers ──────────────────────────────────────────────────────
-gen_secret() { openssl rand -base64 "${1:-32}" | tr -d '\n'; }
-gen_hex()    { openssl rand -hex "${1:-32}"; }
+gen_secret() { openssl rand -base64 "${1:-32}" | tr -d '\n'; return 0; }
+gen_hex()    { openssl rand -hex "${1:-32}"; return 0; }
 
 vault_put() {
   local path="$1"; shift
@@ -73,12 +73,14 @@ vault_put() {
     return 0
   fi
   vault kv put -address="$VAULT_ADDR" "$path" "$@" >/dev/null
+  return 0
 }
 
 vault_get() {
   local path="$1" field="$2"
   vault kv get -address="$VAULT_ADDR" -format=json "$path" 2>/dev/null \
     | jq -r ".data.data.${field} // empty"
+  return 0
 }
 
 restart_services() {
@@ -88,11 +90,12 @@ restart_services() {
   fi
   log "Restarting: $*"
   docker compose restart "$@" 2>/dev/null || true
+  return 0
 }
 
 update_env_var() {
   local key="$1" value="$2" env_file="${3:-.env}"
-  if [[ ! -f "$env_file" ]]; then return; fi
+  if [[ ! -f "$env_file" ]]; then return 0; fi
   if [[ "$DRY_RUN" == "1" ]]; then
     warn "DRY RUN: $key=<redacted> in $env_file"
     return 0
@@ -102,6 +105,7 @@ update_env_var() {
   else
     echo "${key}=${value}" >> "$env_file"
   fi
+  return 0
 }
 
 # ─── JWT Rotation (with dual-key grace period) ───────────────────
@@ -125,6 +129,7 @@ rotate_jwt() {
   restart_services kong gotrue postgrest mongo-api adapter-registry query-router
   log "JWT rotated — dual-key active for ${GRACE_SECONDS}s"
   log "After grace period, remove PREV_JWT_SECRET from .env"
+  return 0
 }
 
 # ─── PostgreSQL Password Rotation ────────────────────────────────
@@ -154,6 +159,7 @@ rotate_postgres() {
 
   restart_services postgrest gotrue pg-meta
   log "PostgreSQL password rotated"
+  return 0
 }
 
 # ─── MongoDB Credential Rotation ─────────────────────────────────
@@ -183,6 +189,7 @@ rotate_mongo() {
 
   restart_services mongo-api query-router realtime
   log "MongoDB credentials rotated"
+  return 0
 }
 
 # ─── MinIO Credential Rotation ───────────────────────────────────
@@ -201,6 +208,7 @@ rotate_minio() {
 
   restart_services minio storage-router
   log "MinIO credentials rotated"
+  return 0
 }
 
 # ─── Kong API Key Rotation ───────────────────────────────────────
@@ -221,6 +229,7 @@ rotate_kong() {
   restart_services kong
   log "Kong API keys rotated"
   warn "Update all API consumers with new keys!"
+  return 0
 }
 
 # ─── SMTP Credential Rotation ────────────────────────────────────
@@ -248,6 +257,7 @@ rotate_smtp() {
 
   restart_services email-service newsletter-service gotrue
   log "SMTP credentials rotated"
+  return 0
 }
 
 # ─── AppRole Secret ID Rotation ──────────────────────────────────
@@ -283,6 +293,7 @@ rotate_approles() {
   done
 
   log "All AppRole secret IDs rotated"
+  return 0
 }
 
 # ─── Main ─────────────────────────────────────────────────────────

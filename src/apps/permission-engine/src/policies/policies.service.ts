@@ -47,7 +47,11 @@ export class PoliciesService {
         dto.priority ?? 0,
       ],
     );
-    return rows[0]!;
+    const row = rows[0];
+    if (!row) {
+      throw new NotFoundException('Policy was not created');
+    }
+    return row;
   }
 
   async remove(id: string): Promise<{ deleted: boolean }> {

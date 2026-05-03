@@ -124,9 +124,9 @@ export class SubscriptionService implements OnModuleInit {
     `);
     const r = rows[0];
     return {
-      total: parseInt(r.total, 10),
-      active: parseInt(r.active, 10),
-      confirmed: parseInt(r.confirmed, 10),
+      total: Number.parseInt(r.total, 10),
+      active: Number.parseInt(r.active, 10),
+      confirmed: Number.parseInt(r.confirmed, 10),
     };
   }
 
@@ -142,9 +142,10 @@ export class SubscriptionService implements OnModuleInit {
    * This calls the email-service internal API.
    */
   private async notifyConfirmation(email: string, firstName: string, token: string): Promise<void> {
-    const emailServiceUrl = this.config.get<string>('EMAIL_SERVICE_URL', 'http://email-service:3030');
-    const baseUrl = this.config.get<string>('NEWSLETTER_BASE_URL', 'http://localhost:8000/newsletter/v1');
+    const emailServiceUrl = this.config.getOrThrow<string>('EMAIL_SERVICE_URL');
+    const baseUrl = this.config.getOrThrow<string>('NEWSLETTER_BASE_URL');
     const confirmUrl = `${baseUrl}/confirm/${token}`;
+    const greetingName = firstName ? ` ${firstName}` : '';
 
     try {
       await fetch(`${emailServiceUrl}/send`, {
@@ -153,7 +154,7 @@ export class SubscriptionService implements OnModuleInit {
         body: JSON.stringify({
           to: email,
           subject: 'Confirm your newsletter subscription',
-          html: `<p>Hello${firstName ? ` ${firstName}` : ''},</p>
+             html: `<p>Hello${greetingName},</p>
                  <p>Please confirm your subscription by clicking the link below:</p>
                  <p><a href="${confirmUrl}">Confirm subscription</a></p>
                  <p>If you did not subscribe, you can safely ignore this email.</p>`,

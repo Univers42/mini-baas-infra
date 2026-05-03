@@ -123,7 +123,7 @@ export class SchemasService {
       throw new BadRequestException('Schema not found');
     }
 
-    const schema = rows[0]!;
+    const schema = rows[0];
     const { connection_string } = await this.fetchConnection(schema.database_id, userId);
 
     if (schema.engine === 'postgresql') {
